@@ -47,3 +47,15 @@ TEST("polyline resource bounds count shared vertices once and reject zero capaci
     CHECK(!polyline_stroke(points, Element::wire, 4));
     CHECK(!polyline_stroke(std::span(points).first(1), Element::wire, 0));
 }
+
+TEST("clipped polyline previews preserve crossing corners and retraced overlaps") {
+    Polyline line({-100, 0}, Element::crossing);
+    CHECK(line.append({0, 0})); CHECK(line.append({0, 100})); CHECK(line.append({3, 100}));
+    const Bounds clip{{-2, -2}, {3, 3}};
+    std::vector<Cell> expected;
+    for (const auto cell : *line.preview({3, 0})) if (clip.contains(cell.position)) expected.push_back(cell);
+    CHECK(line.preview({3, 0}, clip).value() == expected);
+    CHECK(polyline_work(line.vertices()).value() == 204);
+    CHECK(!polyline_work(line.vertices(), 203));
+    CHECK(line.backtrack()); CHECK(line.preview({0, 0}, clip));
+}
