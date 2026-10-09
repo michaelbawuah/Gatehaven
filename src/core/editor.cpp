@@ -101,10 +101,10 @@ Stamp capture(const Circuit& circuit, Bounds region) {
     if (region.min.x > region.max.x || region.min.y > region.max.y) return {};
     Stamp stamp{static_cast<std::int64_t>(region.max.x) - region.min.x + 1,
                 static_cast<std::int64_t>(region.max.y) - region.min.y + 1, {}};
-    for (const auto& cell : circuit.cells_in(region)) {
+    circuit.visit(region, [&](const Cell& cell) {
         stamp.cells.push_back({static_cast<std::int64_t>(cell.position.x) - region.min.x,
                                static_cast<std::int64_t>(cell.position.y) - region.min.y, cell.element});
-    }
+    });
     return stamp;
 }
 
