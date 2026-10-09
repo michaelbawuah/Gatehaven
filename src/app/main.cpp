@@ -5,6 +5,8 @@
 #include "gatehaven/editor.hpp"
 #include "gatehaven/examples.hpp"
 #include "gatehaven/simulation.hpp"
+#include "gatehaven/selection.hpp"
+#include "gatehaven/polyline.hpp"
 #include "gatehaven/viewport.hpp"
 
 #include <SDL3/SDL.h>
@@ -134,7 +136,7 @@ public:
         path_ = path;
         history.clear();
         simulation.reset();
-        selection_.reset();
+        selection_.clear();
         placing_ = false;
         running = false;
         dirty_ = false;
@@ -217,8 +219,10 @@ public:
             if (end) {
                 update_preview(*end);
                 if (drag_tool_.kind == ToolKind::selector) {
-                    selection_ = Bounds{{std::min(drag_->x, end->x), std::min(drag_->y, end->y)},
+                    const Bounds region{{std::min(drag_->x, end->x), std::min(drag_->y, end->y)},
                                         {std::max(drag_->x, end->x), std::max(drag_->y, end->y)}};
+                    selection_.combine(Selection::rectangle(circuit, region), selection_mode_);
+                    selection_changed_ = false;
                     status_ = "SELECTION READY - CTRL C TO COPY";
                 } else apply(preview_);
             }
@@ -242,7 +246,15 @@ public:
                 line(r, 240, static_cast<float>(y), 1280, static_cast<float>(y), {230, 236, 238, 255});
             }
         }
-        for (const auto& cell : circuit.cells_in(visible)) draw_cell(r, cell, simulation.ports(cell.position));
+        for (const auto& cell : circuit.cells_in(visible)) {
+            draw_cell(r, cell, simulation.ports(cell.position));
+            if (selection_.contains(cell.position)) {
+                const auto [x, y] = view.screen(cell.position);
+                rectangle(r, static_cast<float>(x + 2), static_cast<float>(y + 2),
+                    static_cast<float>(view.scale - 4), static_cast<float>(view.scale - 4),
+                    selection_changed_ ? SDL_Color{205, 63, 64, 255} : SDL_Color{53, 103, 205, 255}, true);
+            }
+        }
         for (const auto& cell : preview_) {
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
@@ -252,7 +264,7 @@ public:
                 if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
             }
         }
-        if (selection_) draw_selection(r, *selection_);
+        if (selection_) draw_selection(r, *selection_.bounds());
         if (drag_tool_.kind == ToolKind::selector && drag_ && hover_) {
             draw_selection(r, {{std::min(drag_->x, hover_->x), std::min(drag_->y, hover_->y)},
                                {std::max(drag_->x, hover_->x), std::max(drag_->y, hover_->y)}});
@@ -342,7 +354,9 @@ private:
     std::size_t drag_button_{};
     std::optional<std::size_t> pan_button_;
     std::vector<Cell> preview_;
-    std::optional<Bounds> selection_;
+    Selection selection_;
+    SelectionMode selection_mode_{SelectionMode::replace};
+    bool selection_changed_{};
     ClipboardSession& clipboards_;
     ui::InstanceLauncher launcher_;
     Stamp placement_;
@@ -435,6 +449,13 @@ private:
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
         if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
+        const auto modifiers = SDL_GetModState();
+        selection_mode_ = (modifiers & SDL_KMOD_ALT) != 0 ? SelectionMode::subtract :
+            (modifiers & SDL_KMOD_SHIFT) != 0 ? SelectionMode::add : SelectionMode::replace;
+        if (tools_[*button].kind == ToolKind::selector && e.clicks >= 2) {
+            selection_.combine(connected_selection(circuit, *hover_, e.clicks >= 3), selection_mode_);
+            selection_changed_ = false; return;
+        }
         drag_ = hover_;
         drag_button_ = *button;
         drag_tool_ = tools_[*button];
@@ -454,15 +475,15 @@ private:
             return;
         }
         if (e.key == SDLK_ESCAPE) {
-            cancel_gesture(); selection_.reset(); placing_ = false; help_ = false; return;
+            cancel_gesture(); selection_.clear(); placing_ = false; help_ = false; return;
         }
         if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
             const std::int64_t distance = control ? 4 : 1;
             const auto dx = e.key == SDLK_LEFT ? -distance : e.key == SDLK_RIGHT ? distance : 0;
             const auto dy = e.key == SDLK_UP ? -distance : e.key == SDLK_DOWN ? distance : 0;
-            const auto moved = move_region(circuit, *selection_, dx, dy);
+            const auto moved = move_selection(circuit, selection_, dx, dy);
             if (!moved) status_ = moved.error();
-            else if (apply(moved->edits)) selection_ = moved->region;
+            else if (apply(moved->edits)) { selection_ = moved->selection; selection_changed_ = true; }
             return;
         }
         if (control) {
@@ -472,7 +493,9 @@ private:
             case SDLK_N: fresh(); break;
             case SDLK_Z: undo(shift); break;
             case SDLK_Y: undo(true); break;
-            case SDLK_A: selection_ = circuit.bounds(); tools_[0] = {ToolKind::selector}; break;
+            case SDLK_A:
+                selection_ = circuit.bounds() ? Selection::rectangle(circuit, *circuit.bounds()) : Selection{};
+                selection_changed_ = false; tools_[0] = {ToolKind::selector}; break;
             case SDLK_C: clipboard_action('c', shift); break;
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
@@ -493,6 +516,7 @@ private:
         case SDLK_E: eyedropper_ = true; break;
         case SDLK_B: cancel_gesture(); help_ = !help_; break;
         case SDLK_F: view.frame(circuit.bounds()); break;
+        case SDLK_D:
         case SDLK_DELETE:
         case SDLK_BACKSPACE: erase_selection(); break;
         case SDLK_H: transform('h'); break;
@@ -565,7 +589,7 @@ private:
 
     void copy(bool cut) {
         if (!selection_) { status_ = "SELECT A REGION FIRST"; return; }
-        const auto result = clipboards_.write(clipboard_, capture(circuit, *selection_));
+        const auto result = clipboards_.write(clipboard_, capture_selection(circuit, selection_));
         if (!result) { status_ = "COPY FAILED: " + result.error(); return; }
         if (cut) erase_selection();
         status_ = "COPIED TO SHARED CLIPBOARD " + std::to_string(clipboard_);
@@ -616,14 +640,14 @@ private:
 
     void erase_selection() {
         if (!selection_) return;
-        auto edits = circuit.cells_in(*selection_);
+        auto edits = selection_.cells(circuit);
         for (auto& cell : edits) cell.element = Element::empty;
-        apply(edits);
+        if (apply(edits)) selection_.clear();
     }
 
     void transform(char operation) {
         if (!placing_ && !selection_) return;
-        auto stamp = placing_ ? placement_ : capture(circuit, *selection_);
+        auto stamp = placing_ ? placement_ : capture_selection(circuit, selection_);
         if (operation == 'h') stamp.flip_horizontal();
         else if (operation == 'v') stamp.flip_vertical();
         else {
@@ -631,13 +655,9 @@ private:
             for (int i = 0; i < rotations; ++i) stamp.rotate_clockwise();
         }
         if (placing_) { placement_ = std::move(stamp); return; }
-        const auto target = paste(stamp, selection_->min);
-        const auto corner = translated(selection_->min, stamp.width - 1, stamp.height - 1);
-        if (!target || !corner) { status_ = "TRANSFORM EXCEEDS WORLD BOUNDARY"; return; }
-        auto edits = circuit.cells_in(*selection_);
-        for (auto& cell : edits) cell.element = Element::empty;
-        edits.insert(edits.end(), target->begin(), target->end());
-        if (apply(edits)) selection_->max = *corner;
+        const auto result = place_selection(circuit, selection_, stamp, selection_.bounds()->min);
+        if (!result) { status_ = result.error(); return; }
+        if (apply(result->edits)) { selection_ = result->selection; selection_changed_ = true; }
     }
 
     bool discard_changes() {
