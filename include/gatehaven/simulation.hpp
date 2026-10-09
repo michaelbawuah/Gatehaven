@@ -2,6 +2,7 @@
 
 #include "gatehaven/circuit.hpp"
 #include "gatehaven/topology.hpp"
+#include "gatehaven/netlist.hpp"
 
 #include <cstdint>
 #include <map>
@@ -47,20 +48,23 @@ public:
     template<class Visitor> void visit_state(Visitor&& visitor) const {
         const auto& nodes = topology_.nodes();
         for (std::size_t i = 0; i < nodes.size(); ++i) if (valid_[i])
-            visitor(nodes[i].cell.position, Power{nodes[i].cell.element, power_[i]}, sent_[i], received_[i]);
+            visitor(nodes[i].cell.position, Power{nodes[i].cell.element, node_power(i)}, group_flag(i, sent_), group_flag(i, received_));
     }
 
 private:
-    enum class Material { blocked, conductor, crossing, source };
-    static Material material(Element element, bool enabled);
+    void rebuild(const Circuit& circuit);
+    void energize(std::size_t vertex);
     void propagate();
+    [[nodiscard]] std::uint8_t node_power(std::size_t node) const;
+    [[nodiscard]] bool group_flag(std::size_t node, const std::vector<bool>& flags) const;
     std::uint64_t topology_revision_{std::numeric_limits<std::uint64_t>::max()};
     CompiledCircuit topology_;
+    Netlist nets_;
     std::vector<std::uint8_t> power_;
     std::vector<std::uint8_t> previous_;
-    std::vector<Material> materials_;
+    std::vector<std::uint8_t> enabled_;
     std::vector<bool> received_;
-    std::vector<std::pair<std::size_t, std::uint8_t>> frontier_;
+    std::vector<std::size_t> frontier_;
     std::vector<bool> valid_;
     std::vector<bool> sent_;
     mutable std::map<Point, Power> state_;

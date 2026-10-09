@@ -74,3 +74,12 @@ Preview queries exclude index construction and SDL drawing; these are component
 measurements, not an end-to-end frame-rate claim. Concurrent host load varied.
 No earlier editor benchmark or external application baseline was recorded, so
 these results establish a reproducible starting point rather than a speedup ratio.
+
+## Component propagation
+
+The engine now groups fixed wire connectivity into electrical components.
+Crossings retain two terminals, and relays remain independently switched
+vertices. Tick work visits controls and energized component/relay edges; full
+per-cell state is expanded only when rendering or exporting observations.
+`frontier_visits` therefore counts energized graph vertices in this version,
+not individual grid cells. Historical counts use the earlier unit.
