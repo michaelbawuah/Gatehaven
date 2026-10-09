@@ -236,7 +236,7 @@ public:
             view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
-            if (pan_button_) view.pan(e.motion.xrel, e.motion.yrel);
+            if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
             hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
             if (polyline_ && hover_) polyline_preview(*hover_);
@@ -249,7 +249,10 @@ public:
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == interaction_button_) {
             interaction_button_.reset(); endpoints_.release_screens();
         }
-        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == pan_button_) pan_button_.reset();
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && pan_button_ && input_button(e.button) == pan_button_) {
+            if (pan_distance_ < 3 && pan_origin_) view.center_on(*pan_origin_);
+            pan_button_.reset(); pan_origin_.reset();
+        }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
             const auto end = view.cell(e.button.x, e.button.y);
             if (end) {
@@ -391,6 +394,8 @@ private:
     std::optional<Point> drag_;
     std::size_t drag_button_{};
     std::optional<std::size_t> pan_button_;
+    std::optional<Point> pan_origin_;
+    float pan_distance_{};
     std::optional<std::size_t> interaction_button_;
     FileEndpoints endpoints_;
     std::vector<Cell> preview_;
@@ -419,6 +424,7 @@ private:
         drag_.reset();
         polyline_.reset();
         pan_button_.reset();
+        pan_origin_.reset(); pan_distance_ = 0;
         interaction_button_.reset(); endpoints_.release_screens();
         preview_.clear();
         eyedropper_ = false;
@@ -511,7 +517,7 @@ private:
             return;
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
-        if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
+        if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; pan_origin_ = hover_; pan_distance_ = 0; return; }
         if (tools_[*button].kind == ToolKind::interactor) {
             if (circuit.at(*hover_) == Element::screen) { interaction_button_ = *button; endpoints_.hold_screen(*hover_); }
             else if (is_communicator(circuit.at(*hover_))) communicator_dialog(*hover_);

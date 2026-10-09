@@ -54,6 +54,8 @@ public:
         center_y = std::clamp(center_y - dy / scale, lo, hi);
     }
 
+    void center_on(Point point) { center_x = static_cast<double>(point.x) + 0.5; center_y = static_cast<double>(point.y) + 0.5; }
+
     void zoom(double multiplier, double x, double y) {
         if (!std::isfinite(multiplier) || multiplier <= 0) return;
         const auto before = world(x, y);

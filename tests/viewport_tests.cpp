@@ -3,6 +3,12 @@
 
 using namespace gatehaven;
 
+TEST("centering a cell aligns its center with the viewport center at coordinate extremes") {
+    Viewport view; const Point point{std::numeric_limits<Coordinate>::max(), std::numeric_limits<Coordinate>::min()};
+    view.center_on(point);
+    CHECK(view.cell(view.area.x + view.area.width / 2, view.area.y + view.area.height / 2) == point);
+}
+
 TEST("zoom preserves the world position underneath the cursor") {
     Viewport v;
     const auto before = v.world(811, 326);
