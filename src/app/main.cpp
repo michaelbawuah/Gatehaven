@@ -985,6 +985,8 @@ private:
             const auto label = recovery_date(recovery_entries_[i].modified) + "  " + std::to_string((recovery_entries_[i].bytes + 1023) / 1024) + " KB";
             ui::text(r, 406, static_cast<float>(box.y + 14), label, white, 1.5F);
         }
+        if (!recovery_entries_.empty()) ui::text(r, 390, 544,
+            std::to_string(recovery_index_ + 1) + " OF " + std::to_string(recovery_entries_.size()) + " SNAPSHOTS", white, 1.25F);
         ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", white, 1.25F);
         ui::text(r, 390, 592, "DEL: DELETE   ESC: KEEP FOR LATER", white, 1.25F);
     }
