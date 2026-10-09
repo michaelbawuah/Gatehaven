@@ -1207,10 +1207,11 @@ private:
         rectangle(r, x + 1, y + 1, s - 2, s - 2,
                   powered ? SDL_Color{217, 238, 227, 255} : SDL_Color{233, 238, 241, 255});
         if (cell.element == Element::screen) {
-            const bool bright = simulation.sent(cell.position);
+            const bool bright = !preview && simulation.sent(cell.position);
             rectangle(r, x + 3, y + 3, std::max(1.0F, s - 6), std::max(1.0F, s - 6),
                       bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{57, 64, 84, 255});
             if (s >= 18) ui::text(r, x + s / 2 - 3, y + s / 2 - 3.5F, "S", bright ? ink : white, 1);
+            if (preview) rectangle(r, x, y, s, s, orange, true);
             return;
         }
         if (cell.element == Element::wire || cell.element == Element::crossing || cell.element == Element::signal) {
