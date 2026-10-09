@@ -38,6 +38,7 @@ target_sources(gatehaven_core PRIVATE src/core/preferences.cpp)
 target_sources(gatehaven_core PRIVATE src/core/communicator.cpp)
 target_sources(gatehaven_core PRIVATE src/core/serial_protocol.cpp)
 target_sources(gatehaven_core PRIVATE src/core/statistics.cpp)
+target_sources(gatehaven_core PRIVATE src/core/svg_export.cpp)
 target_include_directories(gatehaven_core PUBLIC include)
 gatehaven_defaults(gatehaven_core)
 
