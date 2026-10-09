@@ -25,7 +25,8 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
         run(cli, "check", sample)
     assert len(list((resources / "samples").glob("*.ghv"))) == 6
     assert (resources / "docs" / "manual.md").is_file()
-    assert "SDL" in (resources / "third_party" / "SDL3" / "LICENSE.txt").read_text()
+    notice = Path("third_party") / "SDL3" / "LICENSE.txt"
+    assert (resources / notice).read_bytes() == (Path(__file__).resolve().parents[1] / notice).read_bytes()
     if has_app == "ON":
         if sys.platform == "darwin":
             bundle = root / "gatehaven.app" / "Contents"
