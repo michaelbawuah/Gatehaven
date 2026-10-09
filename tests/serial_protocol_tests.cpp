@@ -36,7 +36,8 @@ TEST("input byte requests wait at EOF and resume without resetting the circuit")
 TEST("output acknowledges only successful writes and retries failed bytes in order") {
     OutputProtocol output; bool ready = false; std::vector<std::uint8_t> bytes;
     const OutputProtocol::Write write = [&](std::uint8_t byte) -> std::expected<void, std::string> {
-        if (!ready) return std::unexpected("unavailable"); bytes.push_back(byte); return {};
+        if (!ready) return std::unexpected("unavailable");
+        bytes.push_back(byte); return {};
     };
     for (auto bit : serial_reply(0, 0xE3, 8)) CHECK(!output.step(bit != 0, write));
     CHECK(!output.error().empty() && output.pending() == 1 && bytes.empty());
@@ -46,4 +47,20 @@ TEST("output acknowledges only successful writes and retries failed bytes in ord
     std::vector<std::uint8_t> ack;
     for (unsigned i = 0; i < 3; ++i) ack.push_back(output.step(false, write) ? 1 : 0);
     CHECK(ack == serial_reply(0));
+}
+TEST("reserved commands never call file callbacks and complete frames resynchronize") {
+    OutputProtocol output; unsigned writes = 0;
+    const OutputProtocol::Write write = [&](std::uint8_t) -> std::expected<void, std::string> { ++writes; return {}; };
+    for (std::uint8_t command = 1; command < 4; ++command) {
+        for (const auto bit : serial_reply(command, 255, 8)) CHECK(!output.step(bit != 0, write));
+    }
+    CHECK(writes == 0);
+    for (const auto bit : serial_reply(0, 42, 8)) static_cast<void>(output.step(bit != 0, write));
+    CHECK(writes == 1);
+    InputProtocol input;
+    const InputProtocol::Read read = []() -> std::expected<std::optional<std::uint8_t>, std::string> { return std::optional<std::uint8_t>{}; };
+    const InputProtocol::More more = []() -> std::expected<bool, std::string> { return false; };
+    for (unsigned i = 0; i < 4097; ++i) for (const auto bit : serial_reply(0)) static_cast<void>(input.step(bit != 0, read, more));
+    CHECK(input.pending() == 4096 && !input.error().empty());
+    input.reset(); CHECK(input.pending() == 0 && input.error().empty());
 }
