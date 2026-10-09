@@ -35,7 +35,9 @@ int main(int argc, char** argv) {
     Simulation simulation;
     bool high = true;
     const Simulation::Exchange exchange = [&](const CommunicatorGroup&, bool) { return high; };
-    simulation.step(circuit, exchange); // Warm up outside the timed region.
+    const auto cold_start = std::chrono::steady_clock::now();
+    simulation.step(circuit, exchange);
+    const double cold_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - cold_start).count();
     const auto start = std::chrono::steady_clock::now();
     for (unsigned i = 0; i < steps; ++i) {
         if (workload == "pulsed-screens") high = !high;
@@ -48,5 +50,8 @@ int main(int argc, char** argv) {
         return 1;
     }
     std::cout << "{\"workload\":\"" << workload << "\",\"cells\":" << count << ",\"steps\":" << steps
-              << ",\"total_ms\":" << ms << ",\"ms_per_step\":" << ms / steps << "}\n";
+              << ",\"cold_ms\":" << cold_ms << ",\"total_ms\":" << ms << ",\"ms_per_step\":" << ms / steps
+              << ",\"propagations\":" << simulation.metrics().propagations
+              << ",\"settled_ticks\":" << simulation.metrics().settled_ticks
+              << ",\"topology_builds\":" << simulation.metrics().topology_builds << "}\n";
 }
