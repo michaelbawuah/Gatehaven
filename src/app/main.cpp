@@ -376,7 +376,7 @@ public:
         }
         ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
         ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
-        ui::text(r, 22, 748, "B: HINTS  F2: SHORTCUTS", muted, 1.0F);
+        ui::text(r, 22, 748, "B: HINTS  F3: EXAMPLES", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
         ui::text(r, 20, 771, status_.substr(0, 73), white, 1.25F);
         if (hover_) {
@@ -386,7 +386,7 @@ public:
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
-        if (beginner_ && !help_) render_hint(r);
+        if (beginner_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
         if (clipboard_menu_) render_clipboard_menu(r);
@@ -1009,6 +1009,15 @@ private:
         } else if (tools_[0].kind == ToolKind::eraser) {
             first = "DRAG TO ERASE A LINE. SHIFT CHAINS ERASER SEGMENTS.";
             second = "CTRL Z RESTORES THE WHOLE EDIT.";
+        } else if (tools_[0].kind == ToolKind::interactor) {
+            first = "HOLD A SCREEN TO SEND POWER INTO THE CIRCUIT.";
+            second = "CLICK A FILE PORT TO CHOOSE ITS INPUT OR OUTPUT FILE.";
+        } else if (tools_[0].element == Element::screen) {
+            first = "ADJACENT SCREENS WORK AS ONE. I: HOLD TO INTERACT.";
+            second = "BRIGHTNESS SHOWS SIGNALS SENT BY THE CIRCUIT.";
+        } else if (is_communicator(tools_[0].element)) {
+            first = "FILE PORTS TRANSFER SERIAL BITS, ONE PER TICK.";
+            second = "I: CHOOSE A FILE. F1: PROTOCOL GUIDE IN THE MANUAL.";
         }
         rectangle(r, 254, 690, 674, 60, white);
         ui::text(r, 268, 703, first, teal, 1.25F);
@@ -1017,23 +1026,28 @@ private:
 
     void render_help(SDL_Renderer* r) const {
         rectangle(r, 338, 132, 846, 608, ink);
-        ui::text(r, 376, 194, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
-        constexpr std::array<std::string_view, 13> lines{
+        ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
+        constexpr std::array<std::string_view, 18> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
+            "F5/F6/F7: SCREEN / FILE IN / FILE OUT",
+            "I: INTERACT WITH SCREENS AND FILE PORTS",
             "CLICK TOOL: BIND THAT MOUSE BUTTON",
             "HOLD E + CLICK: SAMPLE A TOOL",
+            "SHIFT + DRAW: POLYLINE; BACKSPACE: RETRACE",
+            "SELECT: SHIFT ADDS, ALT SUBTRACTS",
             "SPACE: PLAY/PAUSE    RIGHT: ONE TICK",
             "CTRL SPACE: SET TICKS PER SECOND",
             "R: RESET            F: FRAME CIRCUIT",
             "CTRL C/X/V: COPY / CUT / PASTE",
-            "CTRL Z/Y: UNDO / REDO",
+            "CTRL Z/Y: UNDO / REDO    CTRL D: DUPLICATE",
             "CTRL S/O/N: SAVE / OPEN / NEW",
             "[ AND ]: ROTATE     H/V: FLIP",
             "ARROWS: MOVE SELECTION  CTRL: X4",
             "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
+            "F1: MANUAL    F3: CIRCUIT EXAMPLES",
             "F2 OR ESC: CLOSE    B: BEGINNER HINTS"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            ui::text(r, 378, 246 + static_cast<float>(i) * 36, lines[i], white, 1.75F);
+            ui::text(r, 378, 216 + static_cast<float>(i) * 28, lines[i], white, 1.75F);
         }
     }
 };
