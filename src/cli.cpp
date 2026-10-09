@@ -98,10 +98,10 @@ static int run_cli(int argc, char** argv) {
         std::cout << "tick,x,y,element,ports,sending\n";
         for (std::uint64_t i = 0; i < steps; ++i) {
             simulation.step(*circuit);
-            for (const auto& [point, power] : simulation.snapshot()) {
+            simulation.visit_state([&](Point point, Power power, bool sending, bool) {
                 std::cout << simulation.ticks() << ',' << point.x << ',' << point.y << ',' << name(power.element)
-                          << ',' << static_cast<unsigned>(power.ports) << ',' << simulation.sent(point) << '\n';
-            }
+                          << ',' << static_cast<unsigned>(power.ports) << ',' << sending << '\n';
+            });
         }
         return 0;
     }
@@ -110,10 +110,10 @@ static int run_cli(int argc, char** argv) {
     Simulation simulation;
     for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
     std::cout << "Ticks: " << simulation.ticks() << "\nPowered cells: " << simulation.powered_count() << '\n';
-    for (const auto& [point, power] : simulation.snapshot()) {
+    simulation.visit_state([&](Point point, Power power, bool, bool) {
         std::cout << point.x << ' ' << point.y << ' ' << name(power.element) << ' '
                   << static_cast<unsigned>(power.ports) << '\n';
-    }
+    });
     return 0;
 }
 
