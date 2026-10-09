@@ -38,6 +38,12 @@ public:
     [[nodiscard]] bool sent(Point point) const;
     [[nodiscard]] bool received(Point point) const;
     [[nodiscard]] const std::map<Point, Power>& snapshot() const;
+    // Ordered by y then x. Visitors must not modify this simulation.
+    template<class Visitor> void visit_state(Visitor&& visitor) const {
+        const auto& nodes = topology_.nodes();
+        for (std::size_t i = 0; i < nodes.size(); ++i) if (valid_[i])
+            visitor(nodes[i].cell.position, Power{nodes[i].cell.element, power_[i]}, sent_[i], received_[i]);
+    }
 
 private:
     enum class Material { blocked, conductor, crossing, source };
