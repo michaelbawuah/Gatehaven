@@ -1502,7 +1502,10 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto before_touch = app.circuit;
     const auto finger = [&](Uint32 type, SDL_FingerID id, float x, float y) {
         SDL_Event event{}; event.type = type; event.tfinger.touchID = 1; event.tfinger.fingerID = id;
-        event.tfinger.x = x / 1280; event.tfinger.y = y / 800;
+        float window_x{}, window_y{}; int width{}, height{};
+        require(SDL_RenderCoordinatesToWindow(renderer, x, y, &window_x, &window_y), "Could not map touch coordinates");
+        require(SDL_GetWindowSize(SDL_GetRenderWindow(renderer), &width, &height), "Could not read touch window size");
+        event.tfinger.x = window_x / static_cast<float>(width); event.tfinger.y = window_y / static_cast<float>(height);
         require(SDL_PushEvent(&event), "Could not queue a touch event"); dispatch(app, renderer);
     };
     const auto [touch_x, touch_y] = app.view.screen({9, 4});
@@ -1512,6 +1515,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit.at({9, 4}) == Element::wire, "Native touch did not apply the touch binding");
     key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == before_touch, "Native touch stroke did not undo once");
+    require(SDL_SetWindowSize(SDL_GetRenderWindow(renderer), 1000, 800), "Could not resize touch test window");
     const auto old_scale = app.view.scale;
     finger(SDL_EVENT_FINGER_DOWN, 1, 600, 400); finger(SDL_EVENT_FINGER_DOWN, 2, 800, 400);
     finger(SDL_EVENT_FINGER_MOTION, 2, 900, 400);
@@ -1528,6 +1532,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto help_ticks = app.simulation.ticks(); app.update(0.25);
     require(app.circuit == before_touch && app.simulation.ticks() == help_ticks, "Help allowed hidden editor actions");
     key(SDLK_ESCAPE);
+    require(SDL_SetWindowSize(SDL_GetRenderWindow(renderer), 1280, 800), "Could not restore touch test window");
     const auto recovery_directory = session_directory / "recovery";
     auto abandoned = RecoveryStore::open(recovery_directory).value();
     Circuit lost_circuit; lost_circuit.set({42, -17}, Element::source);
