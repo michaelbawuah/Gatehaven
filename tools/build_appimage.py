@@ -34,6 +34,17 @@ def download(asset, cache):
     target.chmod(0o755)
     return target
 
+def glibc_requirement(text):
+    versions = [tuple(map(int, parts)) for parts in re.findall(r"GLIBC_([0-9]+)\.([0-9]+)", text)]
+    return max(versions, default=(0, 0))
+
+def verify_linux_baseline(appdir):
+    files = [appdir / "usr/bin/gatehaven", appdir / "usr/bin/gatehaven-cli", *(appdir / "usr/lib").glob("*.so*")]
+    required = max(glibc_requirement(run("readelf", "--version-info", path)) for path in files)
+    if required > (2, 39):
+        raise ValueError(f"GLIBC {required[0]}.{required[1]} exceeds the declared 2.39 baseline; use the pinned build host")
+    return ".".join(map(str, required))
+
 def stage_appdir(cmake, build, appdir):
     run(cmake, "--install", build, "--config", "Release", "--prefix", appdir / "usr")
     for name in ("gatehaven", "gatehaven-cli"):
@@ -81,6 +92,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="gatehaven appimage ") as temporary:
         work = Path(temporary); appdir = work / "Gatehaven.AppDir"
         bundled = stage_appdir(args.cmake, args.build.resolve(), appdir)
+        glibc_floor = verify_linux_baseline(appdir)
         run(tool, "--appimage-extract", cwd=work)
         env = dict(os.environ, ARCH=arch)
         candidate = work / "Gatehaven.AppImage"
@@ -105,7 +117,7 @@ def main():
     Path(str(output) + ".json").write_text(json.dumps({"schema": 1, "architecture": arch,
         "tool_version": lock["tool_version"], "runtime_revision": lock["runtime_revision"],
         "assets": assets, "bundled_libraries": bundled, "sha256": digest,
-        "build_information": build_information, "build_metadata": build_metadata,
+        "build_information": build_information, "build_metadata": build_metadata, "glibc_symbol_floor": glibc_floor,
         "system_requirements": "glibc 2.39 or newer; working X11 or Wayland session and native dialog services"}, indent=2) + "\n")
     print(output)
 if __name__ == "__main__": main()

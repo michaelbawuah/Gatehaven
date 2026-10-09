@@ -40,3 +40,13 @@ with tempfile.TemporaryDirectory() as directory:
         reject(lambda: appimage.download(asset, cache))
         assert not target.exists()
 print("Packaging dependency downloads, cached corruption, and size limits passed")
+
+assert appimage.glibc_requirement("GLIBC_2.9 GLIBC_2.34 GLIBCXX_3.4.30 GLIBC_2.4") == (2, 34)
+assert appimage.glibc_requirement("GLIBC_PRIVATE") == (0, 0)
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    (root / "usr/lib").mkdir(parents=True)
+    with patch.object(appimage, "run", return_value="GLIBC_2.39"):
+        assert appimage.verify_linux_baseline(root) == "2.39"
+    with patch.object(appimage, "run", return_value="GLIBC_2.40"):
+        reject(lambda: appimage.verify_linux_baseline(root))
