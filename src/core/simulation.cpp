@@ -22,7 +22,7 @@ constexpr bool control(Element element, unsigned on, unsigned count) {
 
 
 constexpr bool signal_connects(Element element) {
-    return element == Element::wire || element == Element::crossing || element == Element::signal;
+    return element == Element::wire || element == Element::crossing || element == Element::signal || element == Element::source;
 }
 
 constexpr bool connects(Element a, Element b) {

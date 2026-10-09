@@ -40,22 +40,16 @@ TEST("crossing channels cannot turn or short into each other") {
     CHECK(s.powered({0, 1}));
 }
 
-TEST("signals isolate adjacent gate outputs and sources") {
-    Circuit c;
-    c.set({0, 0}, Element::source);
-    c.set({1, 0}, Element::signal);
-    c.set({2, 0}, Element::and_gate);
-    Simulation s;
-    s.step(c);
-    CHECK(!s.powered({1, 0}));
-    CHECK(!s.powered({2, 0}));
-    c.set({0, 1}, Element::wire);
-    c.set({1, 1}, Element::wire);
-    s.step(c);
-    CHECK(s.powered({1, 0}));
-    CHECK(!s.powered({2, 0}));
-    s.step(c);
-    CHECK(s.powered({2, 0}));
+TEST("signals receive directly from sources but isolate gate outputs") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::signal);
+    circuit.set({2, 0}, Element::or_gate);
+    circuit.set({5, 0}, Element::and_gate); circuit.set({6, 0}, Element::signal);
+    Simulation engine; engine.initialize(circuit);
+    CHECK(engine.powered({1, 0}) && !engine.powered({2, 0}));
+    engine.step(circuit);
+    CHECK(engine.powered({2, 0}) && engine.powered({5, 0}));
+    CHECK(!engine.powered({6, 0}));
 }
 
 TEST("gates read inputs one step later including falling edges") {

@@ -22,3 +22,13 @@ element and all saved/reset bit combinations. Disconnected file ports are tested
 active screen interaction and attached file streams require additional scenarios.
 A green comparison applies to its pinned inputs and revision, not every possible
 circuit, timing configuration, or platform.
+
+## Behavior correction discovered by seeded comparisons
+
+A Source directly powers an adjacent Signal. Signal edges to gates, relays, and
+communicators remain control inputs and do not conduct their output power.
+The earlier Gatehaven implementation incorrectly excluded Sources too. The
+external engine exposed this in the first seeded fixture. Both the production
+engine and the slow Gatehaven traversal oracle now include the confirmed edge.
+The slow oracle therefore includes this documented correction to its earlier
+behavior; external comparisons remain the independent acceptance evidence.
