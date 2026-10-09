@@ -117,11 +117,17 @@ static int run_cli(int argc, char** argv) {
     if (command == "profile") {
         Simulation simulation;
         const auto start = std::chrono::steady_clock::now();
+        simulation.initialize(*circuit);
+        const auto compiled = std::chrono::steady_clock::now();
         for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
-        const double elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+        const auto finished = std::chrono::steady_clock::now();
+        const double elapsed = std::chrono::duration<double, std::milli>(finished - start).count();
+        const double compile_ms = std::chrono::duration<double, std::milli>(compiled - start).count();
+        const double steps_ms = std::chrono::duration<double, std::milli>(finished - compiled).count();
         const auto& metrics = simulation.metrics();
         std::cout << "{\"cells\":" << circuit->size() << ",\"ticks\":" << simulation.ticks()
                   << ",\"powered\":" << simulation.powered_count() << ",\"total_ms\":" << elapsed
+                  << ",\"compile_ms\":" << compile_ms << ",\"steps_ms\":" << steps_ms
                   << ",\"topology_builds\":" << metrics.topology_builds << ",\"propagations\":" << metrics.propagations
                   << ",\"frontier_visits\":" << metrics.frontier_visits
                   << ",\"settled_ticks\":" << metrics.settled_ticks << "}\n";

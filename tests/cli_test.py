@@ -55,8 +55,9 @@ with tempfile.TemporaryDirectory(prefix="gatehaven-profile-") as directory:
     path.write_text("GATEHAVEN 1\n0 0 source\n1 0 wire\n", encoding="utf-8")
     profile = json.loads(run("profile", path, 100))
     assert profile["ticks"] == 100 and profile["powered"] == 2
-    assert profile["propagations"] == 2 and profile["settled_ticks"] == 98
+    assert profile["propagations"] == 2 and profile["settled_ticks"] == 99
     assert json.loads(run("profile", path, 0))["ticks"] == 0
+    assert profile["compile_ms"] >= 0 and profile["steps_ms"] >= 0
     path.write_text("GATEHAVEN 1\n" + "".join(f"{i} 0 wire\n" for i in range(6)), encoding="utf-8")
     run("trace", path, 1000000, code=2)
 
