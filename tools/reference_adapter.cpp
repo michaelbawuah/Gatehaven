@@ -7,10 +7,15 @@
 #include <chrono>
 #include <type_traits>
 #include "simulator.hpp"
+#include "../tests/screen_pattern.hpp"
+#include <set>
 
 int main(int argc, char** argv) {
     if (argc != 4) { std::cerr << "reference-adapter state|profile FILE STEPS\n"; return 2; }
     try {
+        const std::string mode(argv[1]);
+        const bool screens = mode == "screen-state" || mode == "screen-profile";
+        if (!screens && mode != "state" && mode != "profile") return 2;
         const auto steps = std::stoull(argv[3]);
         if (steps > 1000000) return 2;
         CanvasState circuit;
@@ -20,15 +25,28 @@ int main(int argc, char** argv) {
         const auto begin = std::chrono::steady_clock::now();
         engine.compile(circuit);
         const auto compiled = std::chrono::steady_clock::now();
-        for (unsigned long long tick = 0; tick < steps; ++tick) engine.step();
+        struct Screen { int index, x, y; };
+        std::vector<Screen> inputs;
+        if (screens) {
+            std::set<int> seen;
+            for (int y = 0; y < circuit.height(); ++y) for (int x = 0; x < circuit.width(); ++x)
+                if (const auto* cell = std::get_if<ScreenCommunicatorElement>(&circuit[{x, y}])) {
+                    const auto index = cell->communicator->communicatorIndex;
+                    if (seen.insert(index).second) inputs.push_back({index, x, y});
+                }
+        }
+        const auto step_begin = std::chrono::steady_clock::now();
+        for (unsigned long long tick = 0; tick < steps; ++tick) {
+            for (const auto& screen : inputs) engine.sendCommunicatorEvent(screen.index, screen_pattern(tick, screen.x, screen.y));
+            engine.step();
+        }
         const auto finished = std::chrono::steady_clock::now();
         engine.takeSnapshot(circuit);
-        if (std::string(argv[1]) == "profile") {
+        if (mode == "profile" || mode == "screen-profile") {
             std::cout << "{\"compile_ms\":" << std::chrono::duration<double, std::milli>(compiled - begin).count()
-                      << ",\"steps_ms\":" << std::chrono::duration<double, std::milli>(finished - compiled).count() << "}\n";
+                      << ",\"steps_ms\":" << std::chrono::duration<double, std::milli>(finished - step_begin).count() << "}\n";
             return 0;
         }
-        if (std::string(argv[1]) != "state") return 2;
         std::cout << "x,y,element,powered,conductive\n";
         for (int y = 0; y < circuit.height(); ++y) for (int x = 0; x < circuit.width(); ++x) {
             const auto& cell = circuit[{x, y}];
