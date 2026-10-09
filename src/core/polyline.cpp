@@ -63,6 +63,7 @@ std::expected<bool, std::string> Polyline::append(Point target) {
     if (next == vertices_.back()) return false;
     auto candidate = vertices_;
     candidate.push_back(next);
+    if (static_cast<std::size_t>(element_) >= element_names.size()) return std::unexpected("Invalid polyline element");
     const auto result = polyline_work(candidate);
     if (!result) return std::unexpected(result.error());
     vertices_ = std::move(candidate);

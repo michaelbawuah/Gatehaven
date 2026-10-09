@@ -42,3 +42,16 @@ wall-clock thresholds. Differential tests, coordinate limits, copy/reset/edit
 behavior, and external exchanges remain correctness gates. Rendering, hardware
 touch, native dialogs, file I/O throughput, and external performance parity are
 separate measurements still required for final acceptance.
+
+## Editor work in the 0.4 candidate
+
+Rectangular and sparse captures avoid temporary cell vectors. History coalesces
+edits in a contiguous stable sort while preserving the last value at overlaps.
+Pencil previews clip before allocating; polyline clicks validate lengths without
+building every cell. Polyline previews only materialize visible segments.
+
+Paste previews build an index once per copied or transformed stamp. Drawing then
+queries visible rows and columns, rather than recreating the entire paste on
+every frame. Actual commits still validate every cell and remain one undo action.
+These changes need measurements from the editor workload benchmark; they do not
+establish performance parity with an external application.
