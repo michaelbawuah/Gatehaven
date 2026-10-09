@@ -164,6 +164,15 @@ public:
         recovery_ = std::move(*opened);
     }
 
+    void show_recovery() {
+        if (!recovery_) return;
+        cancel_gesture();
+        const auto entries = recovery_->scan();
+        if (!entries) { status_ = "RECOVERY: " + entries.error(); return; }
+        recovery_entries_ = *entries; recovery_index_ = 0;
+        recovery_menu_ = true; help_ = false; examples_menu_ = false;
+    }
+
     void finish_recovery() {
         if (recovery_) {
             const auto cleared = recovery_->discard();
@@ -232,7 +241,7 @@ public:
             }
             close_after_save_ = false;
         }
-        if (!running || help_ || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
+        if (!running || recovery_menu_ || help_ || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
         const double interval = 1.0 / speed_;
         unsigned work = 0;
@@ -263,6 +272,15 @@ public:
             launch_open(utf8_path(e.drop.data)); return;
         }
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
+        if (recovery_menu_) {
+            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
+                const auto start = (recovery_index_ / 5) * 5;
+                for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
+                    if (recovery_button(i - start).contains(e.button.x, e.button.y)) { restore_recovery(i); break; }
+                }
+            }
+            return;
+        }
         if (examples_menu_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
                 for (std::size_t i = 0; i < example_names.size(); ++i) {
@@ -666,6 +684,15 @@ private:
     void key(const SDL_KeyboardEvent& e) {
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
+        if (recovery_menu_) {
+            if (e.key == SDLK_ESCAPE || e.key == SDLK_F4) recovery_menu_ = false;
+            else if (!recovery_entries_.empty()) {
+                if (e.key == SDLK_UP) recovery_index_ = (recovery_index_ + recovery_entries_.size() - 1) % recovery_entries_.size();
+                if (e.key == SDLK_DOWN) recovery_index_ = (recovery_index_ + 1) % recovery_entries_.size();
+                if (e.key == SDLK_RETURN) restore_recovery(recovery_index_);
+            }
+            return;
+        }
         if (speed_edit_) { speed_key(e.key); return; }
         if (examples_menu_) {
             if (e.key == SDLK_ESCAPE || e.key == SDLK_F3) examples_menu_ = false;
@@ -753,6 +780,7 @@ private:
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
         case SDLK_F3: cancel_gesture(); help_ = false; examples_menu_ = true; break;
+        case SDLK_F4: show_recovery(); break;
         case SDLK_F1:
             if (!SDL_OpenURL("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md")) status_ = SDL_GetError();
             break;
@@ -839,6 +867,18 @@ private:
         speed_edit_.reset();
         accumulator_ = 0;
         status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
+    }
+
+    void restore_recovery(std::size_t index) {
+        if (!recovery_ || index >= recovery_entries_.size()) return;
+        if (history.modified()) { status_ = "SAVE THIS CIRCUIT OR OPEN A NEW WINDOW BEFORE RECOVERING"; return; }
+        auto restored = recovery_->restore(recovery_entries_[index].id);
+        if (!restored) { status_ = "RECOVERY: " + restored.error(); return; }
+        cancel_gesture(); circuit = std::move(*restored); path_.clear();
+        history.clear(); history.mark_unsaved(); simulation.reset(); endpoints_.clear();
+        selection_.clear(); placing_ = false; running = false; recovery_menu_ = false;
+        recovery_dirty_ = true; recovery_schedule_.written(circuit.revision());
+        view.frame(circuit.bounds()); status_ = "CIRCUIT RECOVERED - SAVE TO KEEP YOUR WORK";
     }
 
     static ViewRect recovery_button(std::size_t row) { return {390, 270 + static_cast<double>(row) * 54, 500, 42}; }
