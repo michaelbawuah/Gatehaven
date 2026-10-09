@@ -167,3 +167,9 @@ TEST("recovered document baselines remain unsaved after undoing their first edit
     CHECK(history.apply(circuit, edit)); CHECK(history.undo(circuit)); CHECK(history.modified());
     history.mark_saved(); CHECK(!history.modified());
 }
+
+TEST("pencil rejects invalid tools even for a single cell") {
+    CHECK(!pencil_line({0, 0}, {0, 0}, static_cast<Element>(255)));
+    CHECK(!pencil_line({0, 0}, {0, 0}, Element::wire, 0));
+    CHECK(pencil_line({0, 0}, {0, 0}, Element::empty, 1)->size() == 1);
+}

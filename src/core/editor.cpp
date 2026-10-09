@@ -9,6 +9,7 @@ namespace gatehaven {
 
 std::expected<std::vector<Cell>, std::string> pencil_line(Point from, Point to, Element element,
                                                         std::size_t max_length) {
+    if (static_cast<std::size_t>(element) >= element_names.size()) return std::unexpected("Invalid pencil element");
     const auto dx = static_cast<std::int64_t>(to.x) - from.x;
     const auto dy = static_cast<std::int64_t>(to.y) - from.y;
     const bool horizontal = std::abs(dx) >= std::abs(dy);
