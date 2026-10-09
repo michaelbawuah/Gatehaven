@@ -211,6 +211,7 @@ public:
             if (pan_button_) view.pan(e.motion.xrel, e.motion.yrel);
             hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
+            if (polyline_ && hover_) polyline_preview(*hover_);
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) mouse_down(e.button);
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == pan_button_) pan_button_.reset();
@@ -357,6 +358,8 @@ private:
     Selection selection_;
     SelectionMode selection_mode_{SelectionMode::replace};
     bool selection_changed_{};
+    std::optional<Polyline> polyline_;
+    std::size_t polyline_button_{};
     ClipboardSession& clipboards_;
     ui::InstanceLauncher launcher_;
     Stamp placement_;
@@ -373,6 +376,7 @@ private:
 
     void cancel_gesture() {
         drag_.reset();
+        polyline_.reset();
         pan_button_.reset();
         preview_.clear();
         eyedropper_ = false;
@@ -436,6 +440,16 @@ private:
         if (!view.area.contains(e.x, e.y)) return;
         hover_ = view.cell(e.x, e.y);
         if (!hover_) return;
+        if (polyline_) {
+            if (*button != polyline_button_) return;
+            const auto added = polyline_->append(*hover_);
+            if (!added) { status_ = added.error(); return; }
+            if ((SDL_GetModState() & SDL_KMOD_SHIFT) == 0 || e.clicks >= 2) {
+                const auto edits = polyline_->edits();
+                if (edits && apply(*edits)) { polyline_.reset(); preview_.clear(); }
+            } else polyline_preview(*hover_);
+            return;
+        }
         if (eyedropper_) {
             const auto element = circuit.at(*hover_);
             tools_[*button] = element == Element::empty ? InputTool{ToolKind::eraser} : InputTool{ToolKind::pencil, element};
@@ -456,6 +470,14 @@ private:
             selection_.combine(connected_selection(circuit, *hover_, e.clicks >= 3), selection_mode_);
             selection_changed_ = false; return;
         }
+        if ((modifiers & SDL_KMOD_SHIFT) != 0 &&
+            (tools_[*button].kind == ToolKind::pencil || tools_[*button].kind == ToolKind::eraser)) {
+            polyline_.emplace(*hover_, tools_[*button].kind == ToolKind::eraser ? Element::empty : tools_[*button].element);
+            polyline_button_ = *button;
+            polyline_preview(*hover_);
+            status_ = "POLYLINE: CLICK TO ADD. BACKSPACE TO RETRACE. DOUBLE CLICK TO FINISH.";
+            return;
+        }
         drag_ = hover_;
         drag_button_ = *button;
         drag_tool_ = tools_[*button];
@@ -472,6 +494,16 @@ private:
             else if (e.key == SDLK_LEFT) clipboard_ = (clipboard_ + 9) % 10;
             else if (e.key == SDLK_RIGHT) clipboard_ = (clipboard_ + 1) % 10;
             else if (e.key == SDLK_RETURN) choose_clipboard(clipboard_);
+            return;
+        }
+        if (polyline_ && e.key == SDLK_BACKSPACE) {
+            if (!polyline_->backtrack()) { polyline_.reset(); preview_.clear(); }
+            else polyline_preview(hover_.value_or(polyline_->vertices().back()));
+            return;
+        }
+        if (polyline_ && e.key == SDLK_RETURN) {
+            const auto edits = polyline_->edits();
+            if (edits && apply(*edits)) { polyline_.reset(); preview_.clear(); }
             return;
         }
         if (e.key == SDLK_ESCAPE) {
@@ -528,10 +560,17 @@ private:
     }
 
     void undo(bool redo) {
+        cancel_gesture();
         if (redo ? history.redo(circuit) : history.undo(circuit)) {
             dirty_ = true; simulation.invalidate(history.last_changes());
             status_ = redo ? "REDONE" : "UNDONE";
         }
+    }
+
+    void polyline_preview(Point target) {
+        const auto result = polyline_->preview(target);
+        if (result) preview_ = *result;
+        else { preview_.clear(); status_ = result.error(); }
     }
 
     void edit_speed() {
