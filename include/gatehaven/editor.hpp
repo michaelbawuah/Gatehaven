@@ -62,6 +62,14 @@ struct Stamp {
 [[nodiscard]] Stamp capture(const Circuit& circuit, Bounds region);
 [[nodiscard]] std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point origin);
 
+// Draw-only view of a previously validated stamp; does not allocate an edit vector.
+template<class Visitor> void visit_stamp(const Stamp& stamp, Point origin, Bounds visible, Visitor&& visitor) {
+    for (const auto& cell : stamp.cells) {
+        const auto point = translated(origin, cell.x, cell.y);
+        if (point && visible.contains(*point)) visitor(Cell{*point, cell.element});
+    }
+}
+
 struct SelectionEdit { Bounds region; std::vector<Cell> edits; };
 [[nodiscard]] std::expected<SelectionEdit, std::string> move_region(
     const Circuit& circuit, Bounds region, std::int64_t dx, std::int64_t dy);

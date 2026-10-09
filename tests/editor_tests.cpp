@@ -196,3 +196,10 @@ TEST("history accounting includes redo and releases abandoned branches") {
 TEST("ambiguous duplicate stamp coordinates fail before placement") {
     CHECK(!paste({1, 1, {{0, 0, Element::wire}, {0, 0, Element::source}}}, {0, 0}));
 }
+
+TEST("stamp preview clips far cells and skips overflowing translations") {
+    Stamp stamp{4294967296LL, 1, {{0, 0, Element::source}, {4294967295LL, 0, Element::wire}}};
+    std::vector<Cell> visible;
+    visit_stamp(stamp, {0, 0}, {{-2, -2}, {2, 2}}, [&](Cell cell) { visible.push_back(cell); });
+    CHECK(visible.size() == 1 && visible[0].element == Element::source);
+}
