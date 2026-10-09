@@ -128,3 +128,11 @@ TEST("save dialog filters append only missing extensions") {
     CHECK(document_save_path("explicit.CCSB", 0).filename() == "explicit.CCSB");
     CHECK(document_save_path("explicit.ghv", 1).filename() == "explicit.ghv");
 }
+
+TEST("document diagnostics identify text rows without inventing binary line numbers") {
+    CHECK(describe_error({0, "Truncated legacy header"}) == "Truncated legacy header");
+    CHECK(describe_error({12, "Unknown element"}) == "Line 12: Unknown element");
+    std::istringstream missing("GATEHAVEN 2\n0 0 and\n");
+    const auto result = read_document(missing);
+    CHECK(!result && describe_error(result.error()) == "Line 2: Expected x y element state");
+}

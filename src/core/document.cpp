@@ -73,7 +73,7 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
         std::istringstream fields(line);
         std::string x_text, y_text, element_text, extra, state_text;
         if (!(fields >> x_text >> y_text >> element_text) || (stateful && !(fields >> state_text)) || (fields >> extra)) {
-            return std::unexpected(DocumentError{number, "Expected x y element"});
+            return std::unexpected(DocumentError{number, stateful ? "Expected x y element state" : "Expected x y element"});
         }
         unsigned state = 0;
         if (stateful) {

@@ -226,7 +226,7 @@ public:
         if (!before || !*before) { status_ = before ? "DOCUMENT NO LONGER EXISTS" : before.error(); return false; }
         auto loaded = load_document(path);
         if (!loaded) {
-            status_ = "LINE " + std::to_string(loaded.error().line) + ": " + loaded.error().message;
+            status_ = describe_error(loaded.error());
             return false;
         }
         const auto after = fingerprint_file(path);

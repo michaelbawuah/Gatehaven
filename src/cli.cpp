@@ -47,7 +47,7 @@ static int run_cli(int argc, char** argv) {
     }
     if (argc == 4 && (std::string_view(argv[1]) == "normalize" || std::string_view(argv[1]) == "convert")) {
         const auto circuit = load_document(utf8_path(argv[2]));
-        if (!circuit) { std::cerr << "Line " << circuit.error().line << ": " << circuit.error().message << '\n'; return 1; }
+        if (!circuit) { std::cerr << describe_error(circuit.error()) << '\n'; return 1; }
         const auto saved = save_document(utf8_path(argv[3]), *circuit);
         if (!saved) { std::cerr << saved.error().message << '\n'; return 1; }
         return 0;
@@ -93,7 +93,7 @@ static int run_cli(int argc, char** argv) {
     }
     const auto circuit = load_document(utf8_path(argv[2]));
     if (!circuit) {
-        std::cerr << "Line " << circuit.error().line << ": " << circuit.error().message << '\n';
+        std::cerr << describe_error(circuit.error()) << '\n';
         return 1;
     }
     if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }

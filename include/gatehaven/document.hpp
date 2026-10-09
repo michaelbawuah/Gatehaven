@@ -17,6 +17,10 @@ struct DocumentError {
     std::string message;
 };
 
+[[nodiscard]] inline std::string describe_error(const DocumentError& error) {
+    return error.line == 0 ? error.message : "Line " + std::to_string(error.line) + ": " + error.message;
+}
+
 struct DocumentLimits {
     std::size_t max_cells{1'000'000};
     std::size_t max_lines{2'000'000};
