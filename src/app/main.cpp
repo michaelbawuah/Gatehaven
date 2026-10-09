@@ -316,14 +316,15 @@ private:
     bool speed_error_{};
     double accumulator_{};
 
-    void apply(std::span<const Cell> edits) {
+    bool apply(std::span<const Cell> edits) {
         const auto result = history.apply(circuit, edits);
-        if (!result) { status_ = result.error(); return; }
+        if (!result) { status_ = result.error(); return false; }
         if (*result) {
             dirty_ = true;
             simulation.invalidate(history.last_changes());
             status_ = "CIRCUIT UPDATED";
         }
+        return true;
     }
 
     void update_preview(Point end) {
@@ -394,6 +395,15 @@ private:
         }
         if (e.key == SDLK_ESCAPE) {
             drag_.reset(); preview_.clear(); selection_.reset(); placing_ = false; help_ = false; return;
+        }
+        if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
+            const std::int64_t distance = control ? 4 : 1;
+            const auto dx = e.key == SDLK_LEFT ? -distance : e.key == SDLK_RIGHT ? distance : 0;
+            const auto dy = e.key == SDLK_UP ? -distance : e.key == SDLK_DOWN ? distance : 0;
+            const auto moved = move_region(circuit, *selection_, dx, dy);
+            if (!moved) status_ = moved.error();
+            else if (apply(moved->edits)) selection_ = moved->region;
+            return;
         }
         if (control) {
             switch (e.key) {
@@ -567,8 +577,7 @@ private:
         auto edits = circuit.cells_in(*selection_);
         for (auto& cell : edits) cell.element = Element::empty;
         edits.insert(edits.end(), target->begin(), target->end());
-        apply(edits);
-        selection_->max = *corner;
+        if (apply(edits)) selection_->max = *corner;
     }
 
     bool discard_changes() {
@@ -682,9 +691,9 @@ private:
     }
 
     void render_help(SDL_Renderer* r) const {
-        rectangle(r, 338, 158, 846, 556, ink);
+        rectangle(r, 338, 132, 846, 608, ink);
         ui::text(r, 376, 194, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
-        constexpr std::array<std::string_view, 12> lines{
+        constexpr std::array<std::string_view, 13> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
             "LEFT DRAG: DRAW      RIGHT DRAG: ERASE",
             "MIDDLE DRAG: PAN     SCROLL: ZOOM",
@@ -695,6 +704,7 @@ private:
             "CTRL Z/Y: UNDO / REDO",
             "CTRL S/O/N: SAVE / OPEN / NEW",
             "[ AND ]: ROTATE     H/V: FLIP",
+            "ARROWS: MOVE SELECTION  CTRL: X4",
             "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
             "B OR ESC: CLOSE THIS HELP"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
@@ -790,6 +800,19 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(unchanged && unchanged->cells[0].element == Element::nor_gate, "Preview transform changed the shared slot");
     key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == edited, "Pasted stamp did not undo as one edit");
+    key(SDLK_Q);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
+    key(SDLK_RIGHT);
+    require(app.circuit.at({-5, -4}) == Element::empty && app.circuit.at({0, -4}) == Element::wire,
+            "Right arrow did not move the selection");
+    key(SDLK_DOWN, SDL_KMOD_CTRL);
+    require(app.circuit.at({0, 0}) == Element::wire && app.circuit.at({0, -4}) == Element::empty,
+            "Control-arrow did not move the selection four cells");
+    require(app.simulation.ticks() == 0, "Moving a selection accidentally stepped simulation");
+    key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.circuit == edited, "Selection moves did not undo cleanly");
+    key(SDLK_ESCAPE);
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";

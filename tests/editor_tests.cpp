@@ -108,3 +108,36 @@ TEST("clipboard supports wide coordinates and rejects overflowing paste atomical
     CHECK(paste(stamp, {lo, 0}));
     CHECK(!paste(stamp, {0, 0}));
 }
+
+TEST("selection move handles overlap and restores overwritten destination cells") {
+    Circuit c;
+    c.set({0, 0}, Element::source);
+    c.set({1, 0}, Element::wire);
+    c.set({2, 0}, Element::nor_gate);
+    const auto original = c;
+    const auto moved = move_region(c, {{0, 0}, {1, 0}}, 1, 0);
+    CHECK(moved && moved->region.min == Point{1, 0} && moved->region.max == Point{2, 0});
+    History history;
+    CHECK(history.apply(c, moved->edits).value());
+    CHECK(c.at({0, 0}) == Element::empty);
+    CHECK(c.at({1, 0}) == Element::source);
+    CHECK(c.at({2, 0}) == Element::wire);
+    CHECK(history.undo(c));
+    CHECK(c == original);
+    CHECK(history.redo(c));
+    CHECK(c.at({2, 0}) == Element::wire);
+}
+
+TEST("moving a selection validates empty borders and extreme offsets before edits") {
+    Circuit c;
+    constexpr auto hi = std::numeric_limits<Coordinate>::max();
+    const Bounds region{{hi - 3, 0}, {hi, 1}};
+    c.set(region.min, Element::source);
+    CHECK(!move_region(c, region, 1, 0));
+    CHECK(!move_region(c, region, std::numeric_limits<std::int64_t>::max(), 0));
+    CHECK(!move_region(c, region, 0, std::numeric_limits<std::int64_t>::min()));
+    CHECK(!move_region(c, {{2, 0}, {1, 0}}, 0, 0));
+    const auto moved = move_region(c, {{0, 0}, {4, 4}}, -4, 4);
+    CHECK(moved && moved->edits.empty() && moved->region.min == Point{-4, 4});
+    CHECK(c.size() == 1);
+}

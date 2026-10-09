@@ -128,4 +128,20 @@ std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point or
     return edits;
 }
 
+std::expected<SelectionEdit, std::string> move_region(const Circuit& circuit, Bounds region,
+                                                     std::int64_t dx, std::int64_t dy) {
+    if (region.min.x > region.max.x || region.min.y > region.max.y) return std::unexpected("Invalid selection bounds");
+    const auto first = translated(region.min, dx, dy);
+    const auto last = translated(region.max, dx, dy);
+    if (!first || !last) return std::unexpected("Selection would exceed coordinate limits");
+    SelectionEdit result{{*first, *last}, {}};
+    const auto cells = circuit.cells_in(region);
+    result.edits.reserve(cells.size() * 2);
+    // Clear the complete source before placing the destination. History keeps
+    // the last edit at an overlapping coordinate and restores overwritten cells.
+    for (const auto& cell : cells) result.edits.push_back({cell.position, Element::empty});
+    for (const auto& cell : cells) result.edits.push_back({*translated(cell.position, dx, dy), cell.element});
+    return result;
+}
+
 } // namespace gatehaven
