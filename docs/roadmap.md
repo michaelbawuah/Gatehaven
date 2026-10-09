@@ -22,7 +22,17 @@ all supported systems, measured large-circuit performance, and manual checks of
 the full interface. A successful Linux build does not establish Windows or Mac
 support. A prototype is not a release candidate.
 
-The development-history target is approximately 350-400 new commits over the
-whole project. Each commit should represent a coherent, reviewable change.
-Feature work, regression tests, performance improvements, bug fixes, and useful
-documentation all count. The target does not replace the acceptance criteria.
+Each commit should represent a coherent, reviewable change with the appropriate
+verification. Release readiness depends on the acceptance criteria.
+
+## Current prototype
+
+The sparse core, gate/relay simulation, native documents, transactional editor,
+ten in-process clipboards, and SDL3 desktop canvas are implemented. The desktop
+has file dialogs, region selection, transforms, basic timing controls, and a
+small original bitmap font.
+
+The clipboards are not shared between processes yet. New/Open currently replace
+the document in one window. Communicators, legacy import, advanced selection,
+custom mouse bindings, full touch interaction, installers, signing, and native
+hardware acceptance are still outstanding. Performance parity is not established.
