@@ -213,7 +213,7 @@ public:
             }
             close_after_save_ = false;
         }
-        if (!running || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
+        if (!running || help_ || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
         const double interval = 1.0 / speed_;
         unsigned work = 0;
@@ -634,6 +634,10 @@ private:
             else if (e.key == SDLK_UP) example_index_ = (example_index_ + example_names.size() - 1) % example_names.size();
             else if (e.key == SDLK_DOWN) example_index_ = (example_index_ + 1) % example_names.size();
             else if (e.key == SDLK_RETURN) choose_example(example_index_);
+            return;
+        }
+        if (help_) {
+            if (e.key == SDLK_ESCAPE || e.key == SDLK_F2) help_ = false;
             return;
         }
         if (clipboard_menu_) {
