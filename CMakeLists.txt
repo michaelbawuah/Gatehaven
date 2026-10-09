@@ -152,3 +152,5 @@ include(cmake/install.cmake)
 if(GATEHAVEN_BUILD_PACKAGES)
     include(cmake/package.cmake)
 endif()
+
+include(cmake/manual.cmake)
