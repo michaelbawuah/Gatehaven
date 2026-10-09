@@ -109,7 +109,7 @@ static int run_cli(int argc, char** argv) {
     if (command == "digest") {
         Simulation simulation; simulation.initialize(*circuit);
         for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
-        std::cout << "{\"schema\":1,\"ticks\":" << simulation.ticks() << ",\"digest\":\""
+        std::cout << "{\"schema\":" << state_digest_version << ",\"ticks\":" << simulation.ticks() << ",\"digest\":\""
                   << state_digest(*circuit, simulation) << "\"}\n";
         return std::cout ? 0 : 1;
     }

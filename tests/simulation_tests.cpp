@@ -280,3 +280,12 @@ TEST("plain text inspection distinguishes crossing axes, relay state, and reset 
     CHECK(describe_cell(circuit, simulation, {1, 1}).find("No component here.") != std::string::npos);
     CHECK(simulation.ticks() == 0 && circuit.saved_state({5, 0}) == 3);
 }
+
+TEST("state digests include reset values and unpowered relay conductivity") {
+    Circuit circuit; circuit.set({0, 0}, Element::positive_relay, 2);
+    Simulation current, reset; current.initialize(circuit); reset.initialize(circuit, true);
+    CHECK(!current.powered({0, 0}) && !reset.powered({0, 0}));
+    CHECK(state_digest(circuit, current) != state_digest(circuit, reset));
+    auto other_reset = circuit; other_reset.set({0, 0}, Element::positive_relay, 3);
+    CHECK(state_digest(circuit, current) != state_digest(other_reset, current));
+}
