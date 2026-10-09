@@ -1,4 +1,5 @@
 #include "gatehaven/selection.hpp"
+#include "gatehaven/connectivity.hpp"
 #include <algorithm>
 #include <map>
 #include <utility>
@@ -16,7 +17,6 @@ Selection connected_selection(const Circuit& circuit, Point seed, bool physical)
     if (circuit.at(seed) == Element::empty) return {};
     std::map<Point, std::uint8_t> visited{{seed, std::uint8_t{15}}};
     std::vector<std::pair<Point, std::uint8_t>> queue{{seed, std::uint8_t{15}}};
-    const auto wire = [](Element e) { return e == Element::wire || e == Element::crossing || e == Element::signal || e == Element::source; };
     for (std::size_t head = 0; head < queue.size(); ++head) {
         const auto [point, ports] = queue[head];
         const auto from = circuit.at(point);
@@ -27,7 +27,7 @@ Selection connected_selection(const Circuit& circuit, Point seed, bool physical)
             if (!next) continue;
             const auto to = circuit.at(*next);
             if (to == Element::empty) continue;
-            if (!physical && ((from == Element::signal && !wire(to)) || (to == Element::signal && !wire(from)))) continue;
+            if (!physical && !conducts_between(from, to)) continue;
             const auto channel = !physical && to == Element::crossing
                 ? static_cast<std::uint8_t>((direction == Direction::north || direction == Direction::south) ? 5 : 10)
                 : std::uint8_t{15};

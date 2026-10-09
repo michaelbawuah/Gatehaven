@@ -1,4 +1,5 @@
 #include "gatehaven/simulation.hpp"
+#include "gatehaven/connectivity.hpp"
 
 #include <algorithm>
 #include <array>
@@ -21,14 +22,6 @@ constexpr bool control(Element element, unsigned on, unsigned count) {
 }
 
 
-constexpr bool signal_connects(Element element) {
-    return element == Element::wire || element == Element::crossing || element == Element::signal || element == Element::source;
-}
-
-constexpr bool connects(Element a, Element b) {
-    return (a != Element::signal || signal_connects(b)) &&
-           (b != Element::signal || signal_connects(a));
-}
 
 } // namespace
 
@@ -59,7 +52,7 @@ void Simulation::propagate() {
         for (std::size_t direction = 0; direction < 4; ++direction) {
             if ((outgoing & (1U << direction)) == 0) continue;
             const auto next = nodes[from].adjacent[direction];
-            if (next == no_node || materials_[next] == Material::blocked || !connects(nodes[from].cell.element, nodes[next].cell.element)) continue;
+            if (next == no_node || materials_[next] == Material::blocked || !conducts_between(nodes[from].cell.element, nodes[next].cell.element)) continue;
             const auto channel = materials_[next] == Material::crossing
                 ? static_cast<std::uint8_t>(direction % 2 == 0 ? 5 : 10) : std::uint8_t{15};
             const auto added = static_cast<std::uint8_t>(channel & static_cast<std::uint8_t>(~power_[next]));
