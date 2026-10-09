@@ -125,6 +125,15 @@ public:
 
     void launch_open(const std::filesystem::path& path) { launch(path); }
 
+    bool start_example(std::string_view name) {
+        auto example = make_example(name);
+        if (!example) return false;
+        circuit = std::move(*example);
+        view.frame(circuit.bounds());
+        status_ = "EXAMPLE: " + std::string(name) + " - I: INTERACT, SPACE: PLAY";
+        return true;
+    }
+
     void load_settings(const std::filesystem::path& path) {
         preferences_path_ = path;
         std::error_code error;
@@ -1194,8 +1203,13 @@ int main(int argc, char** argv) {
         const bool testing = mode == "--self-test" || child_test;
         const bool snapshot = mode == "--snapshot";
         const bool blank = mode == "--new";
+        const bool demo = mode.starts_with("--demo=");
+        if (demo && !make_example(mode.substr(7))) {
+            std::cerr << "Unknown example. Choose starter, oscillator, screen-switch, positive-relay, negative-relay, or gate-gallery.\n";
+            return 2;
+        }
         if ((testing && argc != 2) || (snapshot && argc != 3) || (!testing && !snapshot && argc > 2)) {
-            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --self-test | --snapshot OUTPUT.bmp]\n";
+            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --self-test | --snapshot OUTPUT.bmp]\n";
             return 2;
         }
         if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
@@ -1251,6 +1265,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (blank) app.start_blank();
+        else if (demo) app.start_example(mode.substr(7));
         else if (argc == 2 && !app.open(utf8_path(argv[1]))) {
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Gatehaven", "The circuit could not be opened.", window.get());
         }

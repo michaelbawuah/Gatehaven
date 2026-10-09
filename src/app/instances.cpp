@@ -41,5 +41,7 @@ std::expected<void, std::string> launch_instance(std::optional<std::filesystem::
     return launch(std::string(utf8.begin(), utf8.end()), true);
 }
 
+std::expected<void, std::string> launch_demo(std::string_view name) { return launch("--demo=" + std::string(name), true); }
+
 std::expected<void, std::string> test_child_process() { return launch("--self-test-child", false); }
 }
