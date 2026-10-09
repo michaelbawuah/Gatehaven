@@ -1,0 +1,51 @@
+#include "test.hpp"
+#include "gatehaven/circuit.hpp"
+
+#include <limits>
+
+using namespace gatehaven;
+
+TEST("sparse cells support negative and extreme coordinates") {
+    Circuit circuit;
+    circuit.set({-8, 4}, Element::wire);
+    circuit.set({std::numeric_limits<Coordinate>::max(), -100}, Element::source);
+    CHECK(circuit.size() == 2);
+    CHECK(circuit.at({0, 0}) == Element::empty);
+    CHECK(circuit.at({-8, 4}) == Element::wire);
+    CHECK(circuit.set({-8, 4}, Element::empty));
+    CHECK(!circuit.set({-8, 4}, Element::empty));
+    CHECK(circuit.size() == 1);
+}
+
+TEST("visible queries include boundaries and ignore distant cells") {
+    Circuit circuit;
+    circuit.set({-4, -4}, Element::wire);
+    circuit.set({4, 4}, Element::source);
+    circuit.set({1000000000, 0}, Element::wire);
+    CHECK(circuit.cells_in({{-4, -4}, {4, 4}}).size() == 2);
+    CHECK(circuit.cells_in({{4, 4}, {-4, -4}}).empty());
+    CHECK(circuit.bounds()->max.x == 1000000000);
+}
+
+TEST("coordinate arithmetic cannot wrap the world") {
+    constexpr auto hi = std::numeric_limits<Coordinate>::max();
+    constexpr auto lo = std::numeric_limits<Coordinate>::min();
+    CHECK(!neighbor({hi, 0}, Direction::east));
+    CHECK(!neighbor({0, lo}, Direction::north));
+    CHECK(!translated({0, 0}, std::numeric_limits<std::int64_t>::max(), 0));
+    CHECK(translated({hi, lo}, -1, 1) == Point{hi - 1, lo + 1});
+}
+
+TEST("enumeration order is independent of insertion order") {
+    Circuit first;
+    Circuit second;
+    first.set({2, 4}, Element::wire);
+    first.set({-9, -4}, Element::source);
+    second.set({-9, -4}, Element::source);
+    second.set({2, 4}, Element::wire);
+    CHECK(first.cells() == second.cells());
+    CHECK(first == second);
+    second.clear();
+    CHECK(second.empty());
+    CHECK(!second.bounds());
+}
