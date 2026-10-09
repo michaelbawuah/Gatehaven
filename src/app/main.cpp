@@ -223,6 +223,9 @@ public:
         }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
+        if (e.type == SDL_EVENT_DROP_FILE && e.drop.data) {
+            launch_open(utf8_path(e.drop.data)); return;
+        }
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
         if (examples_menu_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
@@ -1123,6 +1126,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     app.launch_open(open_path);
     require(launched.size() == 2 && launched[1] == open_path, "Open did not request a separate instance");
     require(app.circuit == edited, "Open replaced the current unsaved circuit");
+    const auto dropped_utf8 = open_path.u8string();
+    const std::string dropped_path(dropped_utf8.begin(), dropped_utf8.end());
+    SDL_Event dropped{}; dropped.type = SDL_EVENT_DROP_FILE; dropped.drop.data = dropped_path.c_str();
+    require(SDL_PushEvent(&dropped), "Could not queue a dropped circuit"); dispatch(app, renderer);
+    require(launched.size() == 3 && launched.back() == open_path && app.circuit == edited,
+            "Dropping a circuit did not open a separate document");
     auto peer = ClipboardSession::join(session_directory);
     require(peer.has_value(), "Could not join shared clipboard for editor test");
     key(SDLK_A, SDL_KMOD_CTRL);

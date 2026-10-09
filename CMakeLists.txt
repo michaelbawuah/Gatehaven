@@ -70,7 +70,8 @@ if(GATEHAVEN_BUILD_APP)
     if(APPLE)
         set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE
             MACOSX_BUNDLE_GUI_IDENTIFIER "com.michaelbaffourawuah.gatehaven"
-            MACOSX_BUNDLE_BUNDLE_NAME "Gatehaven")
+            MACOSX_BUNDLE_BUNDLE_NAME "Gatehaven"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/packaging/macos/Info.plist.in")
     endif()
     if(WIN32)
         add_custom_command(TARGET gatehaven POST_BUILD
