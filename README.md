@@ -9,7 +9,7 @@ logic gates, and step through a circuit to see how its signals change.
 
 ![Gatehaven desktop prototype](docs/images/desktop-prototype.png)
 
-**Status: 0.4 development preview, not a finished release.** Windows, macOS,
+**Status: 0.5 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
 for exactly what has been tested.
 
@@ -17,7 +17,10 @@ The editor now includes chained polylines, connected and sparse selections,
 interactive screens, binary file communicators, persistent tool preferences,
 native pinch navigation, crash recovery, keyboard access to every control,
 offline manuals, save-conflict protection, and six built-in circuit lessons.
-Large clipboard and stroke previews use clipped queries. Successful desktop jobs on the
+Legacy `.ccsb` import/export preserves saved/reset levels. A compiled electrical
+component engine, keyboard canvas, and native text inspector make large circuits
+easier to explore. Linux previews include AppImages. Large clipboard and stroke
+previews use clipped queries. Successful desktop jobs on the
 [Actions page](https://github.com/michaelbawuah/Gatehaven/actions/workflows/ci.yml)
 provide unsigned [native preview packages](docs/packaging.md).
 
@@ -88,12 +91,16 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Interact with a communicator | I, then hold a screen or click a file port |
 | Manual / shortcuts / circuit lessons / recovery | F1 / F2 / F3 / F4 |
 | Navigate controls / activate | Tab or Shift+Tab / Enter |
+| Keyboard canvas / use tool | F9, arrows / Enter |
+| Inspect cell / single step in cursor mode | F8 / F10 |
 | Touch pan and zoom | Two fingers on the canvas |
 | Toggle beginner hints | B |
 
 Command can replace Ctrl on macOS. Undo records one drawing stroke as one edit.
 Gate, relay, and communicator pencils place a Signal when clicked on an existing cell of the
-same type. Native documents use `.ghv`; `.ccsb` import is still planned.
+same type. Native documents use `.ghv`; binary `.ccsb` interchange is supported.
+Legacy export translates the occupied rectangle to `(0,0)`; native saves keep
+signed coordinates. See [format limits](docs/document-format.md).
 
 New and Open launch separate Gatehaven instances and preserve the current
 document. All running instances share ten session clipboards. Ordinary copy,
@@ -118,8 +125,8 @@ or clipboard. Press F3 for editable [lessons](samples/README.md).
 ## Under the hood
 
 - A sparse circuit grid indexes occupied rows and columns for viewport queries.
-- Indexed topology and reusable buffers reduce repeated simulation work;
-  communicator-free circuits can skip propagation once they settle.
+- Compiled electrical components and reusable buffers reduce simulation work;
+  dormant circuits skip propagation until edited or a live endpoint is attached.
 - Two-phase simulation reads gate inputs from the previous tick before
   propagating power. Crossing wires keep horizontal and vertical channels separate.
 - The simulation library is independent of SDL and runs headlessly in tests.
@@ -142,5 +149,11 @@ redistributed dependency code.
 Native Actions jobs cover Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows
 x64/ARM64. Download an artifact only after that exact run passes. Windows x64
 also produces an unsigned installer; ARM64 uses a ZIP. Each package includes
-`build-metadata.json`; `gatehaven-cli --build-info` prints its compiler and target.
+`build-metadata.json`; `gatehaven-cli --build-info` prints its compiler, target, and source revision.
 See the packaging guide for installation and remaining acceptance requirements.
+
+The six pinned reference samples round-trip exactly, and external state/timing
+comparisons have reproducible reports. One direct Source/Signal edge intentionally
+follows the supplied brief instead of the older engine; see [comparison scope](docs/reference-validation.md).
+Headless results do not establish full release acceptance. The remaining work is
+tracked in the [release checklist](docs/release-checklist.md).

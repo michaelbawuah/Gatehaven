@@ -45,7 +45,14 @@ DEB/DMG/Windows x64 installer previews are now implemented. Windows ARM64 has
 native CI coverage and a portable archive. State digests and editor benchmarks
 add repeatable verification tools.
 
-Next: independently specified legacy import, screen-reader/accessibility review,
-external performance comparisons, broader Linux packaging,
-signing, and hardware/clean-machine acceptance. Performance parity is not
-established. The final release still depends on these acceptance gates.
+The 0.5 preview implements legacy import/export, stateful native documents and
+clipboards, compiled component simulation, external behavior/headless throughput
+comparisons, AppImage previews, keyboard canvas construction, and native cell
+inspection. The matching corpus is explicit; the Source/Signal specification
+difference is documented and tested separately.
+
+Next: attached-stream and interactive external comparisons, rendering/active-I/O
+performance, screen-reader review, physical display/touch/dialog acceptance,
+clean-machine installation, and release signatures. See the [acceptance matrix](release-checklist.md).
+All six headless sample medians improved in the local measured scenario; complete
+product performance parity still requires the remaining workloads.
