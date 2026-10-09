@@ -500,8 +500,15 @@ private:
         }
         if (placing_ && e.button == SDL_BUTTON_LEFT) {
             const auto edits = paste(placement_, *hover_);
-            if (edits) apply(*edits); else status_ = edits.error();
-            placing_ = false; return;
+            if (!edits) { status_ = edits.error(); return; }
+            if (apply(*edits)) {
+                std::set<Point> points;
+                for (const auto& cell : *edits) points.insert(cell.position);
+                selection_ = Selection::points(std::move(points));
+                selection_.set_frame({*hover_, *translated(*hover_, placement_.width - 1, placement_.height - 1)});
+                selection_changed_ = true; placing_ = false;
+            }
+            return;
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
         if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
