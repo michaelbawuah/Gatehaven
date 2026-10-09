@@ -38,6 +38,15 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     assert "<main>" in (resources / "docs" / "manual.html").read_text(encoding="utf-8")
     notice = Path("third_party") / "SDL3" / "LICENSE.txt"
     assert (resources / notice).read_bytes() == (Path(__file__).resolve().parents[1] / notice).read_bytes()
+    if has_app == "ON" and sys.platform in ("win32", "darwin"):
+        target = "windows" if sys.platform == "win32" else "macos"
+        identity = "a" * 40 if target == "windows" else "Developer ID Application: Plan only"
+        options = ["--timestamp-url", "https://timestamp.example"] if target == "windows" else ["--notary-profile", "plan-only"]
+        output = root / "unused-signing-output"
+        plan = json.loads(run(sys.executable, Path(__file__).resolve().parents[1] / "tools/sign_preview.py",
+                              target, root, output, "--identity", identity, *options))
+        assert plan["mode"] == "plan-only" and plan["build_metadata"] == metadata
+        assert not output.exists(), "Signing planning wrote an artifact"
     if has_app == "ON":
         if sys.platform == "darwin":
             bundle = root / "gatehaven.app" / "Contents"
