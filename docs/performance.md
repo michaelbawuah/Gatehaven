@@ -55,3 +55,22 @@ queries visible rows and columns, rather than recreating the entire paste on
 every frame. Actual commits still validate every cell and remain one undo action.
 These changes need measurements from the editor workload benchmark; they do not
 establish performance parity with an external application.
+
+### Measured editor workload, 9 October 2026
+
+Five fresh Release processes on the same shared Linux x64 host (GCC 13.3.0),
+each using 100,000 cells. Median times from `results-2026-10-09-editor.json`:
+
+| Operation | Median milliseconds |
+| --- | ---: |
+| Apply one 100,000-cell stroke | 29.8930 |
+| Capture the circuit | 4.5219 |
+| Build paste-preview index | 11.7727 |
+| 1,000 clipped preview queries, ten cells each | 0.0819 |
+| Undo then redo the stroke | 33.3263 |
+
+Every run verifies exactly 10,000 preview visits and full undo/redo restoration.
+Preview queries exclude index construction and SDL drawing; these are component
+measurements, not an end-to-end frame-rate claim. Concurrent host load varied.
+No earlier editor benchmark or external application baseline was recorded, so
+these results establish a reproducible starting point rather than a speedup ratio.

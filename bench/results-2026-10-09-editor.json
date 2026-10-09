@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "compiler": "GCC 13.3.0",
+  "configuration": "Release",
+  "runs": [
+    {
+      "cells": 100000,
+      "edit_ms": 29.893,
+      "capture_ms": 4.14602,
+      "index_ms": 11.7727,
+      "preview_1000_ms": 0.085428,
+      "preview_cells": 10000,
+      "undo_redo_ms": 41.3077
+    },
+    {
+      "cells": 100000,
+      "edit_ms": 33.9394,
+      "capture_ms": 4.56234,
+      "index_ms": 14.344,
+      "preview_1000_ms": 0.081874,
+      "preview_cells": 10000,
+      "undo_redo_ms": 34.1897
+    },
+    {
+      "cells": 100000,
+      "edit_ms": 27.775,
+      "capture_ms": 4.34908,
+      "index_ms": 11.5528,
+      "preview_1000_ms": 0.060411,
+      "preview_cells": 10000,
+      "undo_redo_ms": 33.3263
+    },
+    {
+      "cells": 100000,
+      "edit_ms": 30.327,
+      "capture_ms": 5.65961,
+      "index_ms": 11.5822,
+      "preview_1000_ms": 0.060812,
+      "preview_cells": 10000,
+      "undo_redo_ms": 27.9829
+    },
+    {
+      "cells": 100000,
+      "edit_ms": 29.3763,
+      "capture_ms": 4.52188,
+      "index_ms": 12.0876,
+      "preview_1000_ms": 0.084607,
+      "preview_cells": 10000,
+      "undo_redo_ms": 30.7679
+    }
+  ]
+}
