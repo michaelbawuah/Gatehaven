@@ -31,3 +31,13 @@ TEST("polyline rejects excessive and diagonal segments without partial output") 
     CHECK(!line.append({std::numeric_limits<Coordinate>::max(), 0}));
     CHECK(line.vertices().size() == 1);
 }
+TEST("insulated polyline turns conduct while straight portions stay insulated") {
+    Polyline line({0, 0}, Element::crossing);
+    CHECK(line.append({3, 0})); CHECK(line.append({3, 3}));
+    Circuit c; History history; CHECK(history.apply(c, line.edits().value()));
+    CHECK(c.at({3, 0}) == Element::wire);
+    CHECK(c.at({2, 0}) == Element::crossing);
+    CHECK(line.backtrack());
+    const auto shortened = line.edits().value();
+    CHECK(shortened.back().element == Element::crossing);
+}
