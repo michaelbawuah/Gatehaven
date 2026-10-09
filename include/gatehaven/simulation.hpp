@@ -72,6 +72,7 @@ private:
     std::uint64_t ticks_{};
     SimulationMetrics metrics_;
     bool settled_{};
+    bool invalidated_{};
 };
 
 } // namespace gatehaven

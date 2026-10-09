@@ -18,7 +18,7 @@ TEST("relays remain switched vertices and signal edges become control inputs") {
     CHECK(nets.fixed_count() == 3 && nets.vertex_count() == 4);
     const auto relay = nets.terminals()[topology.index({0, 0})][0]; CHECK(nets.links()[relay].size() == 2);
     CHECK(nets.controls().size() == 1 && nets.controls()[0].count == 1);
-    CHECK(nets.controls()[0].inputs[0] == topology.index({0, -1}));
+    CHECK(nets.controls()[0].input_nodes[0] == topology.index({0, -1}));
 }
 TEST("communicator outputs are deduplicated without merging endpoint types") {
     Circuit circuit; circuit.set({0, 0}, Element::screen); circuit.set({1, 0}, Element::screen);

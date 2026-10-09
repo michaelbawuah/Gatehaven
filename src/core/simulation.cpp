@@ -59,7 +59,7 @@ void Simulation::initialize(const Circuit& circuit, bool reset_levels) {
         if (receives_signal(cell.element) && !is_relay(cell.element) && (cell.state & mask)) energize(nets_.terminals()[i][0]);
     }
     ++metrics_.propagations; propagate();
-    valid_.assign(nodes.size(), true); snapshot_dirty_ = true;
+    valid_.assign(nodes.size(), true); snapshot_dirty_ = true; invalidated_ = false;
 }
 void Simulation::refresh(const Circuit& circuit) {
     const auto ticks = ticks_; const auto metrics = metrics_;
@@ -87,35 +87,41 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         const auto terminal = nets_.terminals()[node];
         return previous_[terminal[0]] || previous_[terminal[1]];
     };
-    for (const auto& gate : nets_.controls()) {
-        unsigned active = 0;
-        for (unsigned i = 0; i < gate.count; ++i) if (previous_power(gate.inputs[i])) ++active;
-        const bool on = control(gate.element, active, gate.count);
-        if (is_relay(gate.element)) enabled_[gate.output] = static_cast<std::uint8_t>(on);
-        else if (on) energize(gate.output);
-    }
-    for (std::size_t group = 0; group < topology_.groups().size(); ++group) {
-        bool sending = false;
-        for (const auto input : topology_.groups()[group].inputs) sending = sending || previous_power(input);
-        sent_[group] = sending;
-        received_[group] = exchange && exchange(topology_.groups()[group].endpoint, sending);
-        if (received_[group]) for (const auto output : nets_.group_outputs()[group]) energize(output);
-    }
+    const auto evaluate = [&]<bool NodeInputs>(auto sample) {
+        for (const auto& gate : nets_.controls()) {
+            const auto& inputs = NodeInputs ? gate.input_nodes : gate.inputs;
+            unsigned active = 0;
+            for (unsigned i = 0; i < gate.count; ++i) if (sample(inputs[i])) ++active;
+            const bool on = control(gate.element, active, gate.count);
+            if (is_relay(gate.element)) enabled_[gate.output] = static_cast<std::uint8_t>(on);
+            else if (on) energize(gate.output);
+        }
+        for (std::size_t group = 0; group < topology_.groups().size(); ++group) {
+            bool sending = false;
+            const auto& inputs = NodeInputs ? topology_.groups()[group].inputs : nets_.group_inputs()[group];
+            for (const auto input : inputs) sending = sending || sample(input);
+            sent_[group] = sending;
+            received_[group] = exchange && exchange(topology_.groups()[group].endpoint, sending);
+            if (received_[group]) for (const auto output : nets_.group_outputs()[group]) energize(output);
+        }
+    };
+    if (changed || invalidated_) evaluate.template operator()<true>(previous_power);
+    else evaluate.template operator()<false>([&](std::size_t vertex) { return previous_[vertex] != 0; });
     for (const auto source : nets_.sources()) energize(source);
     ++metrics_.propagations; propagate();
     // A rebuilt graph has a new component partition: comparisons become valid
     // only after its first complete tick.
     settled_ = !changed && topology_.groups().empty() && power_ == previous_;
-    valid_.assign(nodes.size(), true); snapshot_dirty_ = true; ++ticks_;
+    valid_.assign(nodes.size(), true); snapshot_dirty_ = true; invalidated_ = false; ++ticks_;
 }
 void Simulation::reset() {
     state_.clear(); power_.assign(nets_.vertex_count(), 0);
     sent_.assign(topology_.groups().size(), false); received_.assign(sent_.size(), false);
     valid_.assign(topology_.nodes().size(), false);
-    snapshot_dirty_ = false; ticks_ = 0; metrics_ = {}; settled_ = false;
+    snapshot_dirty_ = false; ticks_ = 0; metrics_ = {}; settled_ = false; invalidated_ = true;
 }
 void Simulation::invalidate(std::span<const Point> points) {
-    if (!points.empty()) settled_ = false;
+    if (!points.empty()) { settled_ = false; invalidated_ = true; }
     for (const auto point : points) {
         const auto index = topology_.index(point);
         if (index != no_node) { valid_[index] = false; snapshot_dirty_ = true; }
