@@ -93,6 +93,7 @@ bool FileEndpoints::exchange(Binding& selected, bool sending) {
     return received;
 }
 void FileEndpoints::reset_protocols() {
+    last_error_.clear();
     release_screens();
     for (auto& [point, binding] : bindings_) {
         static_cast<void>(point); binding.input_protocol.reset(); binding.output_protocol.reset();

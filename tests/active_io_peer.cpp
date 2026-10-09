@@ -2,6 +2,7 @@
 #include "gatehaven/file_endpoints.hpp"
 
 struct Peer {
+    static constexpr std::size_t reserved_acknowledgements = 0;
     gatehaven::FileEndpoints endpoints;
     const gatehaven::CommunicatorGroup in{{0, 0}, gatehaven::Element::file_input, {{0, 0}}};
     const gatehaven::CommunicatorGroup out{{2, 0}, gatehaven::Element::file_output, {{2, 0}}};

@@ -126,8 +126,13 @@ template<class Peer> int edges(const std::filesystem::path& directory) {
     // Reserved payload embeds a write header; it must not become another frame.
     for (bool bit : frame(1, 1, 8)) tick(false, bit);
     for (unsigned i = 0; i < 11; ++i) tick(false, false);
-    // Allow the external worker to consume a possible spurious byte before destruction.
-    for (unsigned i = 0; i < 10000; ++i) tick(false, false);
+    // The pinned external engine treats the embedded header as a write. Wait for
+    // its acknowledgement, not an arbitrary number of worker scheduling cycles.
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (out.messages.size() < Peer::reserved_acknowledgements) {
+        tick(false, false);
+        if ((ticks & 1023U) == 0) require(std::chrono::steady_clock::now() < deadline, "reserved-command observation timed out");
+    }
     const auto output_bytes = read_bytes(output).size();
     std::cout << "{\"empty_available\":" << empty_available << ",\"reset_byte\":" << reset_byte
               << ",\"reserved_output_bytes\":" << output_bytes << "}\n";

@@ -114,7 +114,7 @@ TEST("versioned endpoint routes wake on held input and never retain deleted bind
     circuit.set({0, 0}, Element::screen); CHECK(!exchange());
     endpoints.hold_screen({0, 0}); endpoints.reset_protocols(); CHECK(!exchange());
 }
-TEST("versioned file routes preserve queued requests across a new file choice") {
+TEST("versioned file routes select a newly bound anchor and release removed streams") {
     const auto path = std::filesystem::temp_directory_path() / ("gatehaven-route-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     struct Cleanup { std::filesystem::path p; ~Cleanup() { std::filesystem::remove(p); } } cleanup{path};
     CHECK(replace_file(path, "Q"));
@@ -131,4 +131,25 @@ TEST("versioned file routes preserve queued requests across a new file choice") 
     CHECK(reply == serial_reply(0, 'Q', 8));
     circuit.clear(); endpoints.prune(circuit); CHECK(endpoints.bound_files() == 0);
     endpoints.clear(); CHECK(endpoints.last_error().empty());
+}
+
+TEST("cached group errors follow the chosen stream and reset clears the last diagnostic") {
+    FileEndpoints endpoints;
+    const CommunicatorGroup group{{0, 0}, Element::file_output, {{0, 0}, {1, 0}}};
+    for (auto bit : serial_reply(0, 0xFF, 8)) CHECK(!endpoints.exchange(group, bit != 0, 42));
+    CHECK(!endpoints.last_error().empty());
+    endpoints.reset_protocols(); CHECK(endpoints.last_error().empty());
+    CHECK(!endpoints.exchange(group, false, 42));
+}
+TEST("a changed group revision discards partial framing even when its leader is unchanged") {
+    FileEndpoints endpoints;
+    const CommunicatorGroup one{{0, 0}, Element::file_output, {{0, 0}}};
+    const CommunicatorGroup two{{0, 0}, Element::file_output, {{0, 0}, {1, 0}}};
+    CHECK(!endpoints.exchange(one, true, 1)); CHECK(!endpoints.exchange(one, false, 1));
+    for (unsigned bit = 0; bit < 10; ++bit) CHECK(!endpoints.exchange(two, false, 2));
+    CHECK(endpoints.last_error().empty()); // No complete write from the obsolete prefix.
+    for (auto bit : serial_reply(0, 0, 8)) CHECK(!endpoints.exchange(two, bit != 0, 2));
+    CHECK(!endpoints.last_error().empty());
+    endpoints.clear(); CHECK(!endpoints.exchange(two, false, 2));
+    CHECK(endpoints.last_error().empty()); // No dangling route after clear and reuse.
 }

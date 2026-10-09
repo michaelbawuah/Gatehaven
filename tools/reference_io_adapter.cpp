@@ -3,6 +3,7 @@
 #include "fileinputcommunicator.hpp"
 #include "fileoutputcommunicator.hpp"
 struct Peer {
+    static constexpr std::size_t reserved_acknowledgements = 1;
     FileInputCommunicator in{};
     FileOutputCommunicator out{};
     Peer() { in.reset(); out.reset(); }
