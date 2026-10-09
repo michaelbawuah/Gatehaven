@@ -301,6 +301,9 @@ public:
         }
         if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE && !keyboard_cursor_) hover_.reset();
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
+        if (e.type == SDL_EVENT_KEY_UP && (e.key.key == SDLK_RETURN || e.key.key == SDLK_KP_ENTER) && keyboard_cursor_) {
+            interaction_button_.reset(); endpoints_.release_screens();
+        }
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
             e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
@@ -843,6 +846,7 @@ private:
             SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
             click.x = static_cast<float>(x + view.scale / 2); click.y = static_cast<float>(y + view.scale / 2);
             mouse_down(click);
+            if (interaction_button_) return; // A screen stays held until Enter is released.
             SDL_Event release{}; release.type = SDL_EVENT_MOUSE_BUTTON_UP; release.button = click;
             event(release);
             return;
@@ -1752,6 +1756,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
             "Keyboard selector could not copy a cell");
     key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == moving, "Keyboard edit did not undo as one action");
+    key(SDLK_F5); key(SDLK_RETURN); key(SDLK_I); key(SDLK_RETURN); key(SDLK_F10);
+    require(app.simulation.received({4, 5}), "Keyboard interaction did not hold the screen");
+    SDL_Event enter_up{}; enter_up.type = SDL_EVENT_KEY_UP; enter_up.key.key = SDLK_RETURN;
+    require(SDL_PushEvent(&enter_up), "Could not release keyboard interaction"); dispatch(app, renderer);
+    key(SDLK_F10); require(!app.simulation.received({4, 5}), "Keyboard screen remained held after release");
+    key(SDLK_Z, SDL_KMOD_CTRL);
     key(SDLK_ESCAPE);
     require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
