@@ -2,11 +2,13 @@
 
 Gatehaven saves UTF-8 text with a `.ghv` extension. The first line is exactly
 `GATEHAVEN 1`. Subsequent nonblank lines contain `x y element`. Lines whose first
-non-whitespace character is `#` are comments. Both LF and CRLF are accepted.
+non-whitespace character is `#` are comments. Both LF and CRLF are accepted. A UTF-8 BOM is permitted before the header.
+Writers always emit BOM-free LF text.
 
 Coordinates are signed 32-bit decimal integers. Each coordinate pair may occur
 once. Empty cells are omitted. Element names are `wire`, `crossing`, `source`,
-`signal`, `positive-relay`, `negative-relay`, `and`, `or`, `nand`, and `nor`.
+`signal`, `positive-relay`, `negative-relay`, `and`, `or`, `nand`, `nor`,
+`screen`, `file-input`, and `file-output`.
 
 Serialization sorts by y and then x. Documents describe circuit structure;
 simulation power and the current tick are intentionally transient.
@@ -22,3 +24,7 @@ guaranteed; a future durability option needs file and directory synchronization.
 
 Legacy `.ccsb` import is not implemented yet. Renaming a legacy file to `.ghv`
 does not convert it.
+
+Path-based loading accepts regular files, including ordinary symlinks to them,
+and rejects directories and special streams. The header counts toward the line
+budget. Communicator paths and protocol queues are never serialized.
