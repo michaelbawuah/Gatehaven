@@ -1150,7 +1150,9 @@ private:
         path_ = path;
         const auto inspected = fingerprint_file(path);
         disk_version_ = inspected ? *inspected : std::nullopt;
-        history.mark_saved(); clear_checkpoint(); status_ = "CIRCUIT SAVED";
+        history.mark_saved(); clear_checkpoint();
+        status_ = document_format(path) == DocumentFormat::legacy
+            ? "LEGACY CIRCUIT SAVED - FILE ORIGIN IS TOP LEFT" : "CIRCUIT SAVED";
         return true;
     }
 
@@ -1659,6 +1661,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.history.apply(app.circuit, save_edit).has_value(), "Could not edit save fixture");
     key(SDLK_S, SDL_KMOD_CTRL);
     require(!app.history.modified() && load_document(save_path).value() == app.circuit, "Ordinary Save failed");
+    const auto legacy_path = session_directory / "legacy workflow.ccsb";
+    Circuit legacy_fixture; legacy_fixture.set({0, 0}, Element::positive_relay, 3);
+    require(save_document(legacy_path, legacy_fixture).has_value() && app.open(legacy_path), "Legacy open failed");
+    key(SDLK_s, SDL_KMOD_CTRL);
+    require(load_document(legacy_path).value() == legacy_fixture, "Legacy save lost saved levels");
+    require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
     require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
     // The injected test prompt declines replacement; both versions must survive.
