@@ -89,3 +89,16 @@ not recovered. Successful saves and an orderly close clear that window's
 snapshot. A failed recovery write leaves the previous snapshot intact and shows
 an error in the status bar. Recovery cannot guarantee the very latest edit after
 sudden power loss; use Save for work you want to keep.
+
+## Keyboard access to controls
+
+Tab enters the toolbar and cycles through every toolbar, component, and tool
+control. Shift+Tab moves backward; arrow keys move focus once it is visible.
+Enter or Space activates the outlined control. Selecting a tool returns to the
+canvas. Shift+Enter on a component or tool assigns the Touch binding. Escape
+returns focus to the canvas without activating anything.
+
+F2 help, the recovery chooser, clipboard chooser, and speed dialog consume
+keyboard input while open. Simulation pauses behind these overlays and resumes
+its previous play state when they close. Keyboard navigation is implemented;
+screen-reader integration and a full accessibility audit remain release work.
