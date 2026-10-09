@@ -111,3 +111,12 @@ with tempfile.TemporaryDirectory(prefix="gatehaven legacy ") as directory:
     assert run("trace", native, 3) == run("trace", legacy, 3)
     run("convert", legacy, legacy)
     assert legacy.read_bytes()[:4] == b"CCPG"
+
+with tempfile.TemporaryDirectory(prefix="gatehaven state ") as directory:
+    path = Path(directory) / "initial.ghv"
+    path.write_text("GATEHAVEN 2\n0 0 source 0\n1 0 positive-relay 2\n2 0 wire 0\n", encoding="utf-8")
+    zero = list(csv.DictReader(io.StringIO(run("state", path, 0))))
+    assert [row["powered"] for row in zero] == ["1", "1", "1"]
+    assert zero[1]["conductive"] == "1"
+    one = list(csv.DictReader(io.StringIO(run("state", path, 1))))
+    assert one[1]["conductive"] == "0" and one[2]["powered"] == "0"

@@ -64,7 +64,7 @@ static int run_cli(int argc, char** argv) {
     }
     const std::string_view command = argc >= 2 ? argv[1] : "";
     const bool help = command == "--help" || command == "-h";
-    if ((command != "check" && command != "run" && command != "stats" && command != "trace" && command != "profile" && command != "digest") || argc < 3 || argc > 4 ||
+    if ((command != "check" && command != "run" && command != "stats" && command != "trace" && command != "profile" && command != "digest" && command != "state") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
         auto& output = help ? std::cout : std::cerr;
         output << "Gatehaven CLI (.ghv and .ccsb input)\n  gatehaven-cli check FILE.ghv\n"
@@ -73,6 +73,7 @@ static int run_cli(int argc, char** argv) {
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
                      "  gatehaven-cli profile FILE.ghv [STEPS]\n"
                      "  gatehaven-cli digest FILE.ghv [STEPS]\n"
+                     "  gatehaven-cli state FILE [STEPS]\n"
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli normalize FILE OUTPUT.ghv\n"
                      "  gatehaven-cli convert INPUT OUTPUT.ghv|OUTPUT.ccsb\n"
@@ -96,6 +97,16 @@ static int run_cli(int argc, char** argv) {
         return 1;
     }
     if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }
+    if (command == "state") {
+        Simulation simulation; simulation.initialize(*circuit);
+        for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
+        std::cout << "x,y,element,powered,conductive\n";
+        simulation.visit_state([&](Point point, Power power, bool, bool) {
+            std::cout << point.x << ',' << point.y << ',' << name(power.element) << ','
+                      << (power.ports != 0) << ',' << simulation.conductive(point) << '\n';
+        });
+        return std::cout ? 0 : 1;
+    }
     if (command == "digest") {
         Simulation simulation;
         for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
