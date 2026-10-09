@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-if [[ $# != 2 ]]; then
-  echo "Usage: bash tools/build_reference_adapter.sh REFERENCE_CHECKOUT OUTPUT" >&2
+if [[ $# != 2 && $# != 3 ]]; then
+  echo "Usage: bash tools/build_reference_adapter.sh REFERENCE_CHECKOUT OUTPUT [IO_OUTPUT]" >&2
   exit 2
 fi
 source_root=$(cd -- "$1" && pwd)
@@ -17,3 +17,7 @@ fi
 script_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 read -r -a sdl_flags <<< "$(pkg-config --cflags sdl2)"
 "${CXX:-c++}" -std=c++23 -O3 -DNDEBUG -pthread -include cstring -include stdexcept   "${sdl_flags[@]}" -I "$source_root/CircuitSandbox"   "$script_root/reference_adapter.cpp" "$source_root/CircuitSandbox/simulator.cpp" -o "$2"
+if [[ $# == 3 ]]; then
+  "${CXX:-c++}" -std=c++23 -O3 -DNDEBUG -pthread -include cstring -include stdexcept \
+    "${sdl_flags[@]}" -I "$source_root/CircuitSandbox" "$script_root/reference_io_adapter.cpp" -o "$3"
+fi

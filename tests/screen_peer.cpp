@@ -1,5 +1,5 @@
 #include "screen_pattern.hpp"
-#include "gatehaven/file_io.hpp"
+#include "gatehaven/document.hpp"
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/simulation.hpp"
 #include "gatehaven/version.hpp"
