@@ -129,3 +129,12 @@ jobs:
       - run: build/bench/gatehaven-bench 10000 20 screens
       - run: build/bench/gatehaven-bench 10000 20 pulsed-screens
       - run: build/bench/gatehaven-bench 10000 20 feedback
+      - name: Collect repeated benchmark evidence
+        run: python bench/measure.py build/bench/gatehaven-bench --runs 3 > build/bench/measurements.json
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: Gatehaven-benchmark-evidence
+          retention-days: 30
+          if-no-files-found: error
+          path: build/bench/measurements.json
