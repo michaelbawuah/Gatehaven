@@ -250,7 +250,7 @@ public:
             return;
         }
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
-            cancel_gesture(); accumulator_ = 0;
+            cancel_gesture(); accumulator_ = 0; checkpoint();
         }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
@@ -953,7 +953,7 @@ private:
     bool save(const std::filesystem::path& path) {
         const auto result = save_document(path, circuit);
         if (!result) { status_ = result.error().message; return false; }
-        path_ = path; history.mark_saved(); status_ = "CIRCUIT SAVED";
+        path_ = path; history.mark_saved(); clear_checkpoint(); status_ = "CIRCUIT SAVED";
         return true;
     }
 
