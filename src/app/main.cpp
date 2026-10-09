@@ -321,7 +321,7 @@ public:
         }
         ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
         ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
-        ui::text(r, 22, 748, "B: KEYBOARD HELP", muted, 1.0F);
+        ui::text(r, 22, 748, "B: HINTS  F2: SHORTCUTS", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
         ui::text(r, 20, 771, status_.substr(0, 73), white, 1.25F);
         if (hover_) {
@@ -331,6 +331,7 @@ public:
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
+        if (beginner_ && !help_) render_hint(r);
         if (help_) render_help(r);
         if (clipboard_menu_) render_clipboard_menu(r);
         if (speed_edit_) render_speed_dialog(r);
@@ -348,6 +349,7 @@ private:
     bool eyedropper_{};
     bool placing_{};
     bool help_{};
+    bool beginner_{};
     bool dialog_pending_{};
     std::optional<Point> hover_;
     std::optional<Point> drag_;
@@ -545,7 +547,8 @@ private:
         case SDLK_R: simulation.reset(); accumulator_ = 0; break;
         case SDLK_Q: tools_[0] = {ToolKind::selector}; placing_ = false; break;
         case SDLK_E: eyedropper_ = true; break;
-        case SDLK_B: cancel_gesture(); help_ = !help_; break;
+        case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
+        case SDLK_F2: cancel_gesture(); help_ = !help_; break;
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_D:
         case SDLK_DELETE:
@@ -815,6 +818,26 @@ private:
         if (preview) rectangle(r, x, y, s, s, color, true);
     }
 
+    void render_hint(SDL_Renderer* r) const {
+        std::string_view first = "DRAG TO DRAW A STRAIGHT LINE. HOLD SHIFT TO CHAIN LINES.";
+        std::string_view second = "BACKSPACE RETRACES A POLYLINE. DOUBLE CLICK FINISHES IT.";
+        if (placing_) { first = "CLICK TO PLACE YOUR COPIED CIRCUIT. ESC CANCELS."; second = "[ AND ] ROTATE. H AND V FLIP THE PREVIEW."; }
+        else if (eyedropper_) { first = "CLICK A CELL TO BIND THAT BUTTON TO ITS PENCIL."; second = "CLICK EMPTY SPACE TO BIND THE ERASER."; }
+        else if (tools_[0].kind == ToolKind::selector) {
+            first = "SHIFT ADDS TO THE SELECTION. ALT REMOVES FROM IT.";
+            second = "DOUBLE CLICK: ELECTRICAL NET. TRIPLE CLICK: WHOLE CIRCUIT.";
+        } else if (tools_[0].kind == ToolKind::panner) {
+            first = "DRAG TO MOVE THE CAMERA. SCROLL TO ZOOM AT THE CURSOR.";
+            second = "F FRAMES YOUR CIRCUIT. CLICK A TOOL WITH ANY BUTTON TO BIND IT.";
+        } else if (tools_[0].kind == ToolKind::eraser) {
+            first = "DRAG TO ERASE A LINE. SHIFT CHAINS ERASER SEGMENTS.";
+            second = "CTRL Z RESTORES THE WHOLE EDIT.";
+        }
+        rectangle(r, 254, 690, 674, 60, white);
+        ui::text(r, 268, 703, first, teal, 1.25F);
+        ui::text(r, 268, 727, second, muted, 1.25F);
+    }
+
     void render_help(SDL_Renderer* r) const {
         rectangle(r, 338, 132, 846, 608, ink);
         ui::text(r, 376, 194, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
@@ -831,7 +854,7 @@ private:
             "[ AND ]: ROTATE     H/V: FLIP",
             "ARROWS: MOVE SELECTION  CTRL: X4",
             "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
-            "B OR ESC: CLOSE THIS HELP"};
+            "F2 OR ESC: CLOSE    B: BEGINNER HINTS"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
             ui::text(r, 378, 246 + static_cast<float>(i) * 36, lines[i], white, 1.75F);
         }
