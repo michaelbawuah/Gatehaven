@@ -124,6 +124,9 @@ if(GATEHAVEN_BUILD_TESTS)
     add_test(NAME gatehaven_shared_clipboard COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/clipboard_process_test.py $<TARGET_FILE:gatehaven_clipboard_peer>)
     set_tests_properties(gatehaven_shared_clipboard PROPERTIES TIMEOUT 60)
+    add_test(NAME gatehaven_recovery_process COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/recovery_process_test.py $<TARGET_FILE:gatehaven_recovery_peer>)
+    set_tests_properties(gatehaven_recovery_process PROPERTIES TIMEOUT 45)
     if(GATEHAVEN_BUILD_PACKAGES)
         add_test(NAME gatehaven_install COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/install_test.py ${CMAKE_COMMAND}
