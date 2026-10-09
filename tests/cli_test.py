@@ -62,3 +62,21 @@ with tempfile.TemporaryDirectory(prefix="gatehaven-profile-") as directory:
 
 info = run("--build-info")
 assert "Compiler:" in info and "Target:" in info and "Language: C++23" in info
+
+# Independent encoder for the documented digest byte contract.
+def digest_bytes(cells, ticks):
+    payload = bytearray([1]) + ticks.to_bytes(8, "little") + len(cells).to_bytes(8, "little")
+    for x, y, element, ports, sending, receiving in sorted(cells, key=lambda c: (c[1], c[0])):
+        payload += (x & 0xffffffff).to_bytes(4, "little") + (y & 0xffffffff).to_bytes(4, "little")
+        payload += bytes([element, ports, sending, receiving])
+    value = 14695981039346656037
+    for byte in payload:
+        value = ((value ^ byte) * 1099511628211) & 0xffffffffffffffff
+    return f"{value:016x}"
+with tempfile.TemporaryDirectory(prefix="gatehaven digest ") as directory:
+    path = Path(directory) / "deterministic.ghv"
+    path.write_text("GATEHAVEN 1\n-2 -1 source\n-1 -1 wire\n", encoding="utf-8")
+    for ticks in (0, 1, 2, 100):
+        ports = 15 if ticks else 0
+        expected = digest_bytes([(-2, -1, 3, ports, 0, 0), (-1, -1, 1, ports, 0, 0)], ticks)
+        assert json.loads(run("digest", path, ticks)) == {"schema": 1, "ticks": ticks, "digest": expected}
