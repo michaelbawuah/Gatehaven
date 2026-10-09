@@ -2,8 +2,8 @@
 
 Build a circuit by choosing a component in the sidebar and drawing on the grid.
 The starter has two powered branches feeding an AND gate. Space starts or pauses
-the simulation; Right advances one tick when no selection is active. R resets
-power and time. Ctrl+Space sets the speed, initially five ticks per second.
+the simulation; Right advances one tick when no selection is active. R restores
+stored reset levels and resets time. Ctrl+Space sets the speed, initially five ticks per second.
 
 ## Draw and navigate
 
@@ -45,8 +45,10 @@ window's clipboard. Clipboard contents are session data, not permanent saves.
 ## Save and learn
 
 Ctrl+S saves; Ctrl+Shift+S or Shift-click Save chooses another path. New and Open
-start separate windows. `.ghv` files contain circuit structure and never contain
-paths to user files. Returning to the saved revision with Undo clears the unsaved
+start separate windows. Save `.ghv` to keep signed canvas coordinates or `.ccsb`
+for legacy interchange. The legacy file's origin is its occupied top-left corner;
+wide sparse rectangles can exceed its dense-area limit. Both formats preserve
+component levels and never contain paths to user files. Returning to the saved revision with Undo clears the unsaved
 indicator. Save your circuits before closing the last window.
 
 B toggles context hints, off by default. F2 shows shortcuts. F1 opens this manual.
@@ -84,8 +86,8 @@ Escape keeps snapshots for later. Live windows never appear in this list.
 Save your current circuit or use New before restoring another one.
 
 A restored circuit opens paused and unsaved. Save it to choose its destination.
-Recovery preserves components only: file-port choices and simulation state are
-not recovered. Successful saves and an orderly close clear that window's
+Recovery preserves components and their saved/reset levels. File-port choices,
+protocol queues, tick count, viewport, and undo history are not recovered. Successful saves and an orderly close clear that window's
 snapshot. A failed recovery write leaves the previous snapshot intact and shows
 an error in the status bar. Recovery cannot guarantee the very latest edit after
 sudden power loss; use Save for work you want to keep.

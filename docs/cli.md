@@ -6,10 +6,12 @@ an input/output failure, and 2 on invalid command syntax or bounded-work limits.
 
 | Command | Purpose |
 | --- | --- |
-| `check FILE` | Validate a native document without changing it |
+| `check FILE` | Validate native or legacy content without changing it |
 | `stats FILE` | JSON occupied-cell counts, extents and element totals |
 | `run FILE STEPS` | Final powered-port state after the requested ticks |
 | `trace FILE STEPS` | CSV states for every cell on every tick |
+| `state FILE STEPS` | CSV element, power, and relay conductivity at one tick |
+| `convert INPUT OUTPUT` | Convert by output extension, preserving stored levels |
 | `digest FILE STEPS` | A portable regression fingerprint; see state-digest.md |
 | `profile FILE STEPS` | JSON elapsed time and propagation counters |
 | `normalize FILE OUTPUT` | Canonical native text, sorted by y then x |
@@ -22,13 +24,16 @@ rejects requests above 5,000,000 rows before simulation starts. File endpoints
 remain disconnected: circuits cannot choose paths through the command line.
 
 Normalize removes comments, blank lines and a leading UTF-8 BOM, uses LF endings,
-and omits transient state. It can replace the input path atomically after a
-successful parse. It does not convert `.ccsb` files. Keep a separate copy if
-comments matter to you.
+and preserves stored levels. The output extension chooses `.ghv` or `.ccsb`,
+just like Convert. It can replace the input path atomically after a successful
+parse. Keep a separate copy if comments or the original byte layout matter.
 
 For repeatable comparisons, use the same native circuit, explicit tick count,
-and digest schema. Profiling includes topology compilation; benchmark tools
-separate cold setup from steady simulation. Times depend on the machine and load.
+and digest schema. Profiling reports `compile_ms`, `steps_ms`, and `total_ms` separately, excluding
+file parsing and output formatting. Settled ticks can skip propagation; inspect
+the counters before interpreting throughput. Times depend on the machine and load.
+Both desktop and CLI accept `--build-info` without a graphical session. The source
+revision identifies the configured checkout; use a clean checkout for releases.
 
 ## Legacy interoperability
 
