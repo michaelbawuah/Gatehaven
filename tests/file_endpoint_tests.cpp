@@ -73,3 +73,28 @@ TEST("real simulated signal frames write every byte and acknowledge on the retur
         CHECK(!simulation.powered({-1, 0})); // Return power cannot backfeed the request Signal.
     }
 }
+
+TEST("merged ports use the latest binding and split ports retain their own stream positions") {
+    const auto root = std::filesystem::temp_directory_path() / ("gatehaven-merge-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(root);
+    struct Cleanup { std::filesystem::path p; ~Cleanup() { std::filesystem::remove_all(p); } } cleanup{root};
+    CHECK(replace_file(root / "first", "AB")); CHECK(replace_file(root / "second", "XY"));
+    FileEndpoints endpoints;
+    const CommunicatorGroup left{{0, 0}, Element::file_input, {{0, 0}}};
+    const CommunicatorGroup right{{2, 0}, Element::file_input, {{2, 0}}};
+    const CommunicatorGroup merged{{0, 0}, Element::file_input, {{0, 0}, {1, 0}, {2, 0}}};
+    CHECK(endpoints.choose_input(left.id, root / "first"));
+    CHECK(endpoints.choose_input(right.id, root / "second"));
+    CHECK(!endpoints.exchange(left, false)); CHECK(!endpoints.exchange(right, false));
+    const auto read = [&](const CommunicatorGroup& group, std::uint8_t expected) {
+        for (auto bit : serial_reply(0)) CHECK(!endpoints.exchange(group, bit != 0));
+        std::vector<std::uint8_t> reply;
+        for (unsigned i = 0; i < 11; ++i) reply.push_back(endpoints.exchange(group, false) ? 1 : 0);
+        CHECK(reply == serial_reply(0, expected, 8));
+    };
+    read(merged, 'X');
+    read(left, 'A'); read(right, 'Y');
+    endpoints.reset_protocols(); read(left, 'B'); // Reset does not rewind the chosen file.
+    Circuit remaining; remaining.set(left.id, Element::file_input); endpoints.prune(remaining);
+    CHECK(endpoints.bound_files() == 1);
+}
