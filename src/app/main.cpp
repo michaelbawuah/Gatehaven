@@ -38,6 +38,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
 namespace {
 using namespace gatehaven;
@@ -103,7 +104,10 @@ void SDLCALL dialog_callback(void* userdata, const char* const* paths, int filte
     result.save = request->save;
     result.filter = filter;
     result.endpoint = request->endpoint;
-    if (!paths) result.error = SDL_GetError();
+    if (!paths) {
+        result.error = SDL_GetError();
+        if (result.error.empty()) result.error = "The system file dialog failed";
+    }
     else if (!paths[0]) result.canceled = true;
     else result.path = paths[0];
     const std::lock_guard lock(request->mailbox->mutex);
@@ -1433,6 +1437,25 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         require(SDL_PushEvent(&event), "Could not push keyboard event");
         dispatch(app, renderer);
     };
+    {
+        auto mailbox = std::make_shared<Mailbox>();
+        const char* canceled[]{nullptr};
+        dialog_callback(new DialogRequest{mailbox, true, "", std::nullopt}, canceled, 1);
+        require(mailbox->result && mailbox->result->canceled && mailbox->result->filter == 1, "Dialog cancellation was lost");
+        SDL_ClearError();
+        dialog_callback(new DialogRequest{mailbox, false, "", std::nullopt}, nullptr, -1);
+        require(!mailbox->result->error.empty() && !mailbox->result->canceled, "Dialog failure became an empty selected path");
+        const char* selected[]{"chosen file.ccsb", "ignored second file.ghv", nullptr};
+        std::thread callback([&] { dialog_callback(new DialogRequest{mailbox, true, "", Point{3, 2}}, selected, 1); });
+        callback.join();
+        require(mailbox->result->path == selected[0] && mailbox->result->endpoint == Point{3, 2}, "Background dialog result lost its endpoint");
+        std::weak_ptr<Mailbox> lifetime = mailbox;
+        auto pending = new DialogRequest{mailbox, false, "", std::nullopt};
+        mailbox.reset();
+        require(!lifetime.expired(), "Closing the window invalidated pending callback storage");
+        dialog_callback(pending, canceled, 0);
+        require(lifetime.expired(), "Completed callback retained its request storage");
+    }
     key(SDLK_TAB); key(SDLK_RETURN);
     require(app.running, "Keyboard focus could not activate Play");
     key(SDLK_RETURN); require(!app.running, "Keyboard focus could not activate Pause");
