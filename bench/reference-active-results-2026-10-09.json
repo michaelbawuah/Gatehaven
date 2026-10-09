@@ -1,0 +1,584 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-09T22:05:34.115390+00:00",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "candidate_toolchain": "Gatehaven 0.5.0-dev\nCompiler: GNU 13.3.0\nTarget: Linux x86_64\nLanguage: C++23\nSource revision: fd8da115fdc11348fab210a0e6dc430d264d840c\n",
+  "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6",
+  "reference_flags": "C++23 -O3 -DNDEBUG -pthread",
+  "ticks": 10000,
+  "active_screens": true,
+  "samples": [
+    {
+      "sample": "clock.ccsb",
+      "sha256": "8bbb2f6b7236d64135e1cd91729ce577a8f5aa83c6ea7d0e9c1059090de1b3d4",
+      "correctness": {
+        "sample": "clock.ccsb",
+        "ticks": 10000,
+        "cells": 58,
+        "mismatches": 0,
+        "reference_state_sha256": "abb80e6d9371eef5a5a0352a2a100978655626139795b61b58773113358a11f9",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.047141,
+          "candidate": 0.010786
+        },
+        "steps_ms": {
+          "reference": 1.53038,
+          "candidate": 0.421544
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.051227,
+            "steps_ms": 1.53038
+          },
+          "candidate": {
+            "compile_ms": 0.010666,
+            "steps_ms": 0.415305
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.010596,
+            "steps_ms": 0.424789
+          },
+          "reference": {
+            "compile_ms": 0.043716,
+            "steps_ms": 1.55764
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.045508,
+            "steps_ms": 1.49285
+          },
+          "candidate": {
+            "compile_ms": 0.010566,
+            "steps_ms": 0.417678
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.017346,
+            "steps_ms": 0.421544
+          },
+          "reference": {
+            "compile_ms": 0.070306,
+            "steps_ms": 1.56294
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.047561,
+            "steps_ms": 1.42284
+          },
+          "candidate": {
+            "compile_ms": 0.012268,
+            "steps_ms": 0.463728
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.010786,
+            "steps_ms": 0.446271
+          },
+          "reference": {
+            "compile_ms": 0.042894,
+            "steps_ms": 1.48469
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.047141,
+            "steps_ms": 1.70454
+          },
+          "candidate": {
+            "compile_ms": 0.013089,
+            "steps_ms": 0.399201
+          }
+        }
+      ]
+    },
+    {
+      "sample": "clock_minimal.ccsb",
+      "sha256": "542328aced5d6b565f1ae05dcac2ea1b6ce1064b97b0a835b90d16621d0c361a",
+      "correctness": {
+        "sample": "clock_minimal.ccsb",
+        "ticks": 10000,
+        "cells": 16,
+        "mismatches": 0,
+        "reference_state_sha256": "78aa679d448a0817e5c7d324b9cb9e659535dc340f3d4860b8ba0a5f5e637d7f",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.020601,
+          "candidate": 0.006259
+        },
+        "steps_ms": {
+          "reference": 1.45354,
+          "candidate": 0.29274
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.020521,
+            "steps_ms": 1.44221
+          },
+          "candidate": {
+            "compile_ms": 0.006259,
+            "steps_ms": 0.285489
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.00617,
+            "steps_ms": 0.284387
+          },
+          "reference": {
+            "compile_ms": 0.056636,
+            "steps_ms": 5.83643
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.021843,
+            "steps_ms": 1.45354
+          },
+          "candidate": {
+            "compile_ms": 0.009384,
+            "steps_ms": 0.29274
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.005908,
+            "steps_ms": 0.315685
+          },
+          "reference": {
+            "compile_ms": 0.024186,
+            "steps_ms": 1.51702
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.018338,
+            "steps_ms": 1.32952
+          },
+          "candidate": {
+            "compile_ms": 0.00656,
+            "steps_ms": 0.316876
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.006249,
+            "steps_ms": 0.304919
+          },
+          "reference": {
+            "compile_ms": 0.020601,
+            "steps_ms": 1.31637
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.017786,
+            "steps_ms": 1.45754
+          },
+          "candidate": {
+            "compile_ms": 0.011317,
+            "steps_ms": 0.284498
+          }
+        }
+      ]
+    },
+    {
+      "sample": "double dabble with inputs.ccsb",
+      "sha256": "5bd3d7afedf6c9a1a3299c8bae81d83bfcc61c75ff67b97726882207852521cf",
+      "correctness": {
+        "sample": "double dabble with inputs.ccsb",
+        "ticks": 10000,
+        "cells": 64938,
+        "mismatches": 0,
+        "reference_state_sha256": "2add0acc23e0337eecd33dbe3fe49888e433e4a92b320211fad4637173e62361",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 20.0127,
+          "candidate": 5.66048
+        },
+        "steps_ms": {
+          "reference": 392.603,
+          "candidate": 368.299
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 20.9731,
+            "steps_ms": 428.325
+          },
+          "candidate": {
+            "compile_ms": 6.434,
+            "steps_ms": 378.283
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 5.66048,
+            "steps_ms": 433.876
+          },
+          "reference": {
+            "compile_ms": 20.2993,
+            "steps_ms": 421.32
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 18.463,
+            "steps_ms": 382.56
+          },
+          "candidate": {
+            "compile_ms": 6.94368,
+            "steps_ms": 351.779
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 7.47972,
+            "steps_ms": 378.877
+          },
+          "reference": {
+            "compile_ms": 20.0127,
+            "steps_ms": 384.721
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 21.1371,
+            "steps_ms": 394.463
+          },
+          "candidate": {
+            "compile_ms": 5.13481,
+            "steps_ms": 355.289
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 5.27958,
+            "steps_ms": 368.299
+          },
+          "reference": {
+            "compile_ms": 18.7201,
+            "steps_ms": 385.31
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 18.7688,
+            "steps_ms": 392.603
+          },
+          "candidate": {
+            "compile_ms": 5.40381,
+            "steps_ms": 324.776
+          }
+        }
+      ]
+    },
+    {
+      "sample": "duplicator.ccsb",
+      "sha256": "cbe7ba06d4395dbe858bffd74b8ec91d67843e4c7379595f1fc3837c17241938",
+      "correctness": {
+        "sample": "duplicator.ccsb",
+        "ticks": 10000,
+        "cells": 237,
+        "mismatches": 0,
+        "reference_state_sha256": "1dc62626917daae01897a0396d2ebe8c976fc0040a22d3e2419471d93ed72d40",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.127732,
+          "candidate": 0.031277
+        },
+        "steps_ms": {
+          "reference": 1.46897,
+          "candidate": 0.260011
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.127281,
+            "steps_ms": 1.44957
+          },
+          "candidate": {
+            "compile_ms": 0.03319,
+            "steps_ms": 0.323567
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.031277,
+            "steps_ms": 0.277658
+          },
+          "reference": {
+            "compile_ms": 0.127732,
+            "steps_ms": 1.52984
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.128203,
+            "steps_ms": 1.46897
+          },
+          "candidate": {
+            "compile_ms": 0.030455,
+            "steps_ms": 0.278179
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.031167,
+            "steps_ms": 0.259981
+          },
+          "reference": {
+            "compile_ms": 0.124537,
+            "steps_ms": 1.42723
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.12593,
+            "steps_ms": 1.55368
+          },
+          "candidate": {
+            "compile_ms": 0.031778,
+            "steps_ms": 0.259811
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.032599,
+            "steps_ms": 0.260011
+          },
+          "reference": {
+            "compile_ms": 0.158558,
+            "steps_ms": 1.42211
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.128112,
+            "steps_ms": 1.55316
+          },
+          "candidate": {
+            "compile_ms": 0.030495,
+            "steps_ms": 0.259831
+          }
+        }
+      ]
+    },
+    {
+      "sample": "propagate.ccsb",
+      "sha256": "6254d709358aeadbbb910c71dd9946a00953ff0f4716109ebfde0689625764d4",
+      "correctness": {
+        "sample": "propagate.ccsb",
+        "ticks": 10000,
+        "cells": 668,
+        "mismatches": 0,
+        "reference_state_sha256": "63b10d2953694ecf58fffaf1e18bd3023ed3227987a2b1e29b76df96743e1f7f",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.198168,
+          "candidate": 0.078358
+        },
+        "steps_ms": {
+          "reference": 3.75094,
+          "candidate": 1.59539
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.197187,
+            "steps_ms": 3.56575
+          },
+          "candidate": {
+            "compile_ms": 0.077006,
+            "steps_ms": 1.59539
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.077286,
+            "steps_ms": 1.57465
+          },
+          "reference": {
+            "compile_ms": 0.232159,
+            "steps_ms": 3.90237
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.196696,
+            "steps_ms": 4.90997
+          },
+          "candidate": {
+            "compile_ms": 0.078758,
+            "steps_ms": 1.56213
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.075353,
+            "steps_ms": 1.56401
+          },
+          "reference": {
+            "compile_ms": 0.198168,
+            "steps_ms": 3.89852
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.230937,
+            "steps_ms": 3.75094
+          },
+          "candidate": {
+            "compile_ms": 0.078649,
+            "steps_ms": 1.86513
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 0.124637,
+            "steps_ms": 1.92394
+          },
+          "reference": {
+            "compile_ms": 0.198068,
+            "steps_ms": 3.5608
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.237878,
+            "steps_ms": 3.44598
+          },
+          "candidate": {
+            "compile_ms": 0.078358,
+            "steps_ms": 1.73969
+          }
+        }
+      ]
+    },
+    {
+      "sample": "readfile_multi.ccsb",
+      "sha256": "1aa5d6a3fe8d739a90f024143c3a35961eda61243074ab088320bdcf253c5e99",
+      "correctness": {
+        "sample": "readfile_multi.ccsb",
+        "ticks": 10000,
+        "cells": 15582,
+        "mismatches": 0,
+        "reference_state_sha256": "f1b1d747011b97155d59b055db7c6614778f12dbc6b0bca8b94b61a4390049d5",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 3.89457,
+          "candidate": 1.32435
+        },
+        "steps_ms": {
+          "reference": 30.7702,
+          "candidate": 25.3827
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 5.09819,
+            "steps_ms": 31.7773
+          },
+          "candidate": {
+            "compile_ms": 1.41128,
+            "steps_ms": 25.844
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 1.32511,
+            "steps_ms": 25.6686
+          },
+          "reference": {
+            "compile_ms": 4.30005,
+            "steps_ms": 30.7639
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 3.74051,
+            "steps_ms": 29.5029
+          },
+          "candidate": {
+            "compile_ms": 1.29859,
+            "steps_ms": 25.1643
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 1.32435,
+            "steps_ms": 24.6589
+          },
+          "reference": {
+            "compile_ms": 3.89457,
+            "steps_ms": 29.4251
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 3.93057,
+            "steps_ms": 30.9835
+          },
+          "candidate": {
+            "compile_ms": 1.28754,
+            "steps_ms": 25.3827
+          }
+        },
+        {
+          "candidate": {
+            "compile_ms": 1.39238,
+            "steps_ms": 25.3686
+          },
+          "reference": {
+            "compile_ms": 3.79748,
+            "steps_ms": 30.7702
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 3.82651,
+            "steps_ms": 31.4596
+          },
+          "candidate": {
+            "compile_ms": 1.29527,
+            "steps_ms": 26.1125
+          }
+        }
+      ]
+    }
+  ],
+  "median_regressions": [],
+  "limits": [
+    "Shared host; timing noise is possible",
+    "Deterministic changing screen input",
+    "No attached file streams or rendering"
+  ],
+  "candidate_source_tree": "eea7ed6b910adf4f6940dfd025fe1aa7c49de881"
+}

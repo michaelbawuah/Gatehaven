@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-09T22:12:28.170931+00:00",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "source_revision": "34cc08646d54b4e9abaecfb2a147c6c5de54dbc8",
+  "group_cells": 10000,
+  "input_bytes_per_run": 512,
+  "output_bytes_per_run": 512,
+  "medians_ms": {
+    "cached": 0.575154,
+    "uncached": 444.718
+  },
+  "runs": [
+    {
+      "cached": 0.624379,
+      "uncached": 410.57
+    },
+    {
+      "uncached": 444.718,
+      "cached": 0.575154
+    },
+    {
+      "cached": 0.602005,
+      "uncached": 498.066
+    },
+    {
+      "uncached": 445.39,
+      "cached": 0.535247
+    },
+    {
+      "cached": 0.534755,
+      "uncached": 429.944
+    }
+  ],
+  "limits": [
+    "Temporary regular files on this host; storage speed and scheduling vary",
+    "Compares the same endpoint engine with and without routing cache",
+    "Not an external-engine benchmark or a disk durability guarantee"
+  ],
+  "candidate_source_tree": "dafbf33463dd57ee734bd03808bfd1a04192db82"
+}

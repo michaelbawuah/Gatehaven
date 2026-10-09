@@ -1,0 +1,49 @@
+{
+  "schema": 2,
+  "passed": true,
+  "engines": {
+    "reference": {
+      "schema": 1,
+      "passed": true,
+      "input_bytes": 257,
+      "output_bytes": 256,
+      "acknowledgements": 256,
+      "ordered_reload": true,
+      "ticks": 19815,
+      "output_sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+    },
+    "candidate": {
+      "schema": 1,
+      "passed": true,
+      "input_bytes": 257,
+      "output_bytes": 256,
+      "acknowledgements": 256,
+      "ordered_reload": true,
+      "ticks": 6667,
+      "output_sha256": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+    }
+  },
+  "explicit_differences": {
+    "reference": {
+      "empty_available": 1,
+      "reset_byte": 65,
+      "reserved_output_bytes": 1
+    },
+    "candidate": {
+      "empty_available": 0,
+      "reset_byte": 66,
+      "reserved_output_bytes": 0
+    }
+  },
+  "difference_expectations_confirmed": true,
+  "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6",
+  "limits": [
+    "Protocol/stream comparison; not a UI dialog or wall-clock benchmark",
+    "Reply delay intentionally unconstrained within a five-second deadline",
+    "Three protocol edge differences are observed and asserted separately"
+  ],
+  "candidate_source_tree": "dafbf33463dd57ee734bd03808bfd1a04192db82",
+  "candidate_binary_sha256": "05affea03e9422a10dd8eb8b2f09b3756490328d9c2043197cccfc0287683541",
+  "external_adapter_sha256": "5d90964a720ddce08b132827aecd08372b1e10f87817e530573ff08f06be4465",
+  "toolchain": "GNU 13.3.0, C++23, Release, Linux x86_64"
+}
