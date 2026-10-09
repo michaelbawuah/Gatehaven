@@ -178,3 +178,18 @@ TEST("simulation does not connect across integer coordinate boundaries") {
     s.step(c);
     CHECK(s.powered_count() == 1);
 }
+
+TEST("streamed state matches snapshots before and after edits and reset") {
+    Circuit c; c.set({3, -4}, Element::source); c.set({4, -4}, Element::wire);
+    Simulation s;
+    const auto compare = [&] {
+        std::map<Point, Power> streamed;
+        s.visit_state([&](Point p, Power power, bool sending, bool receiving) {
+            streamed.emplace(p, power); CHECK(sending == s.sent(p)); CHECK(receiving == s.received(p));
+        });
+        CHECK(streamed == s.snapshot());
+    };
+    compare(); s.step(c); compare();
+    const std::array removed{Point{3, -4}}; s.invalidate(removed); compare();
+    s.reset(); compare();
+}
