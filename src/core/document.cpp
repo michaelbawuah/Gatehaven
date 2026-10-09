@@ -56,6 +56,8 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
     auto result = read_line(input, line, 1, limits.max_line_bytes);
     if (!result) return std::unexpected(result.error());
     if (line.starts_with("\xEF\xBB\xBF")) line.erase(0, 3);
+    if (line.starts_with("CCPG")) return std::unexpected(DocumentError{1,
+        "Legacy .ccsb data is not supported yet; renaming it does not convert it"});
     if (!*result || line != "GATEHAVEN 1") {
         return std::unexpected(DocumentError{1, "Expected GATEHAVEN 1 document header"});
     }
@@ -108,6 +110,11 @@ std::expected<Circuit, DocumentError> load_document(const std::filesystem::path&
         error ? "Could not inspect document: " + error.message() : "Document is not a regular file"});
     std::ifstream input(path, std::ios::binary);
     if (!input) return std::unexpected(DocumentError{0, "Could not open document"});
+    std::array<char, 4> signature{};
+    input.read(signature.data(), 4);
+    if (input.gcount() == 4 && std::string_view(signature.data(), 4) == "CCPG")
+        return std::unexpected(DocumentError{0, "Legacy .ccsb data is not supported yet; renaming it does not convert it"});
+    input.clear(); input.seekg(0);
     return read_document(input, limits);
 }
 
