@@ -35,9 +35,18 @@ operating-system file dialogs.
   blocks LeakSanitizer's `/proc` task inspection; the GitHub job keeps leak
   detection enabled so that check can run on a normal runner.
 
-The milestone extends desktop CI to all three target operating systems. The
-current run's result must be checked on GitHub; adding a workflow is not evidence
-that it passed. Simulated touch events do not substitute for touchscreen testing.
+## Cross-platform milestone
+
+[Run 37956417854](https://github.com/michaelbawuah/Gatehaven/actions/runs/37956417854)
+passed all eight jobs on 9 October 2026 at commit `f2a48c4`: core/platform tests
+on Linux, macOS, and Windows; desktop builds, event tests, child-process checks,
+and screenshot rendering on all three; Linux ASan/UBSan including leak detection;
+and the simulation benchmark. The macOS desktop compiler was AppleClang
+21.0.0.21000101 and the Windows compiler was MSVC 19.51.36260.0.
+
+This records a specific tested revision. For later changes, check their own
+Actions run. Automated dummy-driver and touch-tagged events do not substitute
+for physical monitor, touchscreen, or native file-dialog acceptance.
 
 ## Initial performance measurement
 
@@ -50,7 +59,7 @@ baseline, not a cross-machine score or proof of performance parity.
 
 - GitHub results for each current commit; see the Actions page rather than
   assuming a configured job has passed.
-- Desktop compilation and real interaction on Windows and macOS.
+- Real desktop interaction and file-dialog behavior on Windows and macOS.
 - Linux X11 and Wayland sessions, native dialogs, per-monitor scaling, and touch.
 - File-dialog cancellation and shutdown on each supported operating system.
 - Platform and compiler versions for release targets, including each CPU architecture.
