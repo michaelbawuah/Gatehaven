@@ -4,6 +4,7 @@
 
 namespace gatehaven {
 std::vector<CommunicatorGroup> communicator_groups(const Circuit& circuit) {
+    if (circuit.count(Element::screen) == 0 && circuit.count(Element::file_input) == 0 && circuit.count(Element::file_output) == 0) return {};
     std::set<Point> visited;
     std::vector<CommunicatorGroup> result;
     for (const auto& cell : circuit.cells()) {

@@ -81,7 +81,7 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     for (const auto& cell : circuit.cells()) {
         unsigned input_count = 0;
         unsigned on_count = 0;
-        for (const auto direction : directions) {
+        if (cell.element >= Element::positive_relay && !is_communicator(cell.element)) for (const auto direction : directions) {
             const auto next = neighbor(cell.position, direction);
             if (!next || circuit.at(*next) != Element::signal) continue;
             ++input_count;
