@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 
 exe = sys.argv[1]
 
@@ -24,6 +25,11 @@ with tempfile.TemporaryDirectory(prefix="gatehaven cli ") as directory:
     output = [r for r in rows if r["x"] == "8" and r["y"] == "0"]
     assert [r["ports"] for r in output] == ["0", "15"]
     assert len(rows) == 98
+    svg = Path(directory) / "diagram.svg"
+    run("svg", path, svg)
+    root = ET.parse(svg).getroot()
+    assert len(root.findall("{http://www.w3.org/2000/svg}g")) == 49
+    run("svg", path, Path(directory) / "missing" / "diagram.svg", code=1)
     assert list(csv.DictReader(io.StringIO(run("trace", path, 0)))) == []
     run("run", path, "-1", code=2)
     run("run", path, "1000001", code=2)

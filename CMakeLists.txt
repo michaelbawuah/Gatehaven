@@ -50,7 +50,7 @@ target_link_libraries(gatehaven_platform PUBLIC gatehaven_core PRIVATE Threads::
 gatehaven_defaults(gatehaven_platform)
 
 add_executable(gatehaven-cli src/cli.cpp)
-target_link_libraries(gatehaven-cli PRIVATE gatehaven_core)
+target_link_libraries(gatehaven-cli PRIVATE gatehaven_platform)
 gatehaven_defaults(gatehaven-cli)
 
 if(GATEHAVEN_BUILD_BENCHMARKS)

@@ -2,10 +2,13 @@
 #include "gatehaven/examples.hpp"
 #include "gatehaven/simulation.hpp"
 #include "gatehaven/statistics.hpp"
+#include "gatehaven/svg_export.hpp"
+#include "gatehaven/file_io.hpp"
 
 #include <charconv>
 #include <iostream>
 #include <string_view>
+#include <sstream>
 
 int main(int argc, char** argv) {
     using namespace gatehaven;
@@ -19,6 +22,16 @@ int main(int argc, char** argv) {
         std::cout << "Saved starter circuit to " << argv[2] << '\n';
         return 0;
     }
+    if (argc == 4 && std::string_view(argv[1]) == "svg") {
+        const auto circuit = load_document(argv[2]);
+        if (!circuit) { std::cerr << circuit.error().message << '\n'; return 1; }
+        std::ostringstream svg;
+        const auto rendered = export_svg(svg, *circuit);
+        if (!rendered) { std::cerr << rendered.error() << '\n'; return 1; }
+        const auto written = replace_file(argv[3], svg.str());
+        if (!written) { std::cerr << written.error() << '\n'; return 1; }
+        return 0;
+    }
     const std::string_view command = argc >= 2 ? argv[1] : "";
     if ((command != "check" && command != "run" && command != "stats" && command != "trace") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
@@ -26,6 +39,7 @@ int main(int argc, char** argv) {
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
                      "  gatehaven-cli stats FILE.ghv\n"
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
+                     "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli --version\n";
         return 2;
