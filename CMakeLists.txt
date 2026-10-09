@@ -127,6 +127,8 @@ if(GATEHAVEN_BUILD_TESTS)
     if(GATEHAVEN_BUILD_BENCHMARKS)
         add_test(NAME gatehaven_benchmarks COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_test.py $<TARGET_FILE:gatehaven-bench>)
         set_tests_properties(gatehaven_benchmarks PROPERTIES TIMEOUT 30)
+        add_test(NAME gatehaven_editor_benchmark COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/editor_benchmark_test.py $<TARGET_FILE:gatehaven-editor-bench>)
     endif()
     add_executable(gatehaven_clipboard_peer tests/clipboard_peer.cpp)
     target_link_libraries(gatehaven_clipboard_peer PRIVATE gatehaven_platform)

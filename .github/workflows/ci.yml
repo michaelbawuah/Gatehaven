@@ -143,6 +143,8 @@ jobs:
       - run: build/bench/gatehaven-bench 10000 20 screens
       - run: build/bench/gatehaven-bench 10000 20 pulsed-screens
       - run: build/bench/gatehaven-bench 10000 20 feedback
+      - name: Measure large-circuit editing
+        run: build/bench/gatehaven-editor-bench 100000 > build/bench/editor.json
       - name: Collect repeated benchmark evidence
         run: python bench/measure.py build/bench/gatehaven-bench --runs 3 > build/bench/measurements.json
       - name: Upload benchmark evidence
@@ -151,4 +153,6 @@ jobs:
           name: Gatehaven-benchmark-evidence
           retention-days: 30
           if-no-files-found: error
-          path: build/bench/measurements.json
+          path: |
+            build/bench/measurements.json
+            build/bench/editor.json
