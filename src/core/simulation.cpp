@@ -75,7 +75,7 @@ void Simulation::step(const Circuit& circuit) {
         auto& node = nodes.emplace(cell.position, Node{cell.element, active_material, 0}).first->second;
         if (active_material == Material::source) {
             node.ports = 15;
-            frontier.emplace_back(cell.position, 15);
+            frontier.emplace_back(cell.position, std::uint8_t{15});
         }
     }
 
