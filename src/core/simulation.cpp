@@ -65,7 +65,7 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         });
         rebuild(circuit);
     }
-    if (settled_) { ++ticks_; ++metrics_.settled_ticks; return; }
+    if (settled_ && (!exchange || topology_.groups().empty())) { ++ticks_; ++metrics_.settled_ticks; return; }
     const auto& nodes = topology_.nodes();
     power_.swap(previous_); power_.assign(nets_.vertex_count(), 0); frontier_.clear();
     const auto previous_power = [&](std::size_t node) {
@@ -103,7 +103,7 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     ++metrics_.propagations; propagate();
     // A rebuilt graph has a new component partition: comparisons become valid
     // only after its first complete tick.
-    settled_ = !changed && topology_.groups().empty() && power_ == previous_;
+    settled_ = !changed && (!exchange || topology_.groups().empty()) && power_ == previous_;
     valid_.assign(nodes.size(), true); snapshot_dirty_ = true; invalidated_ = false; ++ticks_;
 }
 void Simulation::reset() {

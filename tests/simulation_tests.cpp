@@ -249,3 +249,19 @@ TEST("invalidated and cleared simulations never report stale relay conductivity"
     CHECK(!simulation.conductive({0, 0}));
     simulation.initialize(circuit); simulation.reset(); CHECK(!simulation.conductive({0, 0}));
 }
+
+TEST("dormant communicator graphs settle and wake when an endpoint is attached") {
+    Circuit circuit; circuit.set({0, 0}, Element::screen); circuit.set({1, 0}, Element::wire);
+    Simulation simulation; simulation.initialize(circuit);
+    simulation.step(circuit); simulation.step(circuit);
+    CHECK(simulation.metrics().settled_ticks == 1 && !simulation.powered({1, 0}));
+    unsigned exchanges = 0;
+    const auto receive = [&](const CommunicatorGroup&, bool) { ++exchanges; return true; };
+    simulation.step(circuit, receive);
+    CHECK(exchanges == 1 && simulation.powered({1, 0}));
+    simulation.step(circuit, receive); simulation.step(circuit, receive);
+    CHECK(exchanges == 3); // An attached endpoint must run even when voltage is stable.
+    simulation.step(circuit); CHECK(!simulation.powered({1, 0}));
+    simulation.step(circuit); simulation.step(circuit);
+    CHECK(simulation.metrics().settled_ticks == 2 && simulation.ticks() == 8);
+}
