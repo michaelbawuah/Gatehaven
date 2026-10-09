@@ -310,10 +310,12 @@ public:
         ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
         ui::text(r, 22, 748, "B: KEYBOARD HELP", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
-        std::string status = status_;
-        if (hover_) status = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
-                            ", " + std::to_string(hover_->y) + "]  " + (simulation.powered(*hover_) ? "ON" : "OFF");
-        ui::text(r, 20, 777, status.substr(0, 73), white, 1.25F);
+        ui::text(r, 20, 771, status_.substr(0, 73), white, 1.25F);
+        if (hover_) {
+            const auto info = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
+                ", " + std::to_string(hover_->y) + "]  " + (simulation.powered(*hover_) ? "ON" : "OFF");
+            ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
+        }
         ui::text(r, 786, 777, (dirty_ ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (help_) render_help(r);
@@ -845,6 +847,11 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_3);
     const auto copied = (*peer)->read(3);
     require(copied && copied->cells.size() == edited.size(), "Editor copy was not shared");
+    const auto blocked_slot = session_directory / "slot-4.ghclip";
+    std::filesystem::create_directory(blocked_slot);
+    key(SDLK_X, static_cast<SDL_Keymod>(SDL_KMOD_CTRL | SDL_KMOD_SHIFT)); key(SDLK_4);
+    require(app.circuit == edited, "A failed shared clipboard write deleted the cut selection");
+    std::filesystem::remove(blocked_slot);
     const Stamp first{2, 1, {{0, 0, Element::source}, {1, 0, Element::wire}}};
     require((*peer)->write(3, first).has_value(), "Peer copy failed");
     key(SDLK_ESCAPE);
@@ -897,6 +904,18 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit.at({11, 3}) == Element::wire, "Eyedropper did not bind the clicked button");
     for (unsigned i = 0; i < 7; ++i) key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == edited, "Sampling a tool mutated the document");
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 572, SDL_BUTTON_RIGHT, 0); // Rebind right to Pan.
+    pointer(SDL_EVENT_MOUSE_BUTTON_UP, 94, 572, SDL_BUTTON_RIGHT, 0);
+    const auto center = app.view.center_x;
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}, SDL_BUTTON_RIGHT);
+    SDL_Event motion{}; motion.type = SDL_EVENT_MOUSE_MOTION;
+    motion.motion.x = 800; motion.motion.y = 400; motion.motion.xrel = 32; motion.motion.state = SDL_BUTTON_RMASK;
+    require(SDL_PushEvent(&motion), "Could not push pan event"); dispatch(app, renderer);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3}, SDL_BUTTON_RIGHT);
+    require(app.view.center_x < center && app.circuit == edited, "Rebound panner drew or failed to move");
+    const auto after_pan = app.view.center_x;
+    require(SDL_PushEvent(&motion), "Could not push released pan event"); dispatch(app, renderer);
+    require(app.view.center_x == after_pan, "Pan continued after its button was released");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";

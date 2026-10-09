@@ -37,3 +37,26 @@ TEST("clipboard validates untrusted dimensions cell types offsets and duplicates
     CHECK(!encode_stamp({1, 1, {{0, 0, static_cast<Element>(255)}}}));
     CHECK(!encode_stamp({1, 1, {{0, 0, Element::wire}, {0, 0, Element::source}}}));
 }
+
+TEST("a correct checksum does not bypass clipboard structure validation") {
+    const auto valid = encode_stamp({4, 2, {{0, 0, Element::wire}, {3, 1, Element::source}}}).value();
+    const auto reseal = [](std::string bytes) {
+        std::uint64_t hash = 14695981039346656037ULL;
+        for (std::size_t i = 0; i < bytes.size() - 8; ++i) {
+            hash = (hash ^ static_cast<unsigned char>(bytes[i])) * 1099511628211ULL;
+        }
+        for (unsigned i = 0; i < 8; ++i) bytes[bytes.size() - 8 + i] = static_cast<char>((hash >> (8 * i)) & 255);
+        return bytes;
+    };
+    auto invalid = valid;
+    invalid[32] = 4; // x == width
+    CHECK(!decode_stamp(reseal(invalid)));
+    invalid = valid; invalid[40] = 0; // Empty element
+    CHECK(!decode_stamp(reseal(invalid)));
+    invalid = valid; invalid[41] = 0; invalid[45] = 0; // Duplicate first cell
+    CHECK(!decode_stamp(reseal(invalid)));
+    invalid = valid; invalid[12] = 2; // Width exceeds 2^32
+    CHECK(!decode_stamp(reseal(invalid)));
+    invalid = valid; invalid[24] = static_cast<char>(255); // Forged count
+    CHECK(!decode_stamp(reseal(invalid)));
+}
