@@ -43,4 +43,19 @@ bool InputProtocol::step(bool request_bit, const Read& read, const More& more) {
     return receiving;
 }
 void InputProtocol::reset() { decoder_.reset(); requests_.clear(); reply_.clear(); error_.clear(); }
+bool OutputProtocol::step(bool request_bit, const Write& write) {
+    bool receiving = false;
+    if (!reply_.empty()) { receiving = reply_.front() != 0; reply_.pop_front(); }
+    if (const auto request = decoder_.push(request_bit); request && request->command == 0) {
+        if (requests_.size() >= 4096) error_ = "Output request queue is full";
+        else requests_.push_back(*request);
+    }
+    if (!error_.empty() || !reply_.empty() || requests_.empty()) return receiving;
+    const auto written = write(requests_.front().byte);
+    if (!written) { error_ = written.error(); return receiving; }
+    requests_.pop_front();
+    for (const auto bit : serial_reply(0)) reply_.push_back(bit);
+    return receiving;
+}
+void OutputProtocol::reset() { decoder_.reset(); requests_.clear(); reply_.clear(); error_.clear(); }
 }

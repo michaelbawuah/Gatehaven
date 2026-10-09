@@ -33,3 +33,17 @@ TEST("input byte requests wait at EOF and resume without resetting the circuit")
     for (unsigned i = 0; i < 11; ++i) reply.push_back(input.step(false, read, more) ? 1 : 0);
     CHECK(reply == serial_reply(0, 0xA5, 8)); CHECK(input.pending() == 0);
 }
+TEST("output acknowledges only successful writes and retries failed bytes in order") {
+    OutputProtocol output; bool ready = false; std::vector<std::uint8_t> bytes;
+    const OutputProtocol::Write write = [&](std::uint8_t byte) -> std::expected<void, std::string> {
+        if (!ready) return std::unexpected("unavailable"); bytes.push_back(byte); return {};
+    };
+    for (auto bit : serial_reply(0, 0xE3, 8)) CHECK(!output.step(bit != 0, write));
+    CHECK(!output.error().empty() && output.pending() == 1 && bytes.empty());
+    for (unsigned i = 0; i < 8; ++i) CHECK(!output.step(false, write));
+    ready = true; output.retry(); CHECK(!output.step(false, write));
+    CHECK(bytes == std::vector<std::uint8_t>{0xE3});
+    std::vector<std::uint8_t> ack;
+    for (unsigned i = 0; i < 3; ++i) ack.push_back(output.step(false, write) ? 1 : 0);
+    CHECK(ack == serial_reply(0));
+}
