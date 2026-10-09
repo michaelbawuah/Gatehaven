@@ -12,6 +12,7 @@
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/viewport.hpp"
 #include "gatehaven/touch.hpp"
+#include "gatehaven/taps.hpp"
 #include "gatehaven/recovery.hpp"
 #include "gatehaven/recovery_schedule.hpp"
 #include "gatehaven/version.hpp"
@@ -471,6 +472,8 @@ private:
     bool eyedropper_{};
     std::optional<std::size_t> keyboard_focus_;
     TouchGesture touches_;
+    TapSequence taps_;
+    Uint8 touch_clicks_{1};
     bool touch_canvas_{};
     bool placing_{};
     bool help_{};
@@ -532,6 +535,7 @@ private:
 
     void cancel_gesture(bool clear_touch = true) {
         if (clear_touch) touches_.clear();
+        taps_.clear();
         drag_.reset();
         polyline_.reset();
         pan_button_.reset();
@@ -560,6 +564,10 @@ private:
             return;
         }
         if (update.action == TouchAction::none) return;
+        const auto time = event.tfinger.timestamp != 0 ? event.tfinger.timestamp : SDL_GetTicksNS();
+        if (update.action == TouchAction::begin) touch_clicks_ = static_cast<Uint8>(taps_.begin(event.tfinger.touchID, time, update.after));
+        else if (update.action == TouchAction::move) taps_.move(update.after);
+        else if (update.action == TouchAction::end) taps_.end(time, update.after);
         SDL_Event pointer{};
         if (update.action == TouchAction::move) {
             pointer.type = SDL_EVENT_MOUSE_MOTION; pointer.motion.which = SDL_TOUCH_MOUSEID;
@@ -568,7 +576,7 @@ private:
             pointer.motion.yrel = static_cast<float>(update.after.y - update.before.y);
         } else {
             pointer.type = update.action == TouchAction::begin ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
-            pointer.button.which = SDL_TOUCH_MOUSEID; pointer.button.button = SDL_BUTTON_LEFT; pointer.button.clicks = 1;
+            pointer.button.which = SDL_TOUCH_MOUSEID; pointer.button.button = SDL_BUTTON_LEFT; pointer.button.clicks = touch_clicks_;
             pointer.button.x = static_cast<float>(update.after.x); pointer.button.y = static_cast<float>(update.after.y);
         }
         this->event(pointer);
