@@ -1163,6 +1163,25 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == edited, "Selection moves did not undo cleanly");
     key(SDLK_ESCAPE);
+    key(SDLK_Q);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-4, -4});
+    SDL_SetModState(SDL_KMOD_SHIFT);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-2, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
+    SDL_SetModState(SDL_KMOD_ALT);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-4, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-4, -4});
+    SDL_SetModState(SDL_KMOD_NONE);
+    key(SDLK_C, SDL_KMOD_CTRL);
+    const auto shaped = (*peer)->read(0);
+    require(shaped && shaped->cells.size() == 3 && shaped->width == 5, "Add/subtract selection lost its holes or frame");
+    key(SDLK_D, SDL_KMOD_CTRL);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {8, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {8, -4});
+    require(app.circuit.at({8, -4}) == Element::wire && app.circuit.at({9, -4}) == Element::empty &&
+            app.circuit.at({11, -4}) == Element::wire && app.circuit.at({12, -4}) == Element::wire,
+            "Duplicate did not preserve sparse selected cells");
+    const auto after_duplicate = (*peer)->read(0);
+    require(after_duplicate && after_duplicate->cells == shaped->cells, "Duplicate changed the shared clipboard");
+    key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_ESCAPE);
+    require(app.circuit == edited, "Sparse duplicate did not undo as one edit");
     constexpr std::array<Uint8, 5> inputs{SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT, SDL_BUTTON_MIDDLE, SDL_BUTTON_X1, SDL_BUTTON_X2};
     for (std::size_t i = 0; i < inputs.size(); ++i) {
         pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 216, inputs[i], 0); // Bind this button to Source.
