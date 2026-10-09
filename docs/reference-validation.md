@@ -32,3 +32,12 @@ external engine exposed this in the first seeded fixture. Both the production
 engine and the slow Gatehaven traversal oracle now include the confirmed edge.
 The slow oracle therefore includes this documented correction to its earlier
 behavior; external comparisons remain the independent acceptance evidence.
+
+## 9 October 2026 result
+
+All 430 state observations passed: six published samples at ticks 0, 1, 2, 10,
+and 100, plus 100 seeded mixed circuits at ticks 0, 1, 2, and 7. The report
+`tests/compatibility/behavior-2026-10-09.json` records every reference state hash,
+cell count, and mismatch count. This includes all element types and saved-state
+combinations, with file endpoints disconnected. Runtime throughput is measured
+separately using Release builds of both engines on the same host.

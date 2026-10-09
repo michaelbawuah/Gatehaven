@@ -44,7 +44,7 @@ TEST("signals receive directly from sources but isolate gate outputs") {
     Circuit circuit;
     circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::signal);
     circuit.set({2, 0}, Element::or_gate);
-    circuit.set({5, 0}, Element::and_gate); circuit.set({6, 0}, Element::signal);
+    circuit.set({5, 0}, Element::nor_gate); circuit.set({6, 0}, Element::signal);
     Simulation engine; engine.initialize(circuit);
     CHECK(engine.powered({1, 0}) && !engine.powered({2, 0}));
     engine.step(circuit);

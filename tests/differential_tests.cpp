@@ -2,7 +2,7 @@
 #include "reference_simulation.hpp"
 #include <random>
 using namespace gatehaven;
-TEST("simulation matches the frozen reference across seeded mixed circuits and edits") {
+TEST("simulation matches the slow traversal oracle across seeded mixed circuits and edits") {
     std::mt19937 random(20261009);
     for (unsigned trial = 0; trial < 60; ++trial) {
         Circuit circuit;
