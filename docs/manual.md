@@ -118,3 +118,10 @@ In the recovery chooser, Page Up/Page Down move five entries and Home/End jump
 to the newest/oldest entry. The counter shows your position in the full list.
 Delete asks for confirmation: Enter permanently removes only that abandoned
 snapshot; Escape keeps it. Saved circuit files and live windows are unaffected.
+
+## Offline help
+
+Packaged builds include browser-readable guides. F1 opens the installed manual,
+including the file-port protocol and simulation notes, without an internet
+connection. Browser zoom, text selection, search, and printing work normally.
+A development build without generated guides falls back to the repository copy.
