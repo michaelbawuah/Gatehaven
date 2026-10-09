@@ -22,6 +22,16 @@ Circuit starter_circuit() {
     return c;
 }
 
+Circuit screen_switch_circuit() {
+    Circuit c;
+    c.set({0, 0}, Element::screen);
+    for (Coordinate x = 1; x < 4; ++x) c.set({x, 0}, Element::wire);
+    c.set({4, 0}, Element::signal); c.set({5, 0}, Element::and_gate);
+    for (Coordinate x = 6; x < 9; ++x) c.set({x, 0}, Element::wire);
+    c.set({9, 0}, Element::signal); c.set({10, 0}, Element::screen);
+    return c;
+}
+
 Circuit oscillator_circuit() {
     Circuit c;
     c.set({0, 0}, Element::nor_gate);
