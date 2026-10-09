@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -139,9 +140,9 @@ public:
                 } else launch_open(path);
             }
         }
-        if (!running || dialog_pending_ || clipboard_menu_) { accumulator_ = 0; return; }
+        if (!running || dialog_pending_ || clipboard_menu_ || speed_edit_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
-        const double interval = 1.0 / speeds_[speed_index_];
+        const double interval = 1.0 / speed_;
         unsigned work = 0;
         while (accumulator_ >= interval && work < 8) {
             simulation.step(circuit);
@@ -161,6 +162,13 @@ public:
             drag_.reset(); preview_.clear(); accumulator_ = 0;
         }
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
+        if (speed_edit_) {
+            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
+                if (ViewRect{656, 460, 148, 40}.contains(e.button.x, e.button.y)) commit_speed();
+                else if (ViewRect{484, 460, 148, 40}.contains(e.button.x, e.button.y)) speed_edit_.reset();
+            }
+            return;
+        }
         if (clipboard_menu_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
                 for (unsigned slot = 0; slot < 10; ++slot) {
@@ -237,7 +245,7 @@ public:
         line(r, 239, 96, 239, 764, border);
         ui::text(r, 22, 24, "GATEHAVEN", ink, 3);
         ui::text(r, 24, 57, "BUILD. CONNECT. DISCOVER.", muted, 1.25F);
-        const auto toolbar = buttons(running, speeds_[speed_index_]);
+        const auto toolbar = buttons(running, speed_);
         for (std::size_t i = 0; i < toolbar.size(); ++i) {
             const auto& button = toolbar[i];
             rectangle(r, static_cast<float>(button.rect.x), static_cast<float>(button.rect.y),
@@ -274,6 +282,7 @@ public:
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (help_) render_help(r);
         if (clipboard_menu_) render_clipboard_menu(r);
+        if (speed_edit_) render_speed_dialog(r);
         if (dialog_pending_) {
             rectangle(r, 414, 334, 548, 92, ink);
             ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", white, 2);
@@ -301,8 +310,10 @@ private:
     std::filesystem::path path_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
-    static constexpr std::array<unsigned, 5> speeds_{1, 5, 15, 30, 60};
-    std::size_t speed_index_{1};
+    unsigned speed_{5};
+    std::optional<std::string> speed_edit_;
+    bool speed_replace_{};
+    bool speed_error_{};
     double accumulator_{};
 
     void apply(std::span<const Cell> edits) {
@@ -330,7 +341,7 @@ private:
         if (e.button != SDL_BUTTON_LEFT && e.button != SDL_BUTTON_RIGHT) return;
         if (help_) { help_ = false; return; }
         if (e.button == SDL_BUTTON_LEFT) {
-            const auto toolbar = buttons(running, speeds_[speed_index_]);
+            const auto toolbar = buttons(running, speed_);
             for (std::size_t i = 0; i < toolbar.size(); ++i) {
                 if (!toolbar[i].rect.contains(e.x, e.y)) continue;
                 switch (i) {
@@ -340,9 +351,9 @@ private:
                 case 3: undo(false); break;
                 case 4: undo(true); break;
                 case 5: file_dialog(false); break;
-                case 6: request_save(false); break;
+                case 6: request_save((SDL_GetModState() & SDL_KMOD_SHIFT) != 0); break;
                 case 7: view.frame(circuit.bounds()); break;
-                case 8: speed_index_ = (speed_index_ + 1) % speeds_.size(); accumulator_ = 0; break;
+                case 8: edit_speed(); break;
                 case 9: fresh(); break;
                 default: break;
                 }
@@ -372,6 +383,7 @@ private:
     void key(const SDL_KeyboardEvent& e) {
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
+        if (speed_edit_) { speed_key(e.key); return; }
         if (clipboard_menu_) {
             if (e.key == SDLK_ESCAPE) clipboard_menu_.reset();
             else if (e.key >= SDLK_0 && e.key <= SDLK_9) choose_clipboard(static_cast<unsigned>(e.key - SDLK_0));
@@ -394,7 +406,7 @@ private:
             case SDLK_C: clipboard_action('c', shift); break;
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
-            case SDLK_SPACE: speed_index_ = (speed_index_ + 1) % speeds_.size(); accumulator_ = 0; break;
+            case SDLK_SPACE: edit_speed(); break;
             default: break;
             }
             return;
@@ -425,6 +437,59 @@ private:
             dirty_ = true; simulation.invalidate(history.last_changes());
             status_ = redo ? "REDONE" : "UNDONE";
         }
+    }
+
+    void edit_speed() {
+        speed_edit_ = std::to_string(speed_);
+        speed_replace_ = true;
+        speed_error_ = false;
+        accumulator_ = 0;
+        drag_.reset(); preview_.clear();
+    }
+
+    void speed_key(SDL_Keycode code) {
+        if (code == SDLK_ESCAPE) { speed_edit_.reset(); return; }
+        if (code == SDLK_RETURN || code == SDLK_KP_ENTER) { commit_speed(); return; }
+        if (code == SDLK_BACKSPACE || code == SDLK_DELETE) {
+            if (speed_replace_) speed_edit_->clear();
+            else if (!speed_edit_->empty()) speed_edit_->pop_back();
+            speed_replace_ = false; speed_error_ = false; return;
+        }
+        std::optional<char> digit;
+        if (code >= SDLK_0 && code <= SDLK_9) digit = static_cast<char>('0' + code - SDLK_0);
+        else if (code == SDLK_KP_0) digit = '0';
+        else if (code >= SDLK_KP_1 && code <= SDLK_KP_9) digit = static_cast<char>('1' + code - SDLK_KP_1);
+        if (digit) {
+            if (speed_replace_) speed_edit_->clear();
+            if (speed_edit_->size() < 4) speed_edit_->push_back(*digit);
+            speed_replace_ = false; speed_error_ = false;
+        }
+    }
+
+    void commit_speed() {
+        unsigned value{};
+        const auto result = std::from_chars(speed_edit_->data(), speed_edit_->data() + speed_edit_->size(), value);
+        if (result.ec != std::errc{} || result.ptr != speed_edit_->data() + speed_edit_->size() || value < 1 || value > 1000) {
+            speed_error_ = true; return;
+        }
+        speed_ = value;
+        speed_edit_.reset();
+        accumulator_ = 0;
+        status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
+    }
+
+    void render_speed_dialog(SDL_Renderer* r) const {
+        rectangle(r, 410, 234, 470, 306, ink);
+        ui::text(r, 452, 272, "SIMULATION SPEED", white, 2.5F);
+        ui::text(r, 452, 314, "TICKS PER SECOND: 1 TO 1000", white, 1.5F);
+        rectangle(r, 484, 350, 320, 58, speed_replace_ ? teal : white);
+        ui::text(r, 508, 366, speed_edit_->empty() ? "_" : *speed_edit_, speed_replace_ ? white : ink, 3);
+        if (speed_error_) ui::text(r, 452, 427, "ENTER A WHOLE NUMBER FROM 1 TO 1000", {255, 182, 148, 255}, 1.25F);
+        else ui::text(r, 452, 427, "ENTER: APPLY    ESC: CANCEL", white, 1.5F);
+        rectangle(r, 484, 460, 148, 40, muted);
+        rectangle(r, 656, 460, 148, 40, teal);
+        ui::text(r, 520, 473, "CANCEL", white, 2);
+        ui::text(r, 696, 473, "APPLY", white, 2);
     }
 
     void copy(bool cut) {
@@ -619,11 +684,12 @@ private:
     void render_help(SDL_Renderer* r) const {
         rectangle(r, 338, 158, 846, 556, ink);
         ui::text(r, 376, 194, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
-        constexpr std::array<std::string_view, 11> lines{
+        constexpr std::array<std::string_view, 12> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
             "LEFT DRAG: DRAW      RIGHT DRAG: ERASE",
             "MIDDLE DRAG: PAN     SCROLL: ZOOM",
             "SPACE: PLAY/PAUSE    RIGHT: ONE TICK",
+            "CTRL SPACE: SET TICKS PER SECOND",
             "R: RESET            F: FRAME CIRCUIT",
             "CTRL C/X/V: COPY / CUT / PASTE",
             "CTRL Z/Y: UNDO / REDO",
@@ -682,6 +748,19 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit.size() == original.size() + 5, "Keyboard redo failed");
     key(SDLK_R);
     require(app.simulation.ticks() == 0, "Reset failed");
+    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    key(SDLK_2); key(SDLK_3); key(SDLK_RETURN);
+    key(SDLK_SPACE);
+    app.update(0.1);
+    require(app.simulation.ticks() == 2, "Custom simulation speed was not applied");
+    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    key(SDLK_0); key(SDLK_RETURN);
+    app.update(0.2);
+    require(app.simulation.ticks() == 2, "Invalid speed closed the dialog or advanced simulation");
+    key(SDLK_ESCAPE);
+    app.update(0.1);
+    require(app.simulation.ticks() == 4, "Cancel changed the previous simulation speed");
+    key(SDLK_SPACE); key(SDLK_R);
     const auto edited = app.circuit;
     key(SDLK_N, SDL_KMOD_CTRL);
     require(launched.size() == 1 && !launched[0], "New did not request a separate instance");
