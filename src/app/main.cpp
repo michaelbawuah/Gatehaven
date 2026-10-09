@@ -633,6 +633,7 @@ private:
     void undo(bool redo) {
         cancel_gesture();
         if (redo ? history.redo(circuit) : history.undo(circuit)) {
+            selection_.clear(); placing_ = false;
              simulation.invalidate(history.last_changes());
             status_ = redo ? "REDONE" : "UNDONE";
         }
