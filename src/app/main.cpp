@@ -559,7 +559,7 @@ private:
 
     void checkpoint() {
         if (!recovery_ || !history.modified()) return;
-        const auto saved = recovery_->write(circuit);
+        const auto saved = recovery_->write(simulation.document_snapshot(circuit));
         if (saved) { recovery_dirty_ = true; recovery_schedule_.written(circuit.revision()); }
         else { recovery_schedule_.failed(); status_ = "RECOVERY SAVE FAILED: " + saved.error(); }
     }
@@ -1150,7 +1150,7 @@ private:
                 if (!confirm_overwrite_(window_)) { status_ = "SAVE CANCELED - CTRL SHIFT S KEEPS BOTH VERSIONS"; return false; }
             }
         }
-        const auto result = save_document(path, circuit);
+        const auto result = save_document(path, simulation.document_snapshot(circuit));
         if (!result) { status_ = result.error().message; return false; }
         path_ = path;
         const auto inspected = fingerprint_file(path);
@@ -1665,7 +1665,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const std::array save_edit{Cell{{43, -17}, Element::wire}};
     require(app.history.apply(app.circuit, save_edit).has_value(), "Could not edit save fixture");
     key(SDLK_S, SDL_KMOD_CTRL);
-    require(!app.history.modified() && load_document(save_path).value() == app.circuit, "Ordinary Save failed");
+    require(!app.history.modified() && load_document(save_path).value() == app.simulation.document_snapshot(app.circuit), "Ordinary Save failed");
     const auto legacy_path = session_directory / "legacy workflow.ccsb";
     Circuit legacy_fixture; legacy_fixture.set({0, 0}, Element::positive_relay, 3);
     require(save_document(legacy_path, legacy_fixture).has_value() && app.open(legacy_path), "Legacy open failed");
