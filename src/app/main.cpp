@@ -160,9 +160,10 @@ public:
                 auto path = utf8_path(result->path);
                 if (result->save) {
                     if (!path.has_extension()) path += ".ghv";
-                    save(path);
+                    if (save(path) && close_after_save_) quit = true;
                 } else launch_open(path);
             }
+            close_after_save_ = false;
         }
         if (!running || dialog_pending_ || clipboard_menu_ || speed_edit_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
@@ -351,6 +352,7 @@ private:
     bool help_{};
     bool beginner_{};
     bool dialog_pending_{};
+    bool close_after_save_{};
     std::optional<Point> hover_;
     std::optional<Point> drag_;
     std::size_t drag_button_{};
@@ -706,15 +708,21 @@ private:
 
     bool discard_changes() {
         if (!history.modified()) return true;
+        cancel_gesture();
         running = false;
         const SDL_MessageBoxButtonData choices[]{
-            {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Cancel"},
-            {0, 1, "Discard changes"}};
+            {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Cancel"},
+            {0, 1, "Discard changes"}, {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 2, "Save"}};
         const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window_, "Unsaved circuit",
-            "This circuit has unsaved changes. Cancel to save it first, or discard the changes.",
-            2, choices, nullptr};
+            "Save your changes before closing this circuit?", 3, choices, nullptr};
         int selected = 0;
-        return SDL_ShowMessageBox(&data, &selected) && selected == 1;
+        if (!SDL_ShowMessageBox(&data, &selected)) return false;
+        if (selected == 1) return true;
+        if (selected != 2) return false;
+        if (!path_.empty()) return save(path_);
+        close_after_save_ = true;
+        file_dialog(true);
+        return false;
     }
 
     void launch(std::optional<std::filesystem::path> document) {
@@ -724,10 +732,11 @@ private:
 
     void fresh() { launch(std::nullopt); }
 
-    void save(const std::filesystem::path& path) {
+    bool save(const std::filesystem::path& path) {
         const auto result = save_document(path, circuit);
-        if (!result) { status_ = result.error().message; return; }
+        if (!result) { status_ = result.error().message; return false; }
         path_ = path; history.mark_saved(); status_ = "CIRCUIT SAVED";
+        return true;
     }
 
     void request_save(bool save_as) {
