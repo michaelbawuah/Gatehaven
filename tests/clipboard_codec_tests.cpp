@@ -60,3 +60,13 @@ TEST("a correct checksum does not bypass clipboard structure validation") {
     invalid = valid; invalid[24] = static_cast<char>(255); // Forged count
     CHECK(!decode_stamp(reseal(invalid)));
 }
+
+TEST("clipboard state revision round trips every saved level without enlarging messages") {
+    Stamp stamp{4, 1, {}};
+    for (unsigned i = 0; i < 4; ++i) stamp.cells.push_back({i, 0, Element::or_gate, static_cast<std::uint8_t>(i)});
+    const auto bytes = encode_stamp(stamp); CHECK(bytes && bytes->starts_with("GHCLIP02"));
+    CHECK(bytes->size() == 76 && decode_stamp(*bytes).value() == stamp);
+    for (auto& cell : stamp.cells) cell.state = 0;
+    const auto old = encode_stamp(stamp); CHECK(old && old->starts_with("GHCLIP01"));
+    CHECK(decode_stamp(*old).value() == stamp);
+}
