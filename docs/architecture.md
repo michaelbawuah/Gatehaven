@@ -24,18 +24,29 @@ per-element counts are cached. Visible-cell visitors traverse only relevant rows
 and columns without allocating a temporary cell vector.
 
 CompiledCircuit turns each revision into ordered indexed nodes, N/E/S/W adjacency,
-communicator members, and unique neighboring Signal inputs. Simulation preserves
-power only for unchanged element types when recompiling. Contiguous power and
-workspace arrays support propagation; diagnostic maps are materialized lazily.
-Reset and invalidation maintain the same observable snapshot semantics as the
-reference simulator. A copied engine owns independent workspace buffers.
+communicator members, and neighboring Signal inputs. Netlist groups fixed
+conductive paths into components with separate crossing axes. Each relay is a
+switchable vertex linked to neighboring components. Controls store compact input
+component identifiers; communicator groups store unique inputs and output nets.
 
-A communicator-free circuit can skip propagation once consecutive power states
-match. Ticks still advance; edits, invalidation, and reset wake the engine.
-Communicators never use this shortcut because external input can change each
-tick. Metrics distinguish topology builds, real propagations, frontier visits,
-and skipped settled ticks. Seeded differential tests compare every tick against
-a frozen version of Gatehaven's earlier engine.
+The hot loop evaluates controls from previous power, then propagates through
+energized component/relay edges. Per-cell power is expanded only when observed.
+Initialization propagates saved levels at tick zero; desktop Reset uses reset
+levels instead. Edits refresh connectivity without advancing ticks. Invalidated
+cells cannot leak stale power or relay conductivity into the new topology.
+A copied engine owns independent workspace buffers.
+
+Stable circuits can skip propagation when no live exchange callback is attached.
+Ticks still advance. Edits, invalidation, reset, or attaching an endpoint wake the
+engine. A callback with communicator groups executes every tick, even if its
+voltage is unchanged. Metrics distinguish compilation, propagation, component
+frontier visits, and skipped settled ticks.
+
+Seeded tests compare against an independently structured traversal implementation
+of the supplied rules. A separate external adapter compares observable states on
+six published examples and generated circuits. The Source/Signal adjacency rule
+follows the brief and is an explicitly tested difference from that reference;
+see [reference validation](reference-validation.md) for scope and limitations.
 
 Store occupied cells only. Empty space should consume no per-cell memory. Start
 with a straightforward ordered sparse representation and establish correctness
@@ -50,8 +61,8 @@ Keep application mutation and simulation on the main thread initially. This
 avoids racing editor changes against simulation snapshots. Worker threads will
 need an explicit ownership model and measured benefit before being introduced.
 
-Native documents contain circuit structure, not machine-dependent pointers or
-running simulation state. Loading must either produce a complete validated
+Native documents contain circuit structure and saved/reset levels, never machine
+pointers, stream paths, protocol queues, or the running tick counter. Loading must either produce a complete validated
 document or leave the current circuit unchanged.
 
 New/Open start the resolved executable using SDL's argument-array process API;
