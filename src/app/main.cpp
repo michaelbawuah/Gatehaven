@@ -846,7 +846,7 @@ private:
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
             case SDLK_D:
-                cancel_gesture(); placement_ = capture_selection(circuit, selection_); placement_preview_.reset(placement_);
+                cancel_gesture(); placement_ = capture_selection(simulation.document_snapshot(circuit), selection_); placement_preview_.reset(placement_);
                 placing_ = !placement_.cells.empty(); status_ = "CLICK TO PLACE A DUPLICATE"; break;
             case SDLK_I: {
                 std::set<Point> points;
@@ -1044,7 +1044,7 @@ private:
 
     void copy(bool cut) {
         if (!selection_) { status_ = "SELECT A REGION FIRST"; return; }
-        const auto result = clipboards_.write(clipboard_, capture_selection(circuit, selection_));
+        const auto result = clipboards_.write(clipboard_, capture_selection(simulation.document_snapshot(circuit), selection_));
         if (!result) { status_ = "COPY FAILED: " + result.error(); return; }
         if (cut) erase_selection();
         status_ = "COPIED TO SHARED CLIPBOARD " + std::to_string(clipboard_);
@@ -1103,7 +1103,7 @@ private:
 
     void transform(char operation) {
         if (!placing_ && !selection_) return;
-        auto stamp = placing_ ? placement_ : capture_selection(circuit, selection_);
+        auto stamp = placing_ ? placement_ : capture_selection(simulation.document_snapshot(circuit), selection_);
         if (operation == 'h') stamp.flip_horizontal();
         else if (operation == 'v') stamp.flip_vertical();
         else {
