@@ -1349,6 +1349,15 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     finger(SDL_EVENT_FINGER_UP, 2, 900, 400); finger(SDL_EVENT_FINGER_MOTION, 1, 650, 400);
     finger(SDL_EVENT_FINGER_UP, 1, 650, 400);
     require(app.circuit == before_touch, "Remaining pinch finger resumed drawing");
+    finger(SDL_EVENT_FINGER_DOWN, 1, 600, 400);
+    SDL_Event lost{}; lost.type = SDL_EVENT_WINDOW_FOCUS_LOST;
+    require(SDL_PushEvent(&lost), "Could not queue focus loss"); dispatch(app, renderer);
+    finger(SDL_EVENT_FINGER_UP, 1, 650, 400);
+    require(app.circuit == before_touch, "Focus loss committed an unfinished touch stroke");
+    key(SDLK_F2); key(SDLK_DELETE); key(SDLK_SPACE);
+    const auto help_ticks = app.simulation.ticks(); app.update(0.25);
+    require(app.circuit == before_touch && app.simulation.ticks() == help_ticks, "Help allowed hidden editor actions");
+    key(SDLK_ESCAPE);
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
