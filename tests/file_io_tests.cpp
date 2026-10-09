@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <mutex>
 using namespace gatehaven;
 TEST("bounded file reads and replacement preserve complete binary payloads") {
     const auto root = std::filesystem::temp_directory_path() / ("gatehaven-io-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
@@ -24,9 +25,16 @@ TEST("concurrent replacements always leave one complete file and no temporary de
     struct Cleanup { std::filesystem::path p; ~Cleanup() { std::error_code error; std::filesystem::remove_all(p, error); } } cleanup{root};
     const auto path = root / "shared.bin";
     const std::string a(8192, 'a'), b(4096, 'b'); std::atomic<bool> success{true};
-    auto writer = [&](const std::string& bytes) { for (unsigned i = 0; i < 12; ++i) if (!replace_file(path, bytes)) success = false; };
+    std::mutex error_mutex; std::string failure;
+    auto writer = [&](const std::string& bytes) {
+        for (unsigned i = 0; i < 12; ++i) {
+            const auto result = replace_file(path, bytes);
+            if (!result) { success = false; const std::lock_guard guard(error_mutex); failure = result.error(); }
+        }
+    };
     std::thread first(writer, std::cref(a)), second(writer, std::cref(b)); first.join(); second.join();
-    CHECK(success); const auto bytes = read_bounded_file(path, 8192); CHECK(bytes && (*bytes == a || *bytes == b));
+    if (!success) throw std::runtime_error("Concurrent replacement failed: " + failure);
+    const auto bytes = read_bounded_file(path, 8192); CHECK(bytes && (*bytes == a || *bytes == b));
     CHECK(std::distance(std::filesystem::directory_iterator(root), std::filesystem::directory_iterator{}) == 1);
     CHECK(!replace_file(root, "reject"));
     CHECK(std::distance(std::filesystem::directory_iterator(root), std::filesystem::directory_iterator{}) == 1);

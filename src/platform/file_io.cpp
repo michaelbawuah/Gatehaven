@@ -1,4 +1,5 @@
 #include "gatehaven/file_io.hpp"
+#include "gatehaven/detail/replace_path.hpp"
 #include <chrono>
 #include <fstream>
 #include <limits>
@@ -21,10 +22,10 @@ std::expected<std::string, std::string> read_bounded_file(const std::filesystem:
 }
 std::expected<void, std::string> replace_file(const std::filesystem::path& path, std::string_view bytes) {
     if (bytes.size() > static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) return std::unexpected("File exceeds stream size limit");
-    const auto token = std::chrono::steady_clock::now().time_since_epoch().count();
+    const auto token = detail::temporary_token();
     for (unsigned attempt = 0; attempt < 32; ++attempt) {
         auto temporary = path;
-        temporary += ".tmp-" + std::to_string(token) + "-" + std::to_string(attempt);
+        temporary += ".tmp-" + token + "-" + std::to_string(attempt);
         std::ofstream out(temporary, std::ios::binary | std::ios::noreplace);
         if (!out) continue;
         struct Cleanup {
@@ -36,12 +37,7 @@ std::expected<void, std::string> replace_file(const std::filesystem::path& path,
         if (!out) return std::unexpected("Could not write temporary file");
         out.close();
         if (!out) return std::unexpected("Could not close temporary file");
-#ifdef _WIN32
-        if (!MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) return std::unexpected("Could not replace file");
-#else
-        std::error_code error; std::filesystem::rename(temporary, path, error);
-        if (error) return std::unexpected(error.message());
-#endif
+        if (const auto error = detail::replace_path(temporary, path)) return std::unexpected(error.message());
         return {};
     }
     return std::unexpected("Could not create a temporary file beside the destination");

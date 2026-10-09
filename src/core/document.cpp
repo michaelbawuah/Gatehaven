@@ -1,4 +1,5 @@
 #include "gatehaven/document.hpp"
+#include "gatehaven/detail/replace_path.hpp"
 
 #include <charconv>
 #include <chrono>
@@ -109,10 +110,10 @@ std::expected<void, DocumentError> save_document(const std::filesystem::path& pa
                                                 const Circuit& circuit) {
     // Write beside the target so replacement stays on the same filesystem.
     // noreplace prevents collisions from truncating another temporary file.
-    const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+    const auto stamp = detail::temporary_token();
     for (unsigned attempt = 0; attempt < 32; ++attempt) {
         auto temporary = path;
-        temporary += ".part-" + std::to_string(stamp) + "-" + std::to_string(attempt);
+        temporary += ".part-" + stamp + "-" + std::to_string(attempt);
         std::ofstream output(temporary, std::ios::binary | std::ios::out | std::ios::noreplace);
         if (!output) continue;
         RemoveTemporary cleanup{temporary};
@@ -124,16 +125,9 @@ std::expected<void, DocumentError> save_document(const std::filesystem::path& pa
         if (!flushed || output.fail()) {
             return std::unexpected(DocumentError{0, "Could not finish writing document"});
         }
-#ifdef _WIN32
-        if (!MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-            return std::unexpected(DocumentError{0, "Could not replace document (Windows error " +
-                                                    std::to_string(GetLastError()) + ")"});
+        if (const auto error = detail::replace_path(temporary, path)) {
+            return std::unexpected(DocumentError{0, "Could not replace document: " + error.message()});
         }
-#else
-        std::error_code error;
-        std::filesystem::rename(temporary, path, error);
-        if (error) return std::unexpected(DocumentError{0, "Could not replace document: " + error.message()});
-#endif
         return {};
     }
     return std::unexpected(DocumentError{0, "Could not create a temporary file beside the destination"});
