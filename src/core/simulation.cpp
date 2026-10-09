@@ -103,7 +103,7 @@ void Simulation::refresh(const Circuit& circuit) {
 
 bool Simulation::conductive(Point point) const {
     const auto index = topology_.index(point);
-    if (index == no_node || index >= materials_.size()) return false;
+    if (index == no_node || index >= materials_.size() || index >= valid_.size() || !valid_[index]) return false;
     const auto element = topology_.nodes()[index].cell.element;
     return (element == Element::positive_relay || element == Element::negative_relay) && materials_[index] == Material::conductor;
 }

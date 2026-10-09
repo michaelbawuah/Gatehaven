@@ -249,3 +249,11 @@ TEST("refresh after editing propagates instantly and preserves the tick counter"
     CHECK(!engine.powered({1, 0}) && engine.ticks() == 1);
     CHECK(engine.document_snapshot(circuit).saved_state({2, 0}) == 0);
 }
+
+TEST("invalidated and cleared simulations never report stale relay conductivity") {
+    Circuit circuit; circuit.set({0, 0}, Element::positive_relay, 3);
+    Simulation simulation; simulation.initialize(circuit); CHECK(simulation.conductive({0, 0}));
+    const std::array changed{Point{0, 0}}; simulation.invalidate(changed);
+    CHECK(!simulation.conductive({0, 0}));
+    simulation.initialize(circuit); simulation.reset(); CHECK(!simulation.conductive({0, 0}));
+}
