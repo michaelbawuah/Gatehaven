@@ -32,21 +32,6 @@ struct Unlock {
     ~Unlock() { lock.unlock(); }
 };
 
-std::filesystem::path prepare_directory(const std::filesystem::path& path) {
-    std::filesystem::create_directories(path);
-    if (std::filesystem::is_symlink(std::filesystem::symlink_status(path))) {
-        throw std::runtime_error("Clipboard directory must not be a symbolic link");
-    }
-#ifndef _WIN32
-    struct stat info{};
-    if (lstat(path.c_str(), &info) != 0) os_error("Inspect clipboard directory");
-    if (!S_ISDIR(info.st_mode) || info.st_uid != geteuid()) {
-        throw std::runtime_error("Clipboard directory must belong to this user");
-    }
-    if (chmod(path.c_str(), 0700) != 0) os_error("Protect clipboard directory");
-#endif
-    return path;
-}
 
 std::optional<std::string> read_file(const std::filesystem::path& path, std::size_t limit) {
     const auto status = std::filesystem::symlink_status(path);
@@ -93,7 +78,7 @@ struct ClipboardSession::Impl {
     bool joined{};
 
     explicit Impl(const std::filesystem::path& directory)
-        : root(prepare_directory(directory)), transaction(root / "transaction.lock"), members(root / "members.lock") {
+        : root(platform::prepare_private_directory(directory)), transaction(root / "transaction.lock"), members(root / "members.lock") {
         transaction.lock(true);
         const Unlock release{transaction};
         if (members.try_lock(true)) {
