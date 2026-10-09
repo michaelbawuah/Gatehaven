@@ -171,3 +171,32 @@ jobs:
           --checks='-*,bugprone-use-after-move,bugprone-infinite-loop,bugprone-sizeof-expression,bugprone-suspicious-memory-comparison,performance-for-range-copy'
           --warnings-as-errors='*'
           src/core/circuit.cpp src/core/simulation.cpp src/core/topology.cpp src/core/statistics.cpp
+
+  compatibility:
+    name: External compatibility and throughput
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: btzy/circuit-sandbox
+          ref: 19c00d0bd794c3dd558d501939e55f186f58c9e6
+          path: build/reference
+      - run: sudo apt-get update && sudo apt-get install -y libsdl2-dev libboost-dev pkg-config
+      - run: python -m pip install cmake==4.4.4
+      - run: cmake -S . -B build/compat -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build/compat --parallel 2
+      - run: bash tools/build_reference_adapter.sh build/reference build/reference-adapter
+      - name: Compare independent file decoding and exact round trips
+        run: python tools/audit_legacy.py build/compat/gatehaven-cli build/reference/samples > build/legacy-audit.json
+      - name: Compare all samples and seeded mixed circuits
+        run: python tools/compare_reference.py build/reference-adapter build/compat/gatehaven-cli build/reference/samples > build/behavior.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: Gatehaven-compatibility-evidence
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            build/legacy-audit.json
+            build/behavior.json
