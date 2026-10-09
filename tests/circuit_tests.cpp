@@ -5,6 +5,13 @@
 
 using namespace gatehaven;
 
+TEST("communicator element identifiers round trip by name") {
+    for (const auto e : {Element::screen, Element::file_input, Element::file_output}) {
+        CHECK(is_communicator(e)); CHECK(parse_element(name(e)).value() == e);
+    }
+    CHECK(!is_communicator(Element::signal));
+}
+
 TEST("sparse cells support negative and extreme coordinates") {
     Circuit circuit;
     circuit.set({-8, 4}, Element::wire);

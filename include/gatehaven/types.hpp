@@ -57,13 +57,17 @@ inline constexpr std::array directions{Direction::north, Direction::east,
 
 enum class Element : std::uint8_t {
     empty, wire, crossing, source, signal, positive_relay, negative_relay,
-    and_gate, or_gate, nand_gate, nor_gate
+    and_gate, or_gate, nand_gate, nor_gate, screen, file_input, file_output
 };
 
-inline constexpr std::array<std::string_view, 11> element_names{
+inline constexpr std::array<std::string_view, 14> element_names{
     "empty", "wire", "crossing", "source", "signal", "positive-relay",
-    "negative-relay", "and", "or", "nand", "nor"
+    "negative-relay", "and", "or", "nand", "nor", "screen", "file-input", "file-output"
 };
+
+[[nodiscard]] constexpr bool is_communicator(Element element) {
+    return element == Element::screen || element == Element::file_input || element == Element::file_output;
+}
 
 [[nodiscard]] constexpr std::string_view name(Element element) {
     const auto index = static_cast<std::size_t>(element);

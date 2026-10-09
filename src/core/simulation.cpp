@@ -34,7 +34,10 @@ constexpr Material material(Element element, bool enabled) {
     case Element::and_gate:
     case Element::or_gate:
     case Element::nand_gate:
-    case Element::nor_gate: return enabled ? Material::source : Material::conductor;
+    case Element::nor_gate:
+    case Element::screen:
+    case Element::file_input:
+    case Element::file_output: return enabled ? Material::source : Material::conductor;
     }
     return Material::blocked;
 }
