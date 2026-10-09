@@ -1436,7 +1436,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_Q);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     pointer(SDL_EVENT_MOUSE_BUTTON_UP, 50, 50, SDL_BUTTON_LEFT, 0);
-    require(app.circuit == original && !app.history.modified(), "Outside release committed a stroke");
+    require(app.circuit == edited, "Outside selection release modified the circuit");
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
     key(SDLK_RIGHT);
@@ -1452,7 +1452,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_Q);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     pointer(SDL_EVENT_MOUSE_BUTTON_UP, 50, 50, SDL_BUTTON_LEFT, 0);
-    require(app.circuit == original && !app.history.modified(), "Outside release committed a stroke");
+    require(app.circuit == edited, "Outside selection release modified the circuit");
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-4, -4});
     SDL_SetModState(SDL_KMOD_SHIFT);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-2, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
@@ -1607,6 +1607,8 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     app.enable_recovery(recovery_directory); app.show_recovery();
     key(SDLK_RETURN);
     require(app.circuit == before_touch, "Recovery replaced a modified circuit");
+    key(SDLK_DELETE); key(SDLK_ESCAPE);
+    require(app.circuit == before_touch, "Canceled snapshot deletion changed the circuit");
     key(SDLK_ESCAPE); app.history.mark_saved(); app.show_recovery(); key(SDLK_RETURN);
     require(app.circuit == lost_circuit && app.history.modified() && !app.running, "Recovery did not create an unsaved paused document");
     require(!app.history.can_undo(), "Recovery retained the previous document history");
