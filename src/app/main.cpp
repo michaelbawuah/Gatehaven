@@ -122,7 +122,7 @@ bool confirm_overwrite(SDL_Window* window) {
 
 using InspectionDialog = std::function<bool(SDL_Window*, const std::string&)>;
 bool show_inspection(SDL_Window* window, const std::string& text) {
-    return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Gatehaven cell inspector", text.c_str(), window);
+    return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Gatehaven details", text.c_str(), window);
 }
 
 class App {
@@ -769,6 +769,52 @@ private:
         return {12, 522 + static_cast<double>(index - 10 - palette.size()) * 28, 216, 26};
     }
 
+    std::string focus_description() const {
+        if (!keyboard_focus_) return "Canvas. F9 enables keyboard navigation; F8 inspects the current cell.";
+        const auto index = *keyboard_focus_;
+        if (index < 10) {
+            constexpr std::array<std::string_view, 10> descriptions{
+                "Start or pause simulation. Shortcut: Space.", "Pause and advance one tick. Shortcut: F10.",
+                "Restore reset levels and reset the tick counter. Shortcut: R.", "Undo the last edit. Shortcut: Control Z.",
+                "Redo an undone edit. Shortcut: Control Y.", "Open a circuit in another window. Shortcut: Control O.",
+                "Save this circuit. Control Shift S opens Save As.", "Frame the whole circuit. Shortcut: F.",
+                "Set simulation speed from 1 to 1000 ticks per second. Shortcut: Control Space.",
+                "Open a new empty window. Shortcut: Control N."};
+            return buttons(running, speed_)[index].label + " button. " + std::string(descriptions[index]);
+        }
+        const auto tool = index < 10 + palette.size() ? InputTool{ToolKind::pencil, palette[index - 10]}
+            : InputTool{std::array{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor}[index - 10 - palette.size()]};
+        const auto label = tool.kind == ToolKind::pencil ? std::string(labels[index - 10]) + " pencil"
+            : tool.kind == ToolKind::selector ? "Selector" : tool.kind == ToolKind::panner ? "Panner"
+            : tool.kind == ToolKind::eraser ? "Eraser" : "Interactor";
+        std::string text = label + ". Enter binds the left mouse button. Shift Enter binds touch. Current bindings:";
+        bool bound = false;
+        for (std::size_t i = 0; i < tools_.size(); ++i) if (tools_[i] == tool) { text += " " + std::string(binding_names[i]); bound = true; }
+        return text + (bound ? "." : " none.");
+    }
+    void describe_focus() { status_ = "FOCUS: " + focus_description(); }
+    void show_details(const std::string& text) {
+        cancel_gesture(); tick_schedule_.reset();
+        if (!inspection_dialog_(window_, text)) status_ = SDL_GetError();
+        discard_elapsed_ = true;
+    }
+    std::string window_description() const {
+        std::string text = "Gatehaven window\n";
+        text += history.modified() ? "Unsaved changes.\n" : "No unsaved edits.\n";
+        text += std::to_string(circuit.size()) + " cells. Tick " + std::to_string(simulation.ticks()) + ". ";
+        text += running ? "Running" : "Paused";
+        text += " at " + std::to_string(speed_) + " ticks per second.\n";
+        text += high_contrast_ ? "High contrast on.\n" : "Standard colors.\n";
+        text += std::to_string(endpoints_.bound_files()) + " chosen file connections.\n\n";
+        text += focus_description() + "\n\n";
+        if (hover_) text += describe_cell(circuit, simulation, *hover_) + "\n";
+        text += "Keyboard: Tab moves through controls; Enter activates; Escape returns to canvas.\n"
+                "F9: canvas navigation. Arrows: move cursor. Enter: use the selected tool.\n"
+                "F8: inspect focus or cell. F10: one tick. F11: contrast. F12: this summary.\n"
+                "F1 opens the offline manual in your browser for text resizing and reading.\n";
+        return text;
+    }
+
     void key(SDL_KeyboardEvent e) {
         if (e.key >= SDLK_KP_1 && e.key <= SDLK_KP_9) e.key = SDLK_1 + (e.key - SDLK_KP_1);
         else if (e.key == SDLK_KP_0) e.key = SDLK_0;
@@ -818,13 +864,13 @@ private:
         if (e.key == SDLK_TAB && !control) {
             cancel_gesture();
             keyboard_focus_ = keyboard_focus_ ? (*keyboard_focus_ + (shift ? focus_count - 1 : 1)) % focus_count : (shift ? focus_count - 1 : 0);
-            status_ = "KEYBOARD CONTROLS - TAB: NEXT, SHIFT TAB: PREVIOUS, ENTER: ACTIVATE, ESC: CANVAS";
+            describe_focus();
             return;
         }
         if (keyboard_focus_ && !control) {
             if (e.key == SDLK_ESCAPE) { keyboard_focus_.reset(); return; }
-            if (e.key == SDLK_LEFT || e.key == SDLK_UP) { keyboard_focus_ = (*keyboard_focus_ + focus_count - 1) % focus_count; return; }
-            if (e.key == SDLK_RIGHT || e.key == SDLK_DOWN) { keyboard_focus_ = (*keyboard_focus_ + 1) % focus_count; return; }
+            if (e.key == SDLK_LEFT || e.key == SDLK_UP) { keyboard_focus_ = (*keyboard_focus_ + focus_count - 1) % focus_count; describe_focus(); return; }
+            if (e.key == SDLK_RIGHT || e.key == SDLK_DOWN) { keyboard_focus_ = (*keyboard_focus_ + 1) % focus_count; describe_focus(); return; }
             if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER || e.key == SDLK_SPACE) {
                 const auto box = focus_rect(*keyboard_focus_);
                 SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
@@ -931,12 +977,11 @@ private:
         case SDLK_F5: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::screen}; placing_ = false; break;
         case SDLK_F6: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_input}; placing_ = false; break;
         case SDLK_F8:
-            if (hover_) {
-                cancel_gesture(); tick_schedule_.reset();
-                if (!inspection_dialog_(window_, describe_cell(circuit, simulation, *hover_))) status_ = SDL_GetError();
-                discard_elapsed_ = true;
-            } else status_ = "POINT AT A CELL, THEN PRESS F8 TO INSPECT";
+            if (keyboard_focus_) show_details(focus_description());
+            else if (hover_) show_details(describe_cell(circuit, simulation, *hover_));
+            else status_ = "POINT AT A CELL OR TAB TO A CONTROL, THEN PRESS F8";
             break;
+        case SDLK_F12: show_details(window_description()); break;
         case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
@@ -1865,6 +1910,21 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.history.modified() && load_document(save_path).value() == lost_circuit, "Unapproved conflict overwrote external work");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
+    key(SDLK_ESCAPE); key(SDLK_TAB); key(SDLK_F8);
+    require(inspections.back().find("button.") != std::string::npos, "Focused control details were not exposed");
+    key(SDLK_RIGHT); key(SDLK_F8);
+    require(inspections.back().find("STEP button") != std::string::npos, "Control details did not follow focus");
+    key(SDLK_ESCAPE); key(SDLK_F11); key(SDLK_F12);
+    require(inspections.back().find("High contrast on.") != std::string::npos, "Window summary missed contrast mode");
+    const auto before_summary = app.simulation.ticks(); app.update(10);
+    require(app.simulation.ticks() == before_summary, "Time in the details dialog advanced simulation");
+    key(SDLK_F11);
+    for (const auto color : {ui::high_contrast_colors.ink, ui::high_contrast_colors.muted,
+                            ui::high_contrast_colors.teal, ui::high_contrast_colors.orange}) {
+        const auto linear = [](Uint8 value) { const double c = value / 255.0; return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4); };
+        const double luminance = 0.2126 * linear(color.r) + 0.7152 * linear(color.g) + 0.0722 * linear(color.b);
+        require(1.05 / (luminance + 0.05) >= 7, "High-contrast foreground pair fell below 7:1 against white");
+    }
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
 }
 
