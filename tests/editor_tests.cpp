@@ -173,3 +173,13 @@ TEST("pencil rejects invalid tools even for a single cell") {
     CHECK(!pencil_line({0, 0}, {0, 0}, Element::wire, 0));
     CHECK(pencil_line({0, 0}, {0, 0}, Element::empty, 1)->size() == 1);
 }
+
+TEST("history keeps last-write semantics across interleaved duplicate coordinates") {
+    Circuit c; History h;
+    const std::array edits{Cell{{2, 0}, Element::source}, Cell{{1, 0}, Element::wire},
+        Cell{{2, 0}, Element::empty}, Cell{{1, 0}, Element::nor_gate}, Cell{{-1, 0}, Element::signal}};
+    CHECK(h.apply(c, edits).value()); CHECK(c.size() == 2);
+    CHECK(c.at({1, 0}) == Element::nor_gate); CHECK(c.at({2, 0}) == Element::empty);
+    CHECK(h.last_changes().size() == 2); CHECK(h.undo(c)); CHECK(c.empty());
+    CHECK(h.redo(c)); CHECK(c.at({1, 0}) == Element::nor_gate);
+}
