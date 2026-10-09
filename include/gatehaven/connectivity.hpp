@@ -9,7 +9,7 @@ namespace gatehaven {
 }
 [[nodiscard]] constexpr bool conducts_between(Element a, Element b) {
     return a != Element::empty && b != Element::empty &&
-        !(a == Element::signal && receives_signal(b)) &&
-        !(b == Element::signal && receives_signal(a));
+        !(a == Element::signal && (receives_signal(b) || b == Element::source)) &&
+        !(b == Element::signal && (receives_signal(a) || a == Element::source));
 }
 }

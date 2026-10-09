@@ -23,21 +23,16 @@ active screen interaction and attached file streams require additional scenarios
 A green comparison applies to its pinned inputs and revision, not every possible
 circuit, timing configuration, or platform.
 
-## Behavior correction discovered by seeded comparisons
+## Explicit specification difference
 
-A Source directly powers an adjacent Signal. Signal edges to gates, relays, and
-communicators remain control inputs and do not conduct their output power.
-The earlier Gatehaven implementation incorrectly excluded Sources too. The
-external engine exposed this in the first seeded fixture. Both the production
-engine and the slow Gatehaven traversal oracle now include the confirmed edge.
-The slow oracle therefore includes this documented correction to its earlier
-behavior; external comparisons remain the independent acceptance evidence.
+The product brief (page 7) says Signals conduct only toward wire, crossing, and
+Signal cells. The pinned reference engine also conducts directly between a Source
+and a Signal. Gatehaven follows the supplied brief: put a wire between them.
+This is an intentional behavior difference, covered by a dedicated test and
+reported separately from matching cases. Matching the reference on this edge
+would require changing the product requirement.
 
-## 9 October 2026 result
-
-All 430 state observations passed: six published samples at ticks 0, 1, 2, 10,
-and 100, plus 100 seeded mixed circuits at ticks 0, 1, 2, and 7. The report
-`tests/compatibility/behavior-2026-10-09.json` records every reference state hash,
-cell count, and mismatch count. This includes all element types and saved-state
-combinations, with file endpoints disconnected. Runtime throughput is measured
-separately using Release builds of both engines on the same host.
+The six published samples do not exercise that conflicting edge. Seeded matching
+fixtures exclude direct Source/Signal adjacency, and the report identifies this
+restriction. A separate two-cell observation records the expected difference.
+No reference source or assets are distributed in Gatehaven's production build.

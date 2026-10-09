@@ -1,6 +1,6 @@
 #pragma once
-// Slow Gatehaven traversal oracle. Source/Signal connectivity was corrected
-// after external v0.4 observations; this is not the external reference engine.
+// Slow Gatehaven traversal oracle following the product brief.
+// This is not the external reference engine.
 // Map-based traversal oracle for differential checks of optimized simulation.
 #include "gatehaven/simulation.hpp"
 
@@ -67,7 +67,7 @@ constexpr Material material(Element element, bool enabled) {
 }
 
 constexpr bool signal_connects(Element element) {
-    return element == Element::wire || element == Element::crossing || element == Element::signal || element == Element::source;
+    return element == Element::wire || element == Element::crossing || element == Element::signal;
 }
 
 constexpr bool connects(Element a, Element b) {
