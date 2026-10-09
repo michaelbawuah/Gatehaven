@@ -1,0 +1,5 @@
+#pragma once
+namespace gatehaven {
+inline constexpr char version[] = "@PROJECT_VERSION@-dev";
+inline constexpr char application_id[] = "com.michaelbaffourawuah.gatehaven";
+}

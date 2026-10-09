@@ -11,6 +11,7 @@
 #include "gatehaven/file_io.hpp"
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/viewport.hpp"
+#include "gatehaven/version.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -1287,6 +1288,7 @@ struct TestDirectory {
 int main(int argc, char** argv) {
     try {
         const std::string_view mode = argc > 1 ? argv[1] : "";
+        if (mode == "--version" && argc == 2) { std::cout << "Gatehaven " << version << " (SDL3)\n"; return 0; }
         const bool child_test = mode == "--self-test-child";
         const bool testing = mode == "--self-test" || child_test;
         const bool snapshot = mode == "--snapshot";
@@ -1300,7 +1302,7 @@ int main(int argc, char** argv) {
             std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --self-test | --snapshot OUTPUT.bmp]\n";
             return 2;
         }
-        if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
+        if (!SDL_SetAppMetadata("Gatehaven", version, application_id) || !SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
         const SdlLifetime lifetime;
         TestDirectory test_directory;
         std::filesystem::path session_directory;

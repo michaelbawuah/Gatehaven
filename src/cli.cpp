@@ -4,6 +4,7 @@
 #include "gatehaven/statistics.hpp"
 #include "gatehaven/svg_export.hpp"
 #include "gatehaven/file_io.hpp"
+#include "gatehaven/version.hpp"
 
 #include <charconv>
 #include <iostream>
@@ -13,7 +14,7 @@
 int main(int argc, char** argv) {
     using namespace gatehaven;
     if (argc == 2 && std::string_view(argv[1]) == "--version") {
-        std::cout << "Gatehaven 0.1.0-dev (C++23)\n";
+        std::cout << "Gatehaven " << version << " (C++23)\n";
         return 0;
     }
     if (argc == 2 && std::string_view(argv[1]) == "examples") {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(Gatehaven VERSION 0.1.0 LANGUAGES CXX)
+project(Gatehaven VERSION 0.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,7 +40,8 @@ target_sources(gatehaven_core PRIVATE src/core/communicator.cpp)
 target_sources(gatehaven_core PRIVATE src/core/serial_protocol.cpp)
 target_sources(gatehaven_core PRIVATE src/core/statistics.cpp)
 target_sources(gatehaven_core PRIVATE src/core/svg_export.cpp)
-target_include_directories(gatehaven_core PUBLIC include)
+configure_file(include/gatehaven/version.hpp.in generated/gatehaven/version.hpp @ONLY)
+target_include_directories(gatehaven_core PUBLIC include "${CMAKE_CURRENT_BINARY_DIR}/generated")
 gatehaven_defaults(gatehaven_core)
 
 find_package(Threads REQUIRED)

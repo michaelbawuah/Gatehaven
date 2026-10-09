@@ -1,6 +1,6 @@
 {
   "name": "gatehaven",
-  "version-semver": "0.1.0",
+  "version-semver": "0.2.0",
   "description": "A C++23 digital logic sandbox",
   "builtin-baseline": "0699a19d0c6386247ce50d4dedbb8217d484d536",
   "dependencies": ["sdl3"],
