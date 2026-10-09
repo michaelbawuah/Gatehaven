@@ -61,7 +61,7 @@ std::expected<std::vector<RecoveryEntry>, std::string> RecoveryStore::scan() con
             if (error) return std::unexpected(error.message());
             entries.push_back({candidate, modified, size});
         }
-        std::sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return a.modified > b.modified; });
+        std::sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return a.modified != b.modified ? a.modified > b.modified : a.id < b.id; });
         return entries;
     } catch (const std::exception& error) { return std::unexpected(error.what()); }
 }
