@@ -26,6 +26,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
         run(cli, "check", sample)
     assert len(list((resources / "samples").glob("*.ghv"))) == 6
     assert (resources / "docs" / "manual.md").is_file()
+    assert "<main>" in (resources / "docs" / "manual.html").read_text(encoding="utf-8")
     notice = Path("third_party") / "SDL3" / "LICENSE.txt"
     assert (resources / notice).read_bytes() == (Path(__file__).resolve().parents[1] / notice).read_bytes()
     if has_app == "ON":
@@ -36,6 +37,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
             assert info["CFBundleExecutable"] == "gatehaven"
             assert info["UTExportedTypeDeclarations"][0]["UTTypeTagSpecification"]["public.filename-extension"] == ["ghv"]
             assert (bundle / "Resources" / "third_party" / "SDL3" / "LICENSE.txt").is_file()
+            assert (bundle / "Resources" / "docs" / "manual.html").is_file()
         else:
             app = root / "bin" / ("gatehaven" + suffix)
         if sys.platform.startswith("linux"):

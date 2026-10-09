@@ -21,7 +21,7 @@ for package in archives:
         assert len(roots) == 1
         prefix = roots.pop() + "/"
         resources = prefix + "share/gatehaven/"
-        required = [resources + "README.md", resources + "docs/manual.md", resources + "third_party/SDL3/LICENSE.txt"]
+        required = [resources + "README.md", resources + "docs/manual.md", resources + "docs/manual.html", resources + "third_party/SDL3/LICENSE.txt"]
         required += [resources + "samples/" + name + ".ghv" for name in
                      ("starter", "oscillator", "screen-switch", "positive-relay", "negative-relay", "gate-gallery")]
         suffix = ".exe" if "Windows" in package.name else ""
