@@ -85,3 +85,14 @@ with tempfile.TemporaryDirectory(prefix="gatehaven metrics ") as directory:
     path = Path(directory) / "source.ghv"
     path.write_text("GATEHAVEN 1\n0 0 source\n1 0 wire\n", encoding="utf-8")
     assert json.loads(run("profile", path, 3))["frontier_visits"] == 4
+
+with tempfile.TemporaryDirectory(prefix="gatehaven normalize ") as directory:
+    source, output = Path(directory) / "source.ghv", Path(directory) / "output.ghv"
+    source.write_bytes(b"\xef\xbb\xbfGATEHAVEN 1\r\n# notes\r\n2 0 wire\r\n-1 0 source\r\n")
+    run("normalize", source, output)
+    assert output.read_bytes() == b"GATEHAVEN 1\n-1 0 source\n2 0 wire\n"
+    run("normalize", output, output)
+    before = output.read_bytes()
+    source.write_text("invalid", encoding="utf-8")
+    run("normalize", source, output, code=1)
+    assert output.read_bytes() == before
