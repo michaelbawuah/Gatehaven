@@ -11,6 +11,7 @@
 #include "gatehaven/file_io.hpp"
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/viewport.hpp"
+#include "gatehaven/touch.hpp"
 #include "gatehaven/version.hpp"
 
 #include <SDL3/SDL.h>
@@ -234,6 +235,8 @@ public:
         }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
+        if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
+            e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
         if (e.type == SDL_EVENT_DROP_FILE && e.drop.data) {
             launch_open(utf8_path(e.drop.data)); return;
         }
@@ -416,6 +419,8 @@ private:
     std::array<InputTool, 6> tools_{Preferences{}.bindings};
     InputTool drag_tool_;
     bool eyedropper_{};
+    TouchGesture touches_;
+    bool touch_canvas_{};
     bool placing_{};
     bool help_{};
     bool examples_menu_{};
@@ -455,7 +460,8 @@ private:
     bool speed_error_{};
     double accumulator_{};
 
-    void cancel_gesture() {
+    void cancel_gesture(bool clear_touch = true) {
+        if (clear_touch) touches_.clear();
         drag_.reset();
         polyline_.reset();
         pan_button_.reset();
@@ -463,6 +469,39 @@ private:
         interaction_button_.reset(); endpoints_.release_screens();
         preview_.clear();
         eyedropper_ = false;
+    }
+
+    void touch_event(const SDL_Event& event) {
+        if (event.type == SDL_EVENT_FINGER_CANCELED) { cancel_gesture(); return; }
+        const TouchId id{event.tfinger.touchID, event.tfinger.fingerID};
+        const TouchPoint point{event.tfinger.x, event.tfinger.y};
+        if (event.type == SDL_EVENT_FINGER_DOWN) {
+            if (touches_.size() == 0) touch_canvas_ = view.area.contains(point.x, point.y);
+            else touch_canvas_ = touch_canvas_ && view.area.contains(point.x, point.y);
+        }
+        const auto update = event.type == SDL_EVENT_FINGER_DOWN ? touches_.down(id, point) :
+            event.type == SDL_EVENT_FINGER_UP ? touches_.up(id, point) : touches_.move(id, point);
+        if (update.action == TouchAction::cancel) { cancel_gesture(false); return; }
+        if (update.action == TouchAction::navigate) {
+            if (touch_canvas_) {
+                view.zoom(update.zoom, update.before.x, update.before.y);
+                view.pan(update.after.x - update.before.x, update.after.y - update.before.y);
+            }
+            return;
+        }
+        if (update.action == TouchAction::none) return;
+        SDL_Event pointer{};
+        if (update.action == TouchAction::move) {
+            pointer.type = SDL_EVENT_MOUSE_MOTION; pointer.motion.which = SDL_TOUCH_MOUSEID;
+            pointer.motion.x = static_cast<float>(update.after.x); pointer.motion.y = static_cast<float>(update.after.y);
+            pointer.motion.xrel = static_cast<float>(update.after.x - update.before.x);
+            pointer.motion.yrel = static_cast<float>(update.after.y - update.before.y);
+        } else {
+            pointer.type = update.action == TouchAction::begin ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
+            pointer.button.which = SDL_TOUCH_MOUSEID; pointer.button.button = SDL_BUTTON_LEFT; pointer.button.clicks = 1;
+            pointer.button.x = static_cast<float>(update.after.x); pointer.button.y = static_cast<float>(update.after.y);
+        }
+        this->event(pointer);
     }
 
     bool apply(std::span<const Cell> edits) {
@@ -883,6 +922,8 @@ private:
 
     void file_dialog(bool saving) {
         if (dialog_pending_) return;
+        if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
+            e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
         cancel_gesture();
         running = false;
         dialog_pending_ = true;
@@ -896,6 +937,8 @@ private:
 
     void communicator_dialog(Point point) {
         if (dialog_pending_) return;
+        if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
+            e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
         cancel_gesture(); running = false; dialog_pending_ = true;
         const bool output = circuit.at(point) == Element::file_output;
         for (const auto& group : communicator_groups(circuit)) {
