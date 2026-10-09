@@ -40,9 +40,12 @@ Six built-in lessons, CLI traces/statistics/SVG export, install rules, portable
 archives, and installed-product checks are available.
 
 Native multitouch, keyboard traversal, recovery snapshots, indexed simulation,
-and unsigned DEB/DMG previews are now implemented.
+clipped editing previews, offline guides, save-conflict handling, and unsigned
+DEB/DMG/Windows x64 installer previews are now implemented. Windows ARM64 has
+native CI coverage and a portable archive. State digests and editor benchmarks
+add repeatable verification tools.
 
 Next: independently specified legacy import, screen-reader/accessibility review,
-external performance comparisons, Windows installers,
+external performance comparisons, broader Linux packaging,
 signing, and hardware/clean-machine acceptance. Performance parity is not
 established. The final release still depends on these acceptance gates.
