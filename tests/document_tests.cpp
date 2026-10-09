@@ -101,3 +101,10 @@ TEST("native revision two preserves state and rejects ambiguous state columns") 
         std::istringstream invalid(text); CHECK(!read_document(invalid));
     }
 }
+
+TEST("path loading identifies binary legacy data independently of extension") {
+    const auto path = std::filesystem::temp_directory_path() / ("gatehaven-detect-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".data");
+    { std::ofstream output(path, std::ios::binary); const char bytes[]{'C','C','P','G',0,0,0,0,1,0,0,0,1,0,0,0,16}; output.write(bytes, sizeof bytes); }
+    const auto result = load_document(path); std::filesystem::remove(path);
+    CHECK(result && result->at({0, 0}) == Element::source);
+}

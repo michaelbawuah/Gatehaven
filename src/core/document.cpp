@@ -1,4 +1,5 @@
 #include "gatehaven/document.hpp"
+#include "gatehaven/legacy_document.hpp"
 #include "gatehaven/detail/replace_path.hpp"
 
 #include <charconv>
@@ -57,7 +58,7 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
     if (!result) return std::unexpected(result.error());
     if (line.starts_with("\xEF\xBB\xBF")) line.erase(0, 3);
     if (line.starts_with("CCPG")) return std::unexpected(DocumentError{1,
-        "Legacy .ccsb data is not supported yet; renaming it does not convert it"});
+        "Binary legacy document: use load_document or read_legacy_document"});
     const bool stateful = line == "GATEHAVEN 2";
     if (!*result || (line != "GATEHAVEN 1" && !stateful)) {
         return std::unexpected(DocumentError{1, "Expected GATEHAVEN 1 or GATEHAVEN 2 document header"});
@@ -123,10 +124,9 @@ std::expected<Circuit, DocumentError> load_document(const std::filesystem::path&
     if (!input) return std::unexpected(DocumentError{0, "Could not open document"});
     std::array<char, 4> signature{};
     input.read(signature.data(), 4);
-    if (input.gcount() == 4 && std::string_view(signature.data(), 4) == "CCPG")
-        return std::unexpected(DocumentError{0, "Legacy .ccsb data is not supported yet; renaming it does not convert it"});
+    const bool legacy = input.gcount() == 4 && std::string_view(signature.data(), 4) == "CCPG";
     input.clear(); input.seekg(0);
-    return read_document(input, limits);
+    return legacy ? read_legacy_document(input, limits) : read_document(input, limits);
 }
 
 std::expected<void, DocumentError> save_document(const std::filesystem::path& path,
