@@ -444,6 +444,11 @@ public:
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (beginner_ && !recovery_menu_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
+        if (keyboard_focus_) {
+            const auto box = focus_rect(*keyboard_focus_);
+            rectangle(r, static_cast<float>(box.x - 2), static_cast<float>(box.y - 2),
+                static_cast<float>(box.width + 4), static_cast<float>(box.height + 4), orange, true);
+        }
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
         if (recovery_menu_) render_recovery(r);
@@ -460,6 +465,7 @@ private:
     std::array<InputTool, 6> tools_{Preferences{}.bindings};
     InputTool drag_tool_;
     bool eyedropper_{};
+    std::optional<std::size_t> keyboard_focus_;
     TouchGesture touches_;
     bool touch_canvas_{};
     bool placing_{};
@@ -681,6 +687,13 @@ private:
         update_preview(*drag_);
     }
 
+    static constexpr std::size_t focus_count = 10 + palette.size() + 4;
+    ViewRect focus_rect(std::size_t index) const {
+        if (index < 10) return buttons(running, speed_)[index].rect;
+        if (index < 10 + palette.size()) return {12, 146 + static_cast<double>(index - 10) * 28, 216, 26};
+        return {12, 522 + static_cast<double>(index - 10 - palette.size()) * 28, 216, 26};
+    }
+
     void key(const SDL_KeyboardEvent& e) {
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
@@ -713,6 +726,23 @@ private:
             else if (e.key == SDLK_RIGHT) clipboard_ = (clipboard_ + 1) % 10;
             else if (e.key == SDLK_RETURN) choose_clipboard(clipboard_);
             return;
+        }
+        if (e.key == SDLK_TAB && !control) {
+            cancel_gesture();
+            keyboard_focus_ = keyboard_focus_ ? (*keyboard_focus_ + (shift ? focus_count - 1 : 1)) % focus_count : (shift ? focus_count - 1 : 0);
+            status_ = "KEYBOARD CONTROLS - TAB: NEXT, SHIFT TAB: PREVIOUS, ENTER: ACTIVATE, ESC: CANVAS";
+            return;
+        }
+        if (keyboard_focus_ && !control) {
+            if (e.key == SDLK_ESCAPE) { keyboard_focus_.reset(); return; }
+            if (e.key == SDLK_LEFT || e.key == SDLK_UP) { keyboard_focus_ = (*keyboard_focus_ + focus_count - 1) % focus_count; return; }
+            if (e.key == SDLK_RIGHT || e.key == SDLK_DOWN) { keyboard_focus_ = (*keyboard_focus_ + 1) % focus_count; return; }
+            if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER || e.key == SDLK_SPACE) {
+                const auto box = focus_rect(*keyboard_focus_);
+                SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
+                click.x = static_cast<float>(box.x + box.width / 2); click.y = static_cast<float>(box.y + box.height / 2);
+                mouse_down(click); return;
+            }
         }
         if (polyline_ && e.key == SDLK_BACKSPACE) {
             if (!polyline_->backtrack()) { polyline_.reset(); preview_.clear(); }
