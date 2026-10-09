@@ -15,3 +15,8 @@ with tempfile.TemporaryDirectory(prefix="gatehaven-active-") as directory:
     assert report["acknowledgements"] == 256
     assert (Path(directory) / "written.bin").read_bytes() == bytes(range(256))
     print(result.stdout, end="")
+with tempfile.TemporaryDirectory(prefix="gatehaven-edges-") as directory:
+    result = subprocess.run([str(Path(sys.argv[1]).resolve()), directory, "edges"], check=True,
+                            capture_output=True, text=True, timeout=20)
+    assert json.loads(result.stdout) == {"empty_available": 0, "reset_byte": 66, "reserved_output_bytes": 0}
+    print("Protocol edge observations passed")

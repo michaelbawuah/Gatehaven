@@ -95,3 +95,42 @@ template<class Peer> int run(const std::filesystem::path& directory) {
     return 0;
 }
 }
+
+namespace active_io {
+template<class Peer> int edges(const std::filesystem::path& directory) {
+    std::filesystem::create_directories(directory);
+    const auto empty = directory / "empty.bin", data = directory / "reset.bin", output = directory / "reserved.bin";
+    write_bytes(empty, ""); write_bytes(data, "AB");
+    Peer peer; peer.choose_input(empty); peer.choose_output(output);
+    Replies in(true), out(false);
+    std::uint64_t ticks = 0;
+    const auto tick = [&](bool a, bool b) {
+        in.push(peer.input(a)); out.push(peer.output(b));
+        if ((++ticks & 255U) == 0) std::this_thread::yield();
+    };
+    const auto wait = [&](std::size_t count) {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (in.messages.size() < count) {
+            tick(false, false);
+            if ((ticks & 1023U) == 0) require(std::chrono::steady_clock::now() < deadline, "edge reply deadline exceeded");
+        }
+    };
+    for (bool bit : frame(1)) tick(bit, false);
+    wait(1); const auto empty_available = in.messages.back().second;
+    peer.choose_input(data);
+    for (bool bit : frame(0)) tick(bit, false);
+    wait(2); require(in.messages.back() == std::pair{0U, static_cast<unsigned>('A')}, "reset precondition failed");
+    peer.reset_input();
+    for (bool bit : frame(0)) tick(bit, false);
+    wait(3); const auto reset_byte = in.messages.back().second;
+    // Reserved payload embeds a write header; it must not become another frame.
+    for (bool bit : frame(1, 1, 8)) tick(false, bit);
+    for (unsigned i = 0; i < 11; ++i) tick(false, false);
+    // Allow the external worker to consume a possible spurious byte before destruction.
+    for (unsigned i = 0; i < 10000; ++i) tick(false, false);
+    const auto output_bytes = read_bytes(output).size();
+    std::cout << "{\"empty_available\":" << empty_available << ",\"reset_byte\":" << reset_byte
+              << ",\"reserved_output_bytes\":" << output_bytes << "}\n";
+    return 0;
+}
+}
