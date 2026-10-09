@@ -109,3 +109,5 @@ if(GATEHAVEN_BUILD_TESTS)
         set_tests_properties(gatehaven_desktop PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy" TIMEOUT 45)
     endif()
 endif()
+
+include(cmake/install.cmake)
