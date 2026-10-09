@@ -1333,6 +1333,26 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(!app.simulation.powered({11, 3}), "Screen stayed powered after Interact was released");
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_R);
     require(app.circuit == edited, "Screen interaction changed circuit structure");
+    const auto before_touch = app.circuit;
+    const auto finger = [&](Uint32 type, SDL_FingerID id, float x, float y) {
+        SDL_Event event{}; event.type = type; event.tfinger.touchID = 1; event.tfinger.fingerID = id;
+        event.tfinger.x = x / 1280; event.tfinger.y = y / 800;
+        require(SDL_PushEvent(&event), "Could not queue a touch event"); dispatch(app, renderer);
+    };
+    const auto [touch_x, touch_y] = app.view.screen({9, 4});
+    const auto tx = static_cast<float>(touch_x + app.view.scale / 2);
+    const auto ty = static_cast<float>(touch_y + app.view.scale / 2);
+    finger(SDL_EVENT_FINGER_DOWN, 1, tx, ty); finger(SDL_EVENT_FINGER_UP, 1, tx, ty);
+    require(app.circuit.at({9, 4}) == Element::wire, "Native touch did not apply the touch binding");
+    key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.circuit == before_touch, "Native touch stroke did not undo once");
+    const auto old_scale = app.view.scale;
+    finger(SDL_EVENT_FINGER_DOWN, 1, 600, 400); finger(SDL_EVENT_FINGER_DOWN, 2, 800, 400);
+    finger(SDL_EVENT_FINGER_MOTION, 2, 900, 400);
+    require(app.view.scale > old_scale && app.circuit == before_touch, "Pinch failed or committed its canceled stroke");
+    finger(SDL_EVENT_FINGER_UP, 2, 900, 400); finger(SDL_EVENT_FINGER_MOTION, 1, 650, 400);
+    finger(SDL_EVENT_FINGER_UP, 1, 650, 400);
+    require(app.circuit == before_touch, "Remaining pinch finger resumed drawing");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
