@@ -70,3 +70,38 @@ TEST("legacy block IO retains sparse holes and states across chunk boundaries") 
     std::istringstream bad(bytes); const auto result = read_legacy_document(bad);
     CHECK(!result && result.error().message.find("65552") != std::string::npos);
 }
+
+namespace {
+class LimitedOutput : public std::streambuf {
+public:
+    explicit LimitedOutput(std::size_t budget) : budget_(budget) {}
+protected:
+    std::streamsize xsputn(const char*, std::streamsize amount) override {
+        const auto written = std::min(budget_, static_cast<std::size_t>(amount));
+        budget_ -= written; return static_cast<std::streamsize>(written);
+    }
+    int_type overflow(int_type value) override {
+        if (traits_type::eq_int_type(value, traits_type::eof())) return traits_type::not_eof(value);
+        if (!budget_) return traits_type::eof();
+        --budget_; return value;
+    }
+private:
+    std::size_t budget_;
+};
+}
+TEST("legacy writes report short header body and chunk failures") {
+    Circuit circuit; circuit.set({0, 0}, Element::source); circuit.set({70000, 0}, Element::wire);
+    for (std::size_t budget : {0U, 4U, 15U, 16U, 100U, 65552U}) {
+        LimitedOutput storage(budget); std::ostream output(&storage);
+        CHECK(!write_legacy_document(output, circuit));
+    }
+}
+TEST("legacy dimensions use signed limits and configurable dense budgets") {
+    Circuit circuit; circuit.set({0, 0}, Element::wire); circuit.set({999, 999}, Element::wire);
+    CHECK(legacy_layout(circuit, {.max_legacy_area = 1'000'000})->area() == 1'000'000);
+    CHECK(!legacy_layout(circuit, {.max_legacy_area = 999'999}));
+    CHECK(!legacy_layout(circuit, {.max_cells = 1}));
+    std::istringstream empty_width(fixture(0, 500)); CHECK(read_legacy_document(empty_width)->empty());
+    auto bytes = fixture(0, 0); bytes[0] = 'X';
+    std::istringstream bad_magic(bytes); CHECK(!read_legacy_document(bad_magic));
+}
