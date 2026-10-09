@@ -58,6 +58,21 @@ std::expected<std::vector<RecoveryEntry>, std::string> RecoveryStore::scan() con
         return entries;
     } catch (const std::exception& error) { return std::unexpected(error.what()); }
 }
+std::expected<Circuit, std::string> RecoveryStore::restore(std::string_view candidate) {
+    if (!valid_id(candidate) || candidate == impl_->id) return std::unexpected("Invalid recovery identity");
+    try {
+        const auto path = impl_->root / (std::string(candidate) + ".ghv");
+        platform::FileLock owner(impl_->root / (std::string(candidate) + ".lock"));
+        if (!owner.try_lock(true)) return std::unexpected("This circuit is open in another window");
+        if (!std::filesystem::is_regular_file(std::filesystem::symlink_status(path))) return std::unexpected("Recovery snapshot is not a regular file");
+        auto circuit = load_document(path);
+        if (!circuit) return std::unexpected(circuit.error().message);
+        const auto saved = write(*circuit); // Preserve ownership before consuming the abandoned copy.
+        if (!saved) return std::unexpected(saved.error());
+        std::error_code error; std::filesystem::remove(path, error);
+        return std::move(*circuit);
+    } catch (const std::exception& error) { return std::unexpected(error.what()); }
+}
 const std::string& RecoveryStore::id() const { return impl_->id; }
 std::expected<std::unique_ptr<RecoveryStore>, std::string> RecoveryStore::open(const std::filesystem::path& directory) {
     try { return std::unique_ptr<RecoveryStore>(new RecoveryStore(std::make_unique<Impl>(directory))); }
