@@ -116,7 +116,7 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
 void Simulation::reset() {
     state_.clear();
     power_.assign(topology_.nodes().size(), 0);
-    sent_.assign(power_.size(), false); valid_.assign(power_.size(), false);
+    sent_.assign(power_.size(), false); received_.assign(power_.size(), false); valid_.assign(power_.size(), false);
     snapshot_dirty_ = false;
     ticks_ = 0; metrics_ = {}; settled_ = false;
 }
@@ -125,7 +125,7 @@ void Simulation::invalidate(std::span<const Point> points) {
     if (!points.empty()) settled_ = false;
     for (const auto point : points) {
         const auto index = topology_.index(point);
-        if (index != no_node) { power_[index] = 0; sent_[index] = false; valid_[index] = false; snapshot_dirty_ = true; }
+        if (index != no_node) { power_[index] = 0; sent_[index] = false; received_[index] = false; valid_[index] = false; snapshot_dirty_ = true; }
     }
 }
 
@@ -141,6 +141,11 @@ std::size_t Simulation::powered_count() const {
 bool Simulation::sent(Point point) const {
     const auto index = topology_.index(point);
     return index != no_node && sent_[index];
+}
+
+bool Simulation::received(Point point) const {
+    const auto index = topology_.index(point);
+    return index != no_node && received_[index];
 }
 
 const std::map<Point, Power>& Simulation::snapshot() const {

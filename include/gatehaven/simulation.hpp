@@ -36,6 +36,7 @@ public:
     [[nodiscard]] std::uint64_t ticks() const noexcept { return ticks_; }
     [[nodiscard]] std::size_t powered_count() const;
     [[nodiscard]] bool sent(Point point) const;
+    [[nodiscard]] bool received(Point point) const;
     [[nodiscard]] const std::map<Point, Power>& snapshot() const;
 
 private:
