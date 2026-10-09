@@ -40,3 +40,16 @@ TEST("concurrent replacements always leave one complete file and no temporary de
     CHECK(std::distance(std::filesystem::directory_iterator(root), std::filesystem::directory_iterator{}) == 1);
     CHECK(replace_file(path, "")); CHECK(read_bounded_file(path, 0).value().empty());
 }
+
+TEST("fingerprints detect same-size changes even when modification times match") {
+    const auto root = std::filesystem::temp_directory_path() / ("gatehaven-fingerprint-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(root);
+    struct Cleanup { std::filesystem::path p; ~Cleanup() { std::error_code e; std::filesystem::remove_all(p, e); } } cleanup{root};
+    const auto path = root / "circuit.ghv";
+    CHECK(fingerprint_file(path).value() == std::nullopt);
+    CHECK(replace_file(path, "first")); const auto first = fingerprint_file(path); CHECK(first && *first);
+    CHECK(replace_file(path, "other")); std::filesystem::last_write_time(path, (**first).modified);
+    const auto other = fingerprint_file(path); CHECK(other && *other && *other != *first);
+    CHECK(!fingerprint_file(path, 4)); CHECK(!fingerprint_file(root));
+    CHECK(replace_file(path, "")); CHECK(fingerprint_file(path, 0)->value().bytes == 0);
+}
