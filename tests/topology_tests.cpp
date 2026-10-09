@@ -22,3 +22,13 @@ TEST("compiled communicator groups collect each neighboring Signal only once") {
     CHECK(topology.groups()[0].members.size() == 3);
     CHECK(topology.groups()[0].inputs == std::vector<std::size_t>{topology.index({1, 1})});
 }
+
+TEST("linear row joins retain sparse gaps and bidirectional adjacency") {
+    Circuit circuit;
+    for (const Point p : {Point{-4, -3}, {-3, -3}, {8, -3}, {-4, -2}, {7, -2}, {8, -2}, {8, 0}}) circuit.set(p, Element::wire);
+    CompiledCircuit topology(circuit);
+    for (const auto& node : topology.nodes()) for (unsigned d = 0; d < 4; ++d) {
+        const auto point = neighbor(node.cell.position, directions[d]);
+        CHECK(node.adjacent[d] == (point ? topology.index(*point) : no_node));
+    }
+}
