@@ -2,6 +2,8 @@
 #include "gatehaven/editor.hpp"
 
 #include <limits>
+#include <algorithm>
+#include "gatehaven/stamp_preview.hpp"
 
 using namespace gatehaven;
 
@@ -214,4 +216,24 @@ TEST("clipped strokes match full strokes for every drag direction") {
     }
     CHECK(clipped_pencil_line({-999999, 0}, {0, 0}, Element::wire, clip)->size() == 3);
     CHECK(!clipped_pencil_line({-1000000, 0}, {0, 0}, Element::wire, clip));
+}
+
+TEST("indexed stamp previews match clipped cells after rotations and replacements") {
+    Stamp stamp{5, 4, {{0, 0, Element::source}, {4, 3, Element::wire}, {2, 1, Element::and_gate}}};
+    StampPreview preview;
+    for (unsigned rotation = 0; rotation < 4; ++rotation) {
+        preview.reset(stamp);
+        for (Coordinate x = -5; x < 5; ++x) {
+            std::vector<Cell> expected, actual;
+            const Bounds clip{{x, -1}, {x + 2, 1}};
+            visit_stamp(stamp, {-2, -2}, clip, [&](Cell cell) { expected.push_back(cell); });
+            preview.visit({-2, -2}, clip, [&](Cell cell) { actual.push_back(cell); });
+            const auto order = [](Cell a, Cell b) { return a.position < b.position; };
+            std::sort(expected.begin(), expected.end(), order);
+            CHECK(actual == expected);
+        }
+        stamp.rotate_clockwise();
+    }
+    preview.reset({}); unsigned count = 0;
+    preview.visit({0, 0}, {{-10, -10}, {10, 10}}, [&](Cell) { ++count; }); CHECK(count == 0);
 }
