@@ -5,6 +5,16 @@
 
 using namespace gatehaven;
 
+TEST("saved history checkpoints survive undo redo and divergent branches") {
+    Circuit c; History h;
+    const std::array a{Cell{{0, 0}, Element::wire}}, b{Cell{{1, 0}, Element::source}};
+    CHECK(!h.modified()); CHECK(h.apply(c, a)); h.mark_saved(); CHECK(!h.modified());
+    CHECK(h.apply(c, b)); CHECK(h.modified()); CHECK(h.undo(c)); CHECK(!h.modified());
+    CHECK(h.redo(c)); CHECK(h.modified()); CHECK(h.undo(c)); CHECK(h.undo(c)); CHECK(h.modified());
+    CHECK(h.apply(c, b)); CHECK(h.modified()); CHECK(!h.can_redo());
+    h.mark_saved(); CHECK(!h.modified()); CHECK(h.undo_depth() == 1 && h.redo_depth() == 0);
+}
+
 TEST("drawing snaps to dominant axis and includes both endpoints") {
     const auto horizontal = pencil_line({0, 0}, {4, 2}, Element::wire);
     CHECK(horizontal && horizontal->size() == 5);

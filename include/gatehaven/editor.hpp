@@ -21,16 +21,23 @@ public:
     void clear();
     [[nodiscard]] bool can_undo() const noexcept { return !undo_.empty(); }
     [[nodiscard]] bool can_redo() const noexcept { return !redo_.empty(); }
+    [[nodiscard]] std::size_t undo_depth() const noexcept { return undo_.size(); }
+    [[nodiscard]] std::size_t redo_depth() const noexcept { return redo_.size(); }
+    void mark_saved() { saved_revision_ = revision_; }
+    [[nodiscard]] bool modified() const noexcept { return revision_ != saved_revision_; }
     [[nodiscard]] std::span<const Point> last_changes() const noexcept { return last_changes_; }
 
 private:
     struct Delta { Point point; Element before; Element after; };
-    using Command = std::vector<Delta>;
+    struct Command : std::vector<Delta> { std::uint64_t before_revision{}; std::uint64_t after_revision{}; };
     std::deque<Command> undo_;
     std::deque<Command> redo_;
     std::vector<Point> last_changes_;
     std::size_t max_changes_;
     std::size_t stored_changes_{};
+    std::uint64_t revision_{};
+    std::uint64_t next_revision_{1};
+    std::uint64_t saved_revision_{};
 };
 
 struct StampCell {

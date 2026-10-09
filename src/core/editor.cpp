@@ -41,6 +41,8 @@ std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<cons
     }
     if (command.empty()) return false;
     if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
+    command.before_revision = revision_;
+    command.after_revision = next_revision_++;
     for (const auto& delta : command) {
         circuit.set(delta.point, delta.after);
         last_changes_.push_back(delta.point);
@@ -48,6 +50,7 @@ std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<cons
     for (const auto& stale : redo_) stored_changes_ -= stale.size();
     redo_.clear();
     stored_changes_ += command.size();
+    revision_ = command.after_revision;
     undo_.push_back(std::move(command));
     while (stored_changes_ > max_changes_ && undo_.size() > 1) {
         stored_changes_ -= undo_.front().size();
@@ -60,6 +63,7 @@ bool History::undo(Circuit& circuit) {
     last_changes_.clear();
     if (undo_.empty()) return false;
     auto command = std::move(undo_.back());
+    revision_ = command.before_revision;
     undo_.pop_back();
     for (const auto& delta : command) {
         circuit.set(delta.point, delta.before);
@@ -73,6 +77,7 @@ bool History::redo(Circuit& circuit) {
     last_changes_.clear();
     if (redo_.empty()) return false;
     auto command = std::move(redo_.back());
+    revision_ = command.after_revision;
     redo_.pop_back();
     for (const auto& delta : command) {
         circuit.set(delta.point, delta.after);
@@ -87,6 +92,8 @@ void History::clear() {
     redo_.clear();
     last_changes_.clear();
     stored_changes_ = 0;
+    revision_ = saved_revision_ = 0;
+    next_revision_ = 1;
 }
 
 Stamp capture(const Circuit& circuit, Bounds region) {
