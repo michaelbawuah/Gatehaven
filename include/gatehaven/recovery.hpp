@@ -17,6 +17,8 @@ public:
     RecoveryStore(const RecoveryStore&) = delete;
     RecoveryStore& operator=(const RecoveryStore&) = delete;
     [[nodiscard]] const std::string& id() const;
+    [[nodiscard]] std::expected<void, std::string> write(const Circuit& circuit);
+    [[nodiscard]] std::expected<void, std::string> discard();
 private:
     struct Impl;
     explicit RecoveryStore(std::unique_ptr<Impl> impl);
