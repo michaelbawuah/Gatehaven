@@ -37,6 +37,28 @@ constexpr std::array palette{Element::wire, Element::crossing, Element::source,
 constexpr std::array<std::string_view, 10> labels{"WIRE", "CROSSING", "SOURCE", "SIGNAL",
     "AND", "OR", "NAND", "NOR", "+ RELAY", "- RELAY"};
 
+enum class ToolKind { pencil, eraser, panner, selector };
+struct InputTool {
+    ToolKind kind{ToolKind::pencil};
+    Element element{Element::wire};
+    bool operator==(const InputTool&) const = default;
+};
+constexpr std::array<SDL_Color, 6> binding_colors{{{205, 63, 64, 255}, {53, 103, 205, 255},
+    {36, 139, 74, 255}, {0, 150, 180, 255}, {179, 62, 169, 255}, {190, 153, 0, 255}}};
+constexpr std::array<std::string_view, 6> binding_names{"LEFT", "RIGHT", "MIDDLE", "X1", "X2", "TOUCH"};
+
+std::optional<std::size_t> input_button(const SDL_MouseButtonEvent& event) {
+    if (event.which == SDL_TOUCH_MOUSEID) return 5;
+    switch (event.button) {
+    case SDL_BUTTON_LEFT: return 0;
+    case SDL_BUTTON_RIGHT: return 1;
+    case SDL_BUTTON_MIDDLE: return 2;
+    case SDL_BUTTON_X1: return 3;
+    case SDL_BUTTON_X2: return 4;
+    default: return std::nullopt;
+    }
+}
+
 std::filesystem::path utf8_path(std::string_view text) {
     return std::filesystem::path(std::u8string(text.begin(), text.end()));
 }
@@ -159,8 +181,9 @@ public:
         }
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
-            drag_.reset(); preview_.clear(); accumulator_ = 0;
+            drag_.reset(); pan_button_.reset(); preview_.clear(); accumulator_ = 0; eyedropper_ = false;
         }
+        if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
         if (speed_edit_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
@@ -183,16 +206,17 @@ public:
             view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
+            if (pan_button_) view.pan(e.motion.xrel, e.motion.yrel);
             hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
-            if ((e.motion.state & SDL_BUTTON_MMASK) != 0) view.pan(e.motion.xrel, e.motion.yrel);
             if (drag_ && hover_) update_preview(*hover_);
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) mouse_down(e.button);
-        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && e.button.button == drag_button_) {
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == pan_button_) pan_button_.reset();
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
             const auto end = view.cell(e.button.x, e.button.y);
             if (end) {
                 update_preview(*end);
-                if (selecting_ && drag_button_ == SDL_BUTTON_LEFT) {
+                if (drag_tool_.kind == ToolKind::selector) {
                     selection_ = Bounds{{std::min(drag_->x, end->x), std::min(drag_->y, end->y)},
                                         {std::max(drag_->x, end->x), std::max(drag_->y, end->y)}};
                     status_ = "SELECTION READY - CTRL C TO COPY";
@@ -229,7 +253,7 @@ public:
             }
         }
         if (selection_) draw_selection(r, *selection_);
-        if (selecting_ && drag_ && hover_) {
+        if (drag_tool_.kind == ToolKind::selector && drag_ && hover_) {
             draw_selection(r, {{std::min(drag_->x, hover_->x), std::min(drag_->y, hover_->y)},
                                {std::max(drag_->x, hover_->x), std::max(drag_->y, hover_->y)}});
         }
@@ -255,24 +279,36 @@ public:
             ui::text(r, static_cast<float>(button.rect.x + button.rect.width / 2) - text_width / 2,
                      37, button.label, i == 0 ? white : ink, 1.5F);
         }
-        ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    RIGHT ARROW: STEP    MIDDLE DRAG: PAN    SCROLL: ZOOM", muted, 1.25F);
+        ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    ARROWS: MOVE SELECTION    HOLD E: EYEDROPPER    SCROLL: ZOOM", muted, 1.25F);
         ui::text(r, 22, 121, "COMPONENTS", muted, 1.5F);
         for (std::size_t i = 0; i < palette.size(); ++i) {
-            const float y = 152 + static_cast<float>(i) * 40;
-            const bool selected = !selecting_ && palette[i] == tool_;
-            rectangle(r, 12, y, 216, 34, selected ? SDL_Color{225, 241, 236, 255} : white);
-            if (selected) rectangle(r, 12, y, 3, 34, teal);
+            const float y = 150 + static_cast<float>(i) * 36;
+            const InputTool tool{ToolKind::pencil, palette[i]};
+            const bool selected = tools_[0] == tool;
+            rectangle(r, 12, y, 216, 32, selected ? SDL_Color{225, 241, 236, 255} : white);
+            if (selected) rectangle(r, 12, y, 3, 32, teal);
             ui::text(r, 26, y + 10, std::to_string((i + 1) % 10), muted, 1.5F);
             ui::text(r, 52, y + 9, labels[i], selected ? teal : ink, 2.0F);
+            draw_bindings(r, y + 9, tool);
         }
-        rectangle(r, 12, 566, 216, 34, selecting_ ? SDL_Color{225, 241, 236, 255} : paper);
-        ui::text(r, 26, 576, "Q  SELECT REGION", selecting_ ? teal : ink, 1.5F);
-        line(r, 22, 619, 216, 619, border);
-        ui::text(r, 22, 641, "LEFT DRAG TO DRAW", ink, 1.25F);
-        ui::text(r, 22, 664, "RIGHT DRAG TO ERASE", muted, 1.25F);
-        ui::text(r, 22, 693, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
-        ui::text(r, 22, 716, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
-        ui::text(r, 22, 738, "B: KEYBOARD HELP", muted, 1.0F);
+        constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser};
+        constexpr std::array<std::string_view, 3> tool_labels{"Q  SELECT", "PAN", "ERASE"};
+        for (std::size_t i = 0; i < kinds.size(); ++i) {
+            const float y = 522 + static_cast<float>(i) * 36;
+            const InputTool tool{kinds[i]};
+            const bool selected = tools_[0] == tool;
+            rectangle(r, 12, y, 216, 32, selected ? SDL_Color{225, 241, 236, 255} : paper);
+            ui::text(r, 26, y + 10, tool_labels[i], selected ? teal : ink, 1.5F);
+            draw_bindings(r, y + 9, tool);
+        }
+        ui::text(r, 22, 645, "CLICK A TOOL TO BIND", ink, 1.25F);
+        for (std::size_t i = 0; i < binding_names.size(); ++i) {
+            ui::text(r, 22 + static_cast<float>(i % 3) * 68, 667 + static_cast<float>(i / 3) * 15,
+                     binding_names[i], binding_colors[i], 1);
+        }
+        ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
+        ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
+        ui::text(r, 22, 748, "B: KEYBOARD HELP", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
         std::string status = status_;
         if (hover_) status = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
@@ -291,15 +327,18 @@ public:
 
 private:
     SDL_Window* window_; // Non-owning; main owns the window for the entire App lifetime.
-    Element tool_{Element::wire};
-    bool selecting_{};
+    std::array<InputTool, 6> tools_{{{ToolKind::pencil}, {ToolKind::eraser}, {ToolKind::panner},
+        {ToolKind::selector}, {ToolKind::panner}, {ToolKind::pencil}}};
+    InputTool drag_tool_;
+    bool eyedropper_{};
     bool placing_{};
     bool dirty_{};
     bool help_{};
     bool dialog_pending_{};
     std::optional<Point> hover_;
     std::optional<Point> drag_;
-    std::uint8_t drag_button_{};
+    std::size_t drag_button_{};
+    std::optional<std::size_t> pan_button_;
     std::vector<Cell> preview_;
     std::optional<Bounds> selection_;
     ClipboardSession& clipboards_;
@@ -329,8 +368,8 @@ private:
 
     void update_preview(Point end) {
         preview_.clear();
-        if (!drag_ || (selecting_ && drag_button_ == SDL_BUTTON_LEFT)) return;
-        auto element = drag_button_ == SDL_BUTTON_RIGHT ? Element::empty : tool_;
+        if (!drag_ || drag_tool_.kind == ToolKind::selector) return;
+        auto element = drag_tool_.kind == ToolKind::eraser ? Element::empty : drag_tool_.element;
         if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay) {
             element = Element::signal;
         }
@@ -339,7 +378,8 @@ private:
     }
 
     void mouse_down(const SDL_MouseButtonEvent& e) {
-        if (e.button != SDL_BUTTON_LEFT && e.button != SDL_BUTTON_RIGHT) return;
+        const auto button = input_button(e);
+        if (!button) return;
         if (help_) { help_ = false; return; }
         if (e.button == SDL_BUTTON_LEFT) {
             const auto toolbar = buttons(running, speed_);
@@ -360,24 +400,35 @@ private:
                 }
                 return;
             }
-            if (e.x < 240 && e.y >= 152 && e.y < 552) {
-                tool_ = palette[static_cast<std::size_t>((e.y - 152) / 40)];
-                selecting_ = false; placing_ = false; return;
-            }
-            if (ViewRect{12, 566, 216, 34}.contains(e.x, e.y)) {
-                selecting_ = true; placing_ = false; return;
-            }
+        }
+        if (ViewRect{12, 150, 216, 360}.contains(e.x, e.y)) {
+            tools_[*button] = {ToolKind::pencil, palette[static_cast<std::size_t>((e.y - 150) / 36)]};
+            placing_ = false; return;
+        }
+        if (ViewRect{12, 522, 216, 108}.contains(e.x, e.y)) {
+            constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser};
+            tools_[*button] = {kinds[static_cast<std::size_t>((e.y - 522) / 36)]};
+            placing_ = false; return;
         }
         if (!view.area.contains(e.x, e.y)) return;
         hover_ = view.cell(e.x, e.y);
         if (!hover_) return;
+        if (eyedropper_) {
+            const auto element = circuit.at(*hover_);
+            tools_[*button] = element == Element::empty ? InputTool{ToolKind::eraser} : InputTool{ToolKind::pencil, element};
+            status_ = "BOUND " + std::string(binding_names[*button]) + " TO " + std::string(name(element));
+            placing_ = false; return;
+        }
         if (placing_ && e.button == SDL_BUTTON_LEFT) {
             const auto edits = paste(placement_, *hover_);
             if (edits) apply(*edits); else status_ = edits.error();
             placing_ = false; return;
         }
+        if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
+        if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
         drag_ = hover_;
-        drag_button_ = e.button;
+        drag_button_ = *button;
+        drag_tool_ = tools_[*button];
         update_preview(*drag_);
     }
 
@@ -394,7 +445,7 @@ private:
             return;
         }
         if (e.key == SDLK_ESCAPE) {
-            drag_.reset(); preview_.clear(); selection_.reset(); placing_ = false; help_ = false; return;
+            drag_.reset(); pan_button_.reset(); preview_.clear(); selection_.reset(); placing_ = false; help_ = false; return;
         }
         if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
             const std::int64_t distance = control ? 4 : 1;
@@ -412,7 +463,7 @@ private:
             case SDLK_N: fresh(); break;
             case SDLK_Z: undo(shift); break;
             case SDLK_Y: undo(true); break;
-            case SDLK_A: selection_ = circuit.bounds(); selecting_ = true; break;
+            case SDLK_A: selection_ = circuit.bounds(); tools_[0] = {ToolKind::selector}; break;
             case SDLK_C: clipboard_action('c', shift); break;
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
@@ -423,13 +474,14 @@ private:
         }
         if (e.key >= SDLK_0 && e.key <= SDLK_9) {
             const auto digit = static_cast<std::size_t>(e.key - SDLK_0);
-            tool_ = palette[(digit + 9) % 10]; selecting_ = false; placing_ = false; return;
+            tools_[0] = {ToolKind::pencil, palette[(digit + 9) % 10]}; placing_ = false; return;
         }
         switch (e.key) {
         case SDLK_SPACE: running = !running; accumulator_ = 0; break;
         case SDLK_RIGHT: running = false; simulation.step(circuit); break;
         case SDLK_R: simulation.reset(); accumulator_ = 0; break;
-        case SDLK_Q: selecting_ = true; placing_ = false; break;
+        case SDLK_Q: tools_[0] = {ToolKind::selector}; placing_ = false; break;
+        case SDLK_E: eyedropper_ = true; break;
         case SDLK_B: help_ = !help_; break;
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_DELETE:
@@ -550,7 +602,6 @@ private:
         if (!stamp) { status_ = "PASTE FAILED: " + stamp.error(); return; }
         placement_ = *stamp; // Keep a stable preview if another window changes this slot.
         placing_ = !placement_.cells.empty();
-        selecting_ = false;
         status_ = placing_ ? "CLICK TO PLACE - BRACKETS ROTATE" : "CLIPBOARD IS EMPTY";
     }
 
@@ -621,6 +672,12 @@ private:
         const auto location = request->location.c_str();
         if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, &filter, 1, location);
         else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, &filter, 1, nullptr, false);
+    }
+
+    void draw_bindings(SDL_Renderer* r, float y, InputTool tool) const {
+        for (std::size_t i = 0; i < tools_.size(); ++i) {
+            if (tools_[i] == tool) rectangle(r, 182 + static_cast<float>(i) * 7, y, 5, 14, binding_colors[i]);
+        }
     }
 
     void draw_selection(SDL_Renderer* r, Bounds region) const {
@@ -695,8 +752,8 @@ private:
         ui::text(r, 376, 194, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
         constexpr std::array<std::string_view, 13> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
-            "LEFT DRAG: DRAW      RIGHT DRAG: ERASE",
-            "MIDDLE DRAG: PAN     SCROLL: ZOOM",
+            "CLICK TOOL: BIND THAT MOUSE BUTTON",
+            "HOLD E + CLICK: SAMPLE A TOOL",
             "SPACE: PLAY/PAUSE    RIGHT: ONE TICK",
             "CTRL SPACE: SET TICKS PER SECOND",
             "R: RESET            F: FRAME CIRCUIT",
@@ -741,13 +798,15 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_RIGHT);
     require(!app.running && app.simulation.ticks() == 2, "Pause/step failed");
     require(app.simulation.powered({8, 0}), "Starter AND output was not powered");
-    const auto mouse = [&](Uint32 type, Point cell) {
-        const auto [x, y] = app.view.screen(cell);
-        SDL_Event event{}; event.type = type; event.button.button = SDL_BUTTON_LEFT;
-        event.button.x = static_cast<float>(x + app.view.scale / 2);
-        event.button.y = static_cast<float>(y + app.view.scale / 2);
+    const auto pointer = [&](Uint32 type, float x, float y, Uint8 button, SDL_MouseID device) {
+        SDL_Event event{}; event.type = type; event.button.button = button; event.button.which = device;
+        event.button.x = x; event.button.y = y;
         require(SDL_PushEvent(&event), "Could not push mouse event");
         dispatch(app, renderer);
+    };
+    const auto mouse = [&](Uint32 type, Point cell, Uint8 button = SDL_BUTTON_LEFT, SDL_MouseID device = 0) {
+        const auto [x, y] = app.view.screen(cell);
+        pointer(type, static_cast<float>(x + app.view.scale / 2), static_cast<float>(y + app.view.scale / 2), button, device);
     };
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
@@ -813,6 +872,31 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == edited, "Selection moves did not undo cleanly");
     key(SDLK_ESCAPE);
+    constexpr std::array<Uint8, 5> inputs{SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT, SDL_BUTTON_MIDDLE, SDL_BUTTON_X1, SDL_BUTTON_X2};
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+        pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 238, inputs[i], 0); // Bind this button to Source.
+        pointer(SDL_EVENT_MOUSE_BUTTON_UP, 94, 238, inputs[i], 0);
+        const Point target{12, static_cast<Coordinate>(i) - 4};
+        mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, target, inputs[i]);
+        mouse(SDL_EVENT_MOUSE_BUTTON_UP, target, inputs[i]);
+        require(app.circuit.at(target) == Element::source, "A mouse button ignored its tool binding");
+    }
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 166, SDL_BUTTON_LEFT, SDL_TOUCH_MOUSEID); // Touch gets Wire.
+    pointer(SDL_EVENT_MOUSE_BUTTON_UP, 94, 166, SDL_BUTTON_LEFT, SDL_TOUCH_MOUSEID);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {12, 3}, SDL_BUTTON_LEFT, SDL_TOUCH_MOUSEID);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {12, 3}, SDL_BUTTON_LEFT, SDL_TOUCH_MOUSEID);
+    require(app.circuit.at({12, 3}) == Element::wire, "Touch did not keep its own tool binding");
+    key(SDLK_E);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {12, 3}, SDL_BUTTON_X2);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {12, 3}, SDL_BUTTON_X2);
+    SDL_Event released{}; released.type = SDL_EVENT_KEY_UP; released.key.key = SDLK_E;
+    require(SDL_PushEvent(&released), "Could not release eyedropper");
+    dispatch(app, renderer);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}, SDL_BUTTON_X2);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3}, SDL_BUTTON_X2);
+    require(app.circuit.at({11, 3}) == Element::wire, "Eyedropper did not bind the clicked button");
+    for (unsigned i = 0; i < 7; ++i) key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.circuit == edited, "Sampling a tool mutated the document");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
