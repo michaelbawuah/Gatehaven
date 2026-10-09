@@ -71,6 +71,10 @@ static int run_cli(int argc, char** argv) {
     }
     if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }
     if (command == "trace") {
+        constexpr std::uint64_t max_trace_rows = 5'000'000;
+        if (!circuit->empty() && steps > max_trace_rows / circuit->size()) {
+            std::cerr << "Trace exceeds 5000000 rows; reduce the tick count or circuit size\n"; return 2;
+        }
         Simulation simulation;
         std::cout << "tick,x,y,element,ports,sending\n";
         for (std::uint64_t i = 0; i < steps; ++i) {
