@@ -211,7 +211,8 @@ TEST("clipped strokes match full strokes for every drag direction") {
     for (Coordinate x = -8; x <= 8; ++x) for (Coordinate y = -8; y <= 8; ++y) {
         const Point from{5, -4}, to{x, y};
         std::vector<Cell> expected;
-        for (const auto cell : *pencil_line(from, to, Element::wire)) if (clip.contains(cell.position)) expected.push_back(cell);
+        const auto full = pencil_line(from, to, Element::wire); CHECK(full);
+        for (const auto cell : *full) if (clip.contains(cell.position)) expected.push_back(cell);
         CHECK(clipped_pencil_line(from, to, Element::wire, clip).value() == expected);
     }
     CHECK(clipped_pencil_line({-999999, 0}, {0, 0}, Element::wire, clip)->size() == 3);

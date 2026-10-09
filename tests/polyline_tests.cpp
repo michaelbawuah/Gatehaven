@@ -53,7 +53,8 @@ TEST("clipped polyline previews preserve crossing corners and retraced overlaps"
     CHECK(line.append({0, 0})); CHECK(line.append({0, 100})); CHECK(line.append({3, 100}));
     const Bounds clip{{-2, -2}, {3, 3}};
     std::vector<Cell> expected;
-    for (const auto cell : *line.preview({3, 0})) if (clip.contains(cell.position)) expected.push_back(cell);
+    const auto full = line.preview({3, 0}); CHECK(full);
+    for (const auto cell : *full) if (clip.contains(cell.position)) expected.push_back(cell);
     CHECK(line.preview({3, 0}, clip).value() == expected);
     CHECK(polyline_work(line.vertices()).value() == 204);
     CHECK(!polyline_work(line.vertices(), 203));
