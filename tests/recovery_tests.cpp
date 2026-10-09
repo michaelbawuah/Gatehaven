@@ -51,3 +51,9 @@ TEST("recovery scheduling limits repeated writes and retries without losing acti
     CHECK(schedule.poll(33, true, 1));
     CHECK(!schedule.poll(34, false, 30)); CHECK(!schedule.poll(35, true, -1));
 }
+
+TEST("a long pause after a successful checkpoint does not remove the next edit debounce") {
+    RecoverySchedule schedule; schedule.written(1);
+    CHECK(!schedule.poll(1, true, 30)); CHECK(!schedule.poll(1, true, 30));
+    CHECK(!schedule.poll(2, true, 0.5)); CHECK(schedule.poll(2, true, 1.5));
+}
