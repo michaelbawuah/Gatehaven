@@ -155,3 +155,12 @@ a screen; release Enter to release it. F10 steps while the cursor is active.
 F8 opens the text inspector. Escape, F9, or a pointer click leaves cursor mode.
 The native dialog and offline manual provide readable text, but the custom
 canvas does not yet expose a complete screen-reader accessibility tree.
+
+## Simulation rate under load
+
+The speed control accepts 1–1,000 ticks per second. Each desktop frame runs the
+steps due from elapsed time, with a six-millisecond work budget between ticks so
+input and drawing can continue. If the circuit or file system is too slow, the
+actual rate decreases; simulation steps still execute in order. A single slow
+step or file operation can exceed that budget. Pausing clears pending time, and a
+long suspension never creates an unbounded catch-up queue.

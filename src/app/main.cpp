@@ -16,6 +16,7 @@
 #include "gatehaven/viewport.hpp"
 #include "gatehaven/touch.hpp"
 #include "gatehaven/taps.hpp"
+#include "gatehaven/tick_schedule.hpp"
 #include "gatehaven/recovery.hpp"
 #include "gatehaven/file_time.hpp"
 #include "gatehaven/recovery_schedule.hpp"
@@ -284,16 +285,15 @@ public:
             }
             close_after_save_ = false;
         }
-        if (!running || recovery_menu_ || help_ || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
-        accumulator_ += std::clamp(elapsed, 0.0, 0.25);
-        const double interval = 1.0 / speed_;
-        unsigned work = 0;
-        while (accumulator_ >= interval && work < 8) {
+        if (!running || recovery_menu_ || help_ || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { tick_schedule_.reset(); return; }
+        const auto due = tick_schedule_.due(elapsed, speed_);
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(6);
+        for (unsigned work = 0; work < due; ++work) {
             tick();
-            accumulator_ -= interval;
-            ++work;
+            if (std::chrono::steady_clock::now() >= deadline) break;
         }
-        if (work == 8) accumulator_ = std::fmod(accumulator_, interval);
+        // Overload drops wall-clock debt, never a simulation state transition.
+        // The next frame starts with the fractional interval retained above.
     }
 
     void event(const SDL_Event& e) {
@@ -302,7 +302,7 @@ public:
             return;
         }
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
-            cancel_gesture(); keyboard_focus_.reset(); accumulator_ = 0; checkpoint();
+            cancel_gesture(); keyboard_focus_.reset(); tick_schedule_.reset(); checkpoint();
         }
         if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE && !keyboard_cursor_) hover_.reset();
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
@@ -577,7 +577,7 @@ private:
     std::optional<std::string> speed_edit_;
     bool speed_replace_{};
     bool speed_error_{};
-    double accumulator_{};
+    TickSchedule tick_schedule_;
     bool discard_elapsed_{};
     std::unique_ptr<RecoveryStore> recovery_;
     RecoverySchedule recovery_schedule_;
@@ -679,7 +679,7 @@ private:
             for (std::size_t i = 0; i < toolbar.size(); ++i) {
                 if (!toolbar[i].rect.contains(e.x, e.y)) continue;
                 switch (i) {
-                case 0: running = !running; accumulator_ = 0; break;
+                case 0: running = !running; tick_schedule_.reset(); break;
                 case 1: running = false; tick(); break;
                 case 2: reset_simulation(); break;
                 case 3: undo(false); break;
@@ -911,7 +911,7 @@ private:
             tools_[0] = {ToolKind::pencil, palette[(digit + 9) % 10]}; placing_ = false; return;
         }
         switch (e.key) {
-        case SDLK_SPACE: running = !running; accumulator_ = 0; break;
+        case SDLK_SPACE: running = !running; tick_schedule_.reset(); break;
         case SDLK_RIGHT:
         case SDLK_F10: running = false; tick(); break;
         case SDLK_F9:
@@ -931,7 +931,7 @@ private:
         case SDLK_F6: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_input}; placing_ = false; break;
         case SDLK_F8:
             if (hover_) {
-                cancel_gesture(); accumulator_ = 0;
+                cancel_gesture(); tick_schedule_.reset();
                 if (!inspection_dialog_(window_, describe_cell(circuit, simulation, *hover_))) status_ = SDL_GetError();
                 discard_elapsed_ = true;
             } else status_ = "POINT AT A CELL, THEN PRESS F8 TO INSPECT";
@@ -986,7 +986,7 @@ private:
             return received;
         });
     }
-    void reset_simulation() { simulation.initialize(circuit, true); endpoints_.reset_protocols(); accumulator_ = 0; }
+    void reset_simulation() { simulation.initialize(circuit, true); endpoints_.reset_protocols(); tick_schedule_.reset(); }
 
     void polyline_preview(Point target) {
         const auto result = polyline_->preview(target, view.visible());
@@ -998,7 +998,7 @@ private:
         speed_edit_ = std::to_string(speed_);
         speed_replace_ = true;
         speed_error_ = false;
-        accumulator_ = 0;
+        tick_schedule_.reset();
         cancel_gesture();
     }
 
@@ -1029,7 +1029,7 @@ private:
         }
         speed_ = value;
         speed_edit_.reset();
-        accumulator_ = 0;
+        tick_schedule_.reset();
         status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
     }
 
