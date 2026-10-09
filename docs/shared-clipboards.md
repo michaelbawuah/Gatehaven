@@ -25,18 +25,25 @@ which clears them. They are not a persistent circuit library. Normal final exit
 removes slot data, the default index, and any pending temporary file. A failed
 cleanup is retried by the next first member.
 
-## Stamp format, version 1
+## Stamp format, versions 1 and 2
 
 All integers are unsigned and little-endian. The maximum is 1,000,000 cells and
 9,000,040 bytes per slot. Offsets preserve the selection's empty borders.
 
 | Field | Size | Rule |
 | --- | --- | --- |
-| Magic | 8 bytes | `GHCLIP01` |
+| Magic | 8 bytes | `GHCLIP01` or `GHCLIP02` |
 | Width, height | 8 bytes each | 1 through 2^32; both zero for an empty stamp |
 | Cell count | 8 bytes | 0 through 1,000,000 |
-| Each cell | 9 bytes | x: 4 bytes, y: 4 bytes, element: 1 byte |
+| Each cell | 9 bytes | x: 4 bytes, y: 4 bytes, packed element/state: 1 byte |
 | Checksum | 8 bytes | FNV-1a 64 over all preceding bytes |
+
+Version 1 uses the element ordinal directly and defaults stored levels to zero.
+Version 2 uses bits 0–3 for the ordinal and bits 4–5 for saved/reset state; bits
+6–7 must be zero. Writers choose version 1 for an all-zero-state stamp and version
+2 otherwise. Copy/cut/duplicate capture live levels while preserving reset
+levels; moving and transforming that snapshot retain both. Close older Gatehaven
+versions before using the 0.5 preview: mixed-version session sharing is unsupported.
 
 Readers reject unknown/empty element values, duplicate positions, offsets
 outside the dimensions, oversized counts, length mismatches, and failed
