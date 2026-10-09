@@ -104,7 +104,7 @@ jobs:
             build/app/Gatehaven-*.zip
             build/app/Gatehaven-*.tar.gz
             build/app/Gatehaven-*.sha256
-            build/app/gatehaven.bmp
+            build/app/gatehaven*.bmp
 
   benchmark:
     name: Simulation benchmark

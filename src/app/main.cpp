@@ -135,6 +135,16 @@ public:
         return true;
     }
 
+    bool prepare_snapshot(std::string_view state) {
+        if (state == "help") help_ = true;
+        else if (state == "examples") examples_menu_ = true;
+        else if (state == "hints") { beginner_ = true; tools_[0] = {ToolKind::interactor}; }
+        else if (state == "speed") edit_speed();
+        else if (state == "clipboard") clipboard_menu_ = 'v';
+        else return start_example(state);
+        return true;
+    }
+
     void load_settings(const std::filesystem::path& path) {
         preferences_path_ = path;
         std::error_code error;
@@ -1298,8 +1308,8 @@ int main(int argc, char** argv) {
             std::cerr << "Unknown example. Choose starter, oscillator, screen-switch, positive-relay, negative-relay, or gate-gallery.\n";
             return 2;
         }
-        if ((testing && argc != 2) || (snapshot && argc != 3) || (!testing && !snapshot && argc > 2)) {
-            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --self-test | --snapshot OUTPUT.bmp]\n";
+        if ((testing && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && argc > 2)) {
+            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
             return 2;
         }
         if (!SDL_SetAppMetadata("Gatehaven", version, application_id) || !SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
@@ -1352,6 +1362,10 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (snapshot) {
+            if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
+                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, or clipboard.\n";
+                return 2;
+            }
             app.simulation.step(app.circuit); app.simulation.step(app.circuit);
             app.render(renderer.get());
             const std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> pixels(

@@ -68,6 +68,9 @@ if(GATEHAVEN_BUILD_APP)
     gatehaven_defaults(gatehaven)
     add_custom_target(gatehaven_snapshot
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven.bmp
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-help.bmp help
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-examples.bmp examples
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-gallery.bmp gate-gallery
         DEPENDS gatehaven VERBATIM)
     if(APPLE)
         set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE
