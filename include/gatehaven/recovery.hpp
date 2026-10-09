@@ -19,6 +19,7 @@ public:
     [[nodiscard]] const std::string& id() const;
     [[nodiscard]] std::expected<void, std::string> write(const Circuit& circuit);
     [[nodiscard]] std::expected<void, std::string> discard();
+    [[nodiscard]] std::expected<std::vector<RecoveryEntry>, std::string> scan() const;
 private:
     struct Impl;
     explicit RecoveryStore(std::unique_ptr<Impl> impl);

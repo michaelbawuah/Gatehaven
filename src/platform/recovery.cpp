@@ -1,10 +1,15 @@
 #include "gatehaven/recovery.hpp"
 #include "session_lock.hpp"
 #include <random>
+#include <algorithm>
 #include <sstream>
 
 namespace gatehaven {
 namespace {
+bool valid_id(std::string_view id) {
+    return id.starts_with("session-") && id.size() <= 80 && id.size() > 8 &&
+        std::all_of(id.begin() + 8, id.end(), [](char c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || c == '-'; });
+}
 std::string make_id() {
     std::random_device random;
     std::ostringstream text;
@@ -35,6 +40,23 @@ std::expected<void, std::string> RecoveryStore::discard() {
     std::error_code error; std::filesystem::remove(impl_->snapshot(), error);
     if (error) return std::unexpected(error.message());
     return {};
+}
+std::expected<std::vector<RecoveryEntry>, std::string> RecoveryStore::scan() const {
+    try {
+        std::vector<RecoveryEntry> entries;
+        std::size_t inspected = 0;
+        for (const auto& entry : std::filesystem::directory_iterator(impl_->root)) {
+            if (++inspected > 10000) return std::unexpected("Recovery directory contains too many entries");
+            if (entry.path().extension() != ".ghv" || !std::filesystem::is_regular_file(entry.symlink_status())) continue;
+            const auto candidate = entry.path().stem().string();
+            if (!valid_id(candidate) || candidate == impl_->id) continue;
+            platform::FileLock owner(impl_->root / (candidate + ".lock"));
+            if (!owner.try_lock(true)) continue;
+            entries.push_back({candidate, entry.last_write_time(), entry.file_size()});
+        }
+        std::sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return a.modified > b.modified; });
+        return entries;
+    } catch (const std::exception& error) { return std::unexpected(error.what()); }
 }
 const std::string& RecoveryStore::id() const { return impl_->id; }
 std::expected<std::unique_ptr<RecoveryStore>, std::string> RecoveryStore::open(const std::filesystem::path& directory) {
