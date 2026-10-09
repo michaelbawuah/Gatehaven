@@ -481,7 +481,11 @@ public:
             const auto info = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
                 ", " + std::to_string(hover_->y) + "]  " + (is_communicator(circuit.at(*hover_))
                     ? std::string("TX ") + (simulation.sent(*hover_) ? "ON" : "OFF") + "  RX " + (simulation.received(*hover_) ? "ON" : "OFF")
-                    : (simulation.powered(*hover_) ? "ON" : "OFF"));
+                    : circuit.at(*hover_) == Element::crossing
+                        ? std::string("H ") + ((simulation.ports(*hover_) & 10U) ? "ON" : "OFF") + "  V " + ((simulation.ports(*hover_) & 5U) ? "ON" : "OFF")
+                        : (circuit.at(*hover_) == Element::positive_relay || circuit.at(*hover_) == Element::negative_relay)
+                            ? std::string("POWER ") + (simulation.powered(*hover_) ? "ON" : "OFF") + "  CONDUCT " + (simulation.conductive(*hover_) ? "ON" : "OFF")
+                            : (simulation.powered(*hover_) ? "ON" : "OFF"));
             ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +

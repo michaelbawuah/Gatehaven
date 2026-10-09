@@ -132,3 +132,12 @@ Opening a circuit establishes tick-zero power immediately. Sources and saved gat
 outputs power connected wires before the first Step. Reset uses the circuit's
 stored reset levels; Step then advances every gate/relay from the preceding tick.
 Editing while paused updates wire connectivity immediately.
+
+## Inspect a cell
+
+Point at a cell and press F8 for a native text dialog. Crossings report horizontal
+and vertical power separately. Relays distinguish whether they conduct from
+whether they are powered. Gates and ports show stored and reset levels, and
+communicators report transmitting/receiving. Inspection does not advance time
+or edit the circuit. The bottom status strip also shows crossing axes and relay
+conductivity. Native dialog accessibility still needs platform screen-reader QA.
