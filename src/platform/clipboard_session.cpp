@@ -1,5 +1,6 @@
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/clipboard_codec.hpp"
+#include "session_lock.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -23,83 +24,8 @@
 
 namespace gatehaven {
 namespace {
-[[noreturn]] void os_error(const char* operation) {
-#ifdef _WIN32
-    throw std::system_error(static_cast<int>(GetLastError()), std::system_category(), operation);
-#else
-    throw std::system_error(errno, std::generic_category(), operation);
-#endif
-}
-
-class FileLock {
-public:
-    explicit FileLock(const std::filesystem::path& path) {
-#ifdef _WIN32
-        handle_ = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (handle_ == INVALID_HANDLE_VALUE) os_error("Open clipboard lock");
-#else
-        handle_ = ::open(path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600);
-        if (handle_ < 0) os_error("Open clipboard lock");
-#endif
-    }
-    ~FileLock() {
-        unlock();
-#ifdef _WIN32
-        CloseHandle(handle_);
-#else
-        ::close(handle_);
-#endif
-    }
-    FileLock(const FileLock&) = delete;
-    FileLock& operator=(const FileLock&) = delete;
-
-    bool try_lock(bool exclusive) {
-#ifdef _WIN32
-        OVERLAPPED position{};
-        const DWORD flags = LOCKFILE_FAIL_IMMEDIATELY | (exclusive ? LOCKFILE_EXCLUSIVE_LOCK : 0);
-        if (!LockFileEx(handle_, flags, 0, 1, 0, &position)) {
-            if (GetLastError() == ERROR_LOCK_VIOLATION) return false;
-            os_error("Lock clipboard");
-        }
-#else
-        if (flock(handle_, (exclusive ? LOCK_EX : LOCK_SH) | LOCK_NB) != 0) {
-            if (errno == EWOULDBLOCK || errno == EAGAIN || errno == EINTR) return false;
-            os_error("Lock clipboard");
-        }
-#endif
-        locked_ = true;
-        return true;
-    }
-
-    void lock(bool exclusive) {
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-        while (!try_lock(exclusive)) {
-            if (std::chrono::steady_clock::now() >= deadline) {
-                throw std::runtime_error("Clipboard is busy; try again");
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        }
-    }
-
-    void unlock() noexcept {
-        if (!locked_) return;
-#ifdef _WIN32
-        OVERLAPPED position{};
-        UnlockFileEx(handle_, 0, 1, 0, &position);
-#else
-        flock(handle_, LOCK_UN);
-#endif
-        locked_ = false;
-    }
-private:
-#ifdef _WIN32
-    HANDLE handle_{INVALID_HANDLE_VALUE};
-#else
-    int handle_{-1};
-#endif
-    bool locked_{};
-};
+using platform::FileLock;
+using platform::os_error;
 
 struct Unlock {
     FileLock& lock;
