@@ -74,6 +74,27 @@ std::expected<std::vector<Cell>, std::string> Polyline::preview(Point target) co
     if (next != candidate.back()) candidate.push_back(next);
     return polyline_stroke(candidate, element_);
 }
+std::expected<std::vector<Cell>, std::string> Polyline::preview(Point target, Bounds clip) const {
+    auto vertices = vertices_;
+    const auto next = snapped_endpoint(vertices.back(), target);
+    if (next != vertices.back()) vertices.push_back(next);
+    const auto work = polyline_work(vertices);
+    if (!work) return std::unexpected(work.error());
+    std::map<Point, Element> visible;
+    if (clip.contains(vertices.front())) visible[vertices.front()] = element_;
+    for (std::size_t i = 1; i < vertices.size(); ++i) {
+        const auto segment = clipped_pencil_line(vertices[i - 1], vertices[i], element_, clip);
+        if (!segment) return std::unexpected(segment.error());
+        for (const auto cell : *segment) visible[cell.position] = cell.element;
+    }
+    if (element_ == Element::crossing) for (std::size_t i = 1; i + 1 < vertices.size(); ++i) {
+        if (clip.contains(vertices[i]) && ((vertices[i - 1].y == vertices[i].y) != (vertices[i].y == vertices[i + 1].y)))
+            visible[vertices[i]] = Element::wire;
+    }
+    std::vector<Cell> result; result.reserve(visible.size());
+    for (const auto& [point, element] : visible) result.push_back({point, element});
+    return result;
+}
 std::expected<std::vector<Cell>, std::string> Polyline::edits() const { return polyline_stroke(vertices_, element_); }
 bool Polyline::backtrack() {
     if (vertices_.size() < 2) return false;

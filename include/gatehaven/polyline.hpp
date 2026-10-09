@@ -13,6 +13,7 @@ public:
     [[nodiscard]] std::expected<bool, std::string> append(Point target);
     [[nodiscard]] std::expected<std::vector<Cell>, std::string> preview(Point target) const;
     [[nodiscard]] std::expected<std::vector<Cell>, std::string> edits() const;
+    [[nodiscard]] std::expected<std::vector<Cell>, std::string> preview(Point target, Bounds clip) const;
     [[nodiscard]] bool backtrack();
     [[nodiscard]] std::span<const Point> vertices() const { return vertices_; }
 private:

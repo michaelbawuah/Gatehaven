@@ -329,6 +329,7 @@ public:
             const double amount = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y;
             view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
             if (drag_ && hover_) update_preview(*hover_);
+            if (polyline_ && hover_) polyline_preview(*hover_);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
             if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
@@ -909,7 +910,7 @@ private:
     void reset_simulation() { simulation.reset(); endpoints_.reset_protocols(); accumulator_ = 0; }
 
     void polyline_preview(Point target) {
-        const auto result = polyline_->preview(target);
+        const auto result = polyline_->preview(target, view.visible());
         if (result) preview_ = *result;
         else { preview_.clear(); status_ = result.error(); }
     }
