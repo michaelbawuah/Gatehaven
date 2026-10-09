@@ -18,10 +18,24 @@ Use C++23 with compiler extensions disabled. Use RAII for resources and
 integer simulation state and ordered traversal so outcomes do not depend on hash
 iteration or platform scheduling.
 
-The circuit maintains per-element counts with every mutation. Queries for
-communicators can skip the grid entirely when none exist. Passive simulation
-cells skip control-input scans. The simulator still rebuilds connectivity each
-tick; incremental propagation is future performance work.
+Every structural mutation receives a process-unique revision. Copies retain the
+same revision until edited; moved-from grids remain valid and empty. Bounds and
+per-element counts are cached. Visible-cell visitors traverse only relevant rows
+and columns without allocating a temporary cell vector.
+
+CompiledCircuit turns each revision into ordered indexed nodes, N/E/S/W adjacency,
+communicator members, and unique neighboring Signal inputs. Simulation preserves
+power only for unchanged element types when recompiling. Contiguous power and
+workspace arrays support propagation; diagnostic maps are materialized lazily.
+Reset and invalidation maintain the same observable snapshot semantics as the
+reference simulator. A copied engine owns independent workspace buffers.
+
+A communicator-free circuit can skip propagation once consecutive power states
+match. Ticks still advance; edits, invalidation, and reset wake the engine.
+Communicators never use this shortcut because external input can change each
+tick. Metrics distinguish topology builds, real propagations, frontier visits,
+and skipped settled ticks. Seeded differential tests compare every tick against
+a frozen version of Gatehaven's earlier engine.
 
 Store occupied cells only. Empty space should consume no per-cell memory. Start
 with a straightforward ordered sparse representation and establish correctness
