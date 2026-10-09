@@ -27,15 +27,17 @@ public:
     [[nodiscard]] std::uint8_t ports(Point point) const;
     [[nodiscard]] std::uint64_t ticks() const noexcept { return ticks_; }
     [[nodiscard]] std::size_t powered_count() const;
-    [[nodiscard]] bool sent(Point point) const { const auto it = sent_.find(point); return it != sent_.end() && it->second; }
-    [[nodiscard]] const std::map<Point, Power>& snapshot() const noexcept { return state_; }
+    [[nodiscard]] bool sent(Point point) const;
+    [[nodiscard]] const std::map<Point, Power>& snapshot() const;
 
 private:
     std::uint64_t topology_revision_{std::numeric_limits<std::uint64_t>::max()};
     CompiledCircuit topology_;
     std::vector<std::uint8_t> power_;
-    std::map<Point, Power> state_;
-    std::map<Point, bool> sent_;
+    std::vector<bool> valid_;
+    std::vector<bool> sent_;
+    mutable std::map<Point, Power> state_;
+    mutable bool snapshot_dirty_{};
     std::uint64_t ticks_{};
 };
 

@@ -1,5 +1,6 @@
 #include "gatehaven/simulation.hpp"
 
+#include <algorithm>
 #include <array>
 #include <utility>
 #include <vector>
@@ -58,8 +59,8 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         std::vector<std::uint8_t> preserved(rebuilt.nodes().size());
         for (std::size_t i = 0; i < rebuilt.nodes().size(); ++i) {
             const auto& cell = rebuilt.nodes()[i].cell;
-            const auto previous = state_.find(cell.position);
-            if (previous != state_.end() && previous->second.element == cell.element) preserved[i] = previous->second.ports;
+            const auto old = topology_.index(cell.position);
+            if (old != no_node && topology_.nodes()[old].cell.element == cell.element) preserved[i] = power_[old];
         }
         topology_ = std::move(rebuilt); power_ = std::move(preserved);
         topology_revision_ = circuit.revision();
@@ -70,13 +71,13 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     std::vector<Material> materials(nodes.size());
     std::vector<bool> received(nodes.size());
     std::vector<std::pair<std::size_t, std::uint8_t>> frontier;
-    frontier.reserve(nodes.size()); sent_.clear();
+    frontier.reserve(nodes.size()); sent_.assign(nodes.size(), false);
     for (const auto& group : topology_.groups()) {
         bool sending = false;
         for (const auto input : group.inputs) sending = sending || previous[input] != 0;
         const bool receiving = exchange && exchange(group.endpoint, sending);
         for (const auto member : group.members) {
-            received[member] = receiving; sent_[nodes[member].cell.position] = sending;
+            received[member] = receiving; sent_[member] = sending;
         }
     }
     for (std::size_t i = 0; i < nodes.size(); ++i) {
@@ -105,37 +106,49 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
             frontier.emplace_back(next, added);
         }
     }
-    state_.clear();
-    for (std::size_t i = 0; i < nodes.size(); ++i) state_.emplace(nodes[i].cell.position, Power{nodes[i].cell.element, power_[i]});
+    valid_.assign(nodes.size(), true); snapshot_dirty_ = true;
     ++ticks_;
 }
 
 void Simulation::reset() {
     state_.clear();
     power_.assign(topology_.nodes().size(), 0);
-    sent_.clear();
+    sent_.assign(power_.size(), false); valid_.assign(power_.size(), false);
+    snapshot_dirty_ = false;
     ticks_ = 0;
 }
 
 void Simulation::invalidate(std::span<const Point> points) {
     for (const auto point : points) {
-        state_.erase(point); sent_.erase(point);
-        const auto index = topology_.index(point); if (index != no_node) power_[index] = 0;
+        const auto index = topology_.index(point);
+        if (index != no_node) { power_[index] = 0; sent_[index] = false; valid_[index] = false; snapshot_dirty_ = true; }
     }
 }
 
 std::uint8_t Simulation::ports(Point point) const {
-    const auto found = state_.find(point);
-    return found == state_.end() ? std::uint8_t{0} : found->second.ports;
+    const auto index = topology_.index(point);
+    return index == no_node ? std::uint8_t{0} : power_[index];
 }
 
 std::size_t Simulation::powered_count() const {
-    std::size_t count = 0;
-    for (const auto& [point, power] : state_) {
-        static_cast<void>(point);
-        if (power.ports != 0) ++count;
+    return static_cast<std::size_t>(std::count_if(power_.begin(), power_.end(), [](auto value) { return value != 0; }));
+}
+
+bool Simulation::sent(Point point) const {
+    const auto index = topology_.index(point);
+    return index != no_node && sent_[index];
+}
+
+const std::map<Point, Power>& Simulation::snapshot() const {
+    if (snapshot_dirty_) {
+        state_.clear();
+        const auto& nodes = topology_.nodes();
+        for (std::size_t i = 0; i < nodes.size(); ++i) if (valid_[i]) {
+            state_.emplace_hint(state_.end(), nodes[i].cell.position, Power{nodes[i].cell.element, power_[i]});
+        }
+        snapshot_dirty_ = false;
     }
-    return count;
+    return state_;
 }
 
 } // namespace gatehaven
