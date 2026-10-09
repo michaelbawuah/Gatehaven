@@ -14,6 +14,7 @@
 #include "gatehaven/touch.hpp"
 #include "gatehaven/taps.hpp"
 #include "gatehaven/recovery.hpp"
+#include "gatehaven/file_time.hpp"
 #include "gatehaven/recovery_schedule.hpp"
 #include "gatehaven/version.hpp"
 #include "gatehaven/paths.hpp"
@@ -143,7 +144,7 @@ public:
         else if (state == "recovery") {
             recovery_menu_ = true;
             const auto date = std::chrono::sys_days{std::chrono::year{2026}/10/9};
-            recovery_entries_.push_back({"preview", std::chrono::file_clock::from_sys(date), 2048});
+            recovery_entries_.push_back({"preview", file_time(date), 2048});
         }
         else if (state == "hints") { beginner_ = true; tools_[0] = {ToolKind::interactor}; }
         else if (state == "speed") edit_speed();
@@ -931,7 +932,7 @@ private:
     }
 
     static std::string recovery_date(std::filesystem::file_time_type time) {
-        const auto stamp = std::chrono::file_clock::to_sys(time);
+        const auto stamp = system_time(time);
         const auto day = std::chrono::floor<std::chrono::days>(stamp);
         const std::chrono::year_month_day date{day};
         const std::chrono::hh_mm_ss clock{std::chrono::floor<std::chrono::seconds>(stamp - day)};

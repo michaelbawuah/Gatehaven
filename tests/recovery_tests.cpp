@@ -1,5 +1,6 @@
 #include "test.hpp"
 #include "gatehaven/recovery.hpp"
+#include "gatehaven/file_time.hpp"
 #include "gatehaven/file_io.hpp"
 #include "gatehaven/recovery_schedule.hpp"
 #include <chrono>
@@ -72,3 +73,10 @@ TEST("recovery rejects symlink roots and never follows snapshot links") {
     CHECK(load_document(outside)->size() == 1);
 }
 #endif
+
+TEST("recovery timestamps round-trip through each vendor filesystem clock") {
+    const auto recent = std::chrono::sys_days{std::chrono::year{2026}/10/9} + std::chrono::hours{17} + std::chrono::minutes{42};
+    const auto historic = std::chrono::sys_days{std::chrono::year{1969}/12/31};
+    CHECK(std::chrono::floor<std::chrono::seconds>(system_time(file_time(recent))) == recent);
+    CHECK(std::chrono::floor<std::chrono::seconds>(system_time(file_time(historic))) == historic);
+}
