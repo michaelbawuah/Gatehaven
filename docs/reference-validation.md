@@ -2,7 +2,7 @@
 
 Gatehaven's production build does not depend on reference source or assets.
 A test-only adapter can compile against a separate, unchanged checkout at
-`19c00d0bd794c3dd558d501939e55f186f58c9e6`. On Linux it needs a C++17 compiler,
+`19c00d0bd794c3dd558d501939e55f186f58c9e6`. On Linux it needs a C++23 compiler,
 Boost headers, SDL2 headers, and pkg-config. No UI or file-dialog automation is
 involved. The adapter calls compile, step, and snapshot on the external engine.
 
@@ -36,3 +36,7 @@ The six published samples do not exercise that conflicting edge. Seeded matching
 fixtures exclude direct Source/Signal adjacency, and the report identifies this
 restriction. A separate two-cell observation records the expected difference.
 No reference source or assets are distributed in Gatehaven's production build.
+
+The reference adapter is built in C++23 mode too. The initial exploratory report
+used C++17 for the external checkout; current measurements and CI use C++23 for
+both engines, with extensions disabled. Gatehaven has no C++17 fallback build.

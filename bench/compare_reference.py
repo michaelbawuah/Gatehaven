@@ -49,7 +49,7 @@ def main():
     metadata = subprocess.run([str(candidate), "--build-info"], check=True, capture_output=True, text=True).stdout
     print(json.dumps({"schema": 1, "recorded_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                       "host": platform.platform(), "machine": platform.machine(), "candidate_toolchain": metadata,
-                      "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6", "reference_flags": "C++17 -O3 -DNDEBUG -pthread",
+                      "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6", "reference_flags": "C++23 -O3 -DNDEBUG -pthread",
                       "ticks": args.ticks, "samples": records, "median_regressions": regressions,
                       "limits": ["Shared host; timing noise is possible", "Headless simulation only", "No attached file streams or rendering"]}, indent=2))
     return 1 if args.require_no_regression and regressions else 0

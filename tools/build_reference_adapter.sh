@@ -16,4 +16,4 @@ if [[ -n $(git -C "$source_root" status --porcelain --untracked-files=no) ]]; th
 fi
 script_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 read -r -a sdl_flags <<< "$(pkg-config --cflags sdl2)"
-"${CXX:-c++}" -std=c++17 -O3 -DNDEBUG -pthread -include cstring -include stdexcept   "${sdl_flags[@]}" -I "$source_root/CircuitSandbox"   "$script_root/reference_adapter.cpp" "$source_root/CircuitSandbox/simulator.cpp" -o "$2"
+"${CXX:-c++}" -std=c++23 -O3 -DNDEBUG -pthread -include cstring -include stdexcept   "${sdl_flags[@]}" -I "$source_root/CircuitSandbox"   "$script_root/reference_adapter.cpp" "$source_root/CircuitSandbox/simulator.cpp" -o "$2"

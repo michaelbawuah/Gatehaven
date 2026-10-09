@@ -7,7 +7,7 @@ namespace gatehaven {
 namespace {
 class Components {
 public:
-    explicit Components(std::size_t size) : parent_(size), rank_(size) { std::iota(parent_.begin(), parent_.end(), 0); }
+    explicit Components(std::size_t size) : parent_(size), rank_(size) { std::iota(parent_.begin(), parent_.end(), std::size_t{0}); }
     std::size_t root(std::size_t value) {
         while (parent_[value] != value) { parent_[value] = parent_[parent_[value]]; value = parent_[value]; }
         return value;
