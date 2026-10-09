@@ -139,7 +139,7 @@ public:
         selection_.clear();
         placing_ = false;
         running = false;
-        dirty_ = false;
+        history.mark_saved();
         view.frame(circuit.bounds());
         status_ = "DOCUMENT OPENED";
         return true;
@@ -329,7 +329,7 @@ public:
                 ", " + std::to_string(hover_->y) + "]  " + (simulation.powered(*hover_) ? "ON" : "OFF");
             ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
         }
-        ui::text(r, 786, 777, (dirty_ ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
+        ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (help_) render_help(r);
         if (clipboard_menu_) render_clipboard_menu(r);
@@ -347,7 +347,6 @@ private:
     InputTool drag_tool_;
     bool eyedropper_{};
     bool placing_{};
-    bool dirty_{};
     bool help_{};
     bool dialog_pending_{};
     std::optional<Point> hover_;
@@ -386,7 +385,7 @@ private:
         const auto result = history.apply(circuit, edits);
         if (!result) { status_ = result.error(); return false; }
         if (*result) {
-            dirty_ = true;
+            
             simulation.invalidate(history.last_changes());
             status_ = "CIRCUIT UPDATED";
         }
@@ -562,7 +561,7 @@ private:
     void undo(bool redo) {
         cancel_gesture();
         if (redo ? history.redo(circuit) : history.undo(circuit)) {
-            dirty_ = true; simulation.invalidate(history.last_changes());
+             simulation.invalidate(history.last_changes());
             status_ = redo ? "REDONE" : "UNDONE";
         }
     }
@@ -700,7 +699,7 @@ private:
     }
 
     bool discard_changes() {
-        if (!dirty_) return true;
+        if (!history.modified()) return true;
         running = false;
         const SDL_MessageBoxButtonData choices[]{
             {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Cancel"},
@@ -722,7 +721,7 @@ private:
     void save(const std::filesystem::path& path) {
         const auto result = save_document(path, circuit);
         if (!result) { status_ = result.error().message; return; }
-        path_ = path; dirty_ = false; status_ = "CIRCUIT SAVED";
+        path_ = path; history.mark_saved(); status_ = "CIRCUIT SAVED";
     }
 
     void request_save(bool save_as) {
