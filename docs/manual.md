@@ -71,3 +71,21 @@ choose an electrical net or physical circuit. Long holds and drags do not count
 as repeated taps. Focus loss cancels unfinished touches and releases screen
 interaction. Physical touchscreen and per-monitor scaling acceptance is still
 required; automated SDL events cover the input and coordinate conversion paths.
+
+## Recover unsaved work
+
+Gatehaven keeps a recovery snapshot after two idle seconds of editing, or after
+thirty seconds of continuous changes. Leaving the window also checkpoints a
+modified circuit. These snapshots are separate from your saved circuit file.
+
+After an unexpected shutdown, the next ordinary launch offers abandoned work.
+Press F4 to open recovery later. Use Up/Down and Enter, or click a dated entry.
+Escape keeps snapshots for later. Live windows never appear in this list.
+Save your current circuit or use New before restoring another one.
+
+A restored circuit opens paused and unsaved. Save it to choose its destination.
+Recovery preserves components only: file-port choices and simulation state are
+not recovered. Successful saves and an orderly close clear that window's
+snapshot. A failed recovery write leaves the previous snapshot intact and shows
+an error in the status bar. Recovery cannot guarantee the very latest edit after
+sudden power loss; use Save for work you want to keep.
