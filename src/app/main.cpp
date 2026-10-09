@@ -319,6 +319,7 @@ public:
         if (e.type == SDL_EVENT_MOUSE_WHEEL && view.area.contains(e.wheel.mouse_x, e.wheel.mouse_y)) {
             const double amount = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y;
             view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
+            if (drag_ && hover_) update_preview(*hover_);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
             if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
@@ -341,7 +342,7 @@ public:
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
             const auto end = view.area.contains(e.button.x, e.button.y) ? view.cell(e.button.x, e.button.y) : std::nullopt;
             if (end) {
-                update_preview(*end);
+                update_preview(*end, true);
                 if (drag_tool_.kind == ToolKind::selector) {
                     const Bounds region{{std::min(drag_->x, end->x), std::min(drag_->y, end->y)},
                                         {std::max(drag_->x, end->x), std::max(drag_->y, end->y)}};
@@ -597,14 +598,14 @@ private:
         return true;
     }
 
-    void update_preview(Point end) {
+    void update_preview(Point end, bool complete = false) {
         preview_.clear();
         if (!drag_ || drag_tool_.kind == ToolKind::selector) return;
         auto element = drag_tool_.kind == ToolKind::eraser ? Element::empty : drag_tool_.element;
         if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay) {
             element = Element::signal;
         }
-        const auto stroke = pencil_line(*drag_, end, element);
+        const auto stroke = complete ? pencil_line(*drag_, end, element) : clipped_pencil_line(*drag_, end, element, view.visible());
         if (stroke) preview_ = *stroke; else status_ = stroke.error();
     }
 
