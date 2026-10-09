@@ -12,6 +12,8 @@
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/viewport.hpp"
 #include "gatehaven/touch.hpp"
+#include "gatehaven/recovery.hpp"
+#include "gatehaven/recovery_schedule.hpp"
 #include "gatehaven/version.hpp"
 
 #include <SDL3/SDL.h>
@@ -156,6 +158,19 @@ public:
         tools_ = settings->bindings; speed_ = settings->speed; beginner_ = settings->beginner;
     }
 
+    void enable_recovery(const std::filesystem::path& directory) {
+        auto opened = RecoveryStore::open(directory);
+        if (!opened) { status_ = "RECOVERY UNAVAILABLE: " + opened.error(); return; }
+        recovery_ = std::move(*opened);
+    }
+
+    void finish_recovery() {
+        if (recovery_) {
+            const auto cleared = recovery_->discard();
+            if (!cleared) std::cerr << "Gatehaven recovery cleanup: " << cleared.error() << '\n';
+        }
+    }
+
     void save_settings() const {
         if (preferences_path_.empty()) return;
         const auto saved = replace_file(preferences_path_, encode_preferences({tools_, speed_, beginner_}));
@@ -183,6 +198,10 @@ public:
     }
 
     void update(double elapsed) {
+        if (recovery_) {
+            if (recovery_schedule_.poll(circuit.revision(), history.modified(), elapsed)) checkpoint();
+            if (!history.modified() && recovery_dirty_) clear_checkpoint();
+        }
         const auto file_name = path_.filename().u8string();
         const std::string title = (history.modified() ? "* " : "") +
             (path_.empty() ? std::string("Untitled") : std::string(file_name.begin(), file_name.end())) + " - Gatehaven";
@@ -462,6 +481,22 @@ private:
     bool speed_replace_{};
     bool speed_error_{};
     double accumulator_{};
+    std::unique_ptr<RecoveryStore> recovery_;
+    RecoverySchedule recovery_schedule_;
+    bool recovery_dirty_{};
+
+    void checkpoint() {
+        if (!recovery_ || !history.modified()) return;
+        const auto saved = recovery_->write(circuit);
+        if (saved) { recovery_dirty_ = true; recovery_schedule_.written(circuit.revision()); }
+        else { recovery_schedule_.failed(); status_ = "RECOVERY SAVE FAILED: " + saved.error(); }
+    }
+    void clear_checkpoint() {
+        if (!recovery_) return;
+        const auto cleared = recovery_->discard();
+        if (cleared) recovery_dirty_ = false;
+        else status_ = "RECOVERY CLEANUP FAILED: " + cleared.error();
+    }
 
     void cancel_gesture(bool clear_touch = true) {
         if (clear_touch) touches_.clear();
@@ -1471,6 +1506,7 @@ int main(int argc, char** argv) {
         else if (argc == 2 && !app.open(utf8_path(argv[1]))) {
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Gatehaven", "The circuit could not be opened.", window.get());
         }
+        app.enable_recovery(session_directory.parent_path() / "recovery-v1");
         auto previous = std::chrono::steady_clock::now();
         while (!app.quit) {
             dispatch(app, renderer.get());
@@ -1481,6 +1517,7 @@ int main(int argc, char** argv) {
             SDL_RenderPresent(renderer.get());
             SDL_Delay(8);
         }
+        app.finish_recovery();
         app.save_settings();
         return 0;
     } catch (const std::exception& e) {
