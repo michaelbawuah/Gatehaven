@@ -477,10 +477,12 @@ private:
             }
         }
         if (ViewRect{12, 146, 216, 364}.contains(e.x, e.y)) {
+            cancel_gesture();
             tools_[*button] = {ToolKind::pencil, palette[static_cast<std::size_t>((e.y - 146) / 28)]};
             placing_ = false; return;
         }
         if (ViewRect{12, 522, 216, 112}.contains(e.x, e.y)) {
+            cancel_gesture();
             constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
             tools_[*button] = {kinds[static_cast<std::size_t>((e.y - 522) / 28)]};
             placing_ = false; return;
@@ -606,6 +608,7 @@ private:
             return;
         }
         if (e.key >= SDLK_0 && e.key <= SDLK_9) {
+            cancel_gesture();
             const auto digit = static_cast<std::size_t>(e.key - SDLK_0);
             tools_[0] = {ToolKind::pencil, palette[(digit + 9) % 10]}; placing_ = false; return;
         }
@@ -613,12 +616,12 @@ private:
         case SDLK_SPACE: running = !running; accumulator_ = 0; break;
         case SDLK_RIGHT: running = false; tick(); break;
         case SDLK_R: reset_simulation(); break;
-        case SDLK_Q: tools_[0] = {ToolKind::selector}; placing_ = false; break;
-        case SDLK_E: eyedropper_ = true; break;
-        case SDLK_I: tools_[0] = {ToolKind::interactor}; placing_ = false; break;
-        case SDLK_F5: tools_[0] = {ToolKind::pencil, Element::screen}; break;
-        case SDLK_F6: tools_[0] = {ToolKind::pencil, Element::file_input}; break;
-        case SDLK_F7: tools_[0] = {ToolKind::pencil, Element::file_output}; break;
+        case SDLK_Q: cancel_gesture(); tools_[0] = {ToolKind::selector}; placing_ = false; break;
+        case SDLK_E: cancel_gesture(); eyedropper_ = true; break;
+        case SDLK_I: cancel_gesture(); tools_[0] = {ToolKind::interactor}; placing_ = false; break;
+        case SDLK_F5: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::screen}; placing_ = false; break;
+        case SDLK_F6: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_input}; placing_ = false; break;
+        case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
         case SDLK_F1:
