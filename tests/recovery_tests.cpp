@@ -80,3 +80,17 @@ TEST("recovery timestamps round-trip through each vendor filesystem clock") {
     CHECK(std::chrono::floor<std::chrono::seconds>(system_time(file_time(recent))) == recent);
     CHECK(std::chrono::floor<std::chrono::seconds>(system_time(file_time(historic))) == historic);
 }
+
+TEST("recovery snapshots retain imported current and reset levels") {
+    const auto root = std::filesystem::temp_directory_path() / ("gatehaven-state-recovery-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    Circuit circuit; circuit.set({-10, 4}, Element::or_gate, 3);
+    auto store = RecoveryStore::open(root); CHECK(store && (*store)->write(circuit));
+    // A live store owns its snapshot; after release it is available to a new instance.
+    store = std::unexpected(std::string("released"));
+    auto peer = RecoveryStore::open(root); CHECK(peer);
+    const auto entries = (*peer)->scan(); CHECK(entries && entries->size() == 1);
+    const auto restored = (*peer)->restore(entries->front().id); CHECK(restored && *restored == circuit);
+    CHECK((*peer)->discard());
+    peer = std::unexpected(std::string("released"));
+    std::error_code ignored; std::filesystem::remove_all(root, ignored);
+}
