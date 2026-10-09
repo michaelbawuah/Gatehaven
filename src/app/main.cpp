@@ -111,8 +111,8 @@ public:
     bool quit{};
 
     explicit App(SDL_Window* window, ClipboardSession& clipboards,
-                 ui::InstanceLauncher launcher = ui::launch_instance)
-        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)) {
+                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo)
+        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)) {
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
     }
@@ -201,7 +201,7 @@ public:
             }
             close_after_save_ = false;
         }
-        if (!running || dialog_pending_ || clipboard_menu_ || speed_edit_) { accumulator_ = 0; return; }
+        if (!running || dialog_pending_ || clipboard_menu_ || speed_edit_ || examples_menu_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
         const double interval = 1.0 / speed_;
         unsigned work = 0;
@@ -224,6 +224,14 @@ public:
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
+        if (examples_menu_) {
+            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
+                for (std::size_t i = 0; i < example_names.size(); ++i) {
+                    if (example_button(i).contains(e.button.x, e.button.y)) { choose_example(i); break; }
+                }
+            }
+            return;
+        }
         if (speed_edit_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
                 if (ViewRect{656, 460, 148, 40}.contains(e.button.x, e.button.y)) commit_speed();
@@ -380,6 +388,7 @@ public:
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (beginner_ && !help_) render_hint(r);
         if (help_) render_help(r);
+        if (examples_menu_) render_examples(r);
         if (clipboard_menu_) render_clipboard_menu(r);
         if (speed_edit_) render_speed_dialog(r);
         if (dialog_pending_) {
@@ -396,6 +405,8 @@ private:
     bool eyedropper_{};
     bool placing_{};
     bool help_{};
+    bool examples_menu_{};
+    std::size_t example_index_{};
     bool beginner_{};
     bool dialog_pending_{};
     bool close_after_save_{};
@@ -415,6 +426,7 @@ private:
     std::size_t polyline_button_{};
     ClipboardSession& clipboards_;
     ui::InstanceLauncher launcher_;
+    ui::DemoLauncher demo_launcher_;
     Stamp placement_;
     unsigned clipboard_{};
     std::optional<char> clipboard_menu_;
@@ -560,6 +572,14 @@ private:
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
         if (speed_edit_) { speed_key(e.key); return; }
+        if (examples_menu_) {
+            if (e.key == SDLK_ESCAPE || e.key == SDLK_F3) examples_menu_ = false;
+            else if (e.key >= SDLK_1 && e.key <= SDLK_6) choose_example(static_cast<std::size_t>(e.key - SDLK_1));
+            else if (e.key == SDLK_UP) example_index_ = (example_index_ + example_names.size() - 1) % example_names.size();
+            else if (e.key == SDLK_DOWN) example_index_ = (example_index_ + 1) % example_names.size();
+            else if (e.key == SDLK_RETURN) choose_example(example_index_);
+            return;
+        }
         if (clipboard_menu_) {
             if (e.key == SDLK_ESCAPE) clipboard_menu_.reset();
             else if (e.key >= SDLK_0 && e.key <= SDLK_9) choose_clipboard(static_cast<unsigned>(e.key - SDLK_0));
@@ -633,6 +653,7 @@ private:
         case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
+        case SDLK_F3: cancel_gesture(); help_ = false; examples_menu_ = true; break;
         case SDLK_F1:
             if (!SDL_OpenURL("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md")) status_ = SDL_GetError();
             break;
@@ -954,6 +975,26 @@ private:
         if (preview) rectangle(r, x, y, s, s, color, true);
     }
 
+    static ViewRect example_button(std::size_t index) { return {406, 252 + static_cast<double>(index) * 54, 548, 42}; }
+
+    void choose_example(std::size_t index) {
+        examples_menu_ = false;
+        const auto result = demo_launcher_(example_names[index]);
+        status_ = result ? "EXAMPLE OPENED IN A NEW WINDOW" : "EXAMPLE FAILED: " + result.error();
+    }
+
+    void render_examples(SDL_Renderer* r) const {
+        rectangle(r, 374, 162, 612, 478, ink);
+        ui::text(r, 406, 194, "EXPLORE A CIRCUIT", white, 2.5F);
+        ui::text(r, 406, 226, "OPENS IN A NEW WINDOW", {170, 208, 196, 255}, 1.5F);
+        for (std::size_t i = 0; i < example_names.size(); ++i) {
+            const auto box = example_button(i);
+            rectangle(r, 406, static_cast<float>(box.y), 548, 42, i == example_index_ ? teal : muted);
+            ui::text(r, 428, static_cast<float>(box.y + 13), std::to_string(i + 1) + "  " + std::string(example_names[i]), white, 2);
+        }
+        ui::text(r, 406, 602, "1-6 OR ARROWS + ENTER. ESC: CLOSE", white, 1.5F);
+    }
+
     void render_hint(SDL_Renderer* r) const {
         std::string_view first = "DRAG TO DRAW A STRAIGHT LINE. HOLD SHIFT TO CHAIN LINES.";
         std::string_view second = "BACKSPACE RETRACES A POLYLINE. DOUBLE CLICK FINISHES IT.";
@@ -1006,7 +1047,7 @@ void dispatch(App& app, SDL_Renderer* renderer) {
 }
 
 void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& session_directory,
-               const std::vector<std::optional<std::filesystem::path>>& launched) {
+               const std::vector<std::optional<std::filesystem::path>>& launched, const std::vector<std::string>& demos) {
     const auto require = [](bool ok, const char* message) {
         if (!ok) throw std::runtime_error(message);
     };
@@ -1017,6 +1058,10 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         dispatch(app, renderer);
     };
     const auto original = app.circuit;
+    key(SDLK_F3); key(SDLK_DOWN); key(SDLK_RETURN);
+    require(demos.size() == 1 && demos.back() == "oscillator", "Example chooser did not launch the selected lesson");
+    key(SDLK_F3); key(SDLK_ESCAPE);
+    require(demos.size() == 1 && app.circuit == original, "Example chooser changed the active document");
     key(SDLK_SPACE);
     require(app.running, "Play event failed");
     app.update(0.21);
@@ -1242,14 +1287,19 @@ int main(int argc, char** argv) {
         SDL_SetWindowMinimumSize(window.get(), 800, 500);
         SDL_SetRenderVSync(renderer.get(), 1);
         std::vector<std::optional<std::filesystem::path>> launched;
+        std::vector<std::string> demos;
         ui::InstanceLauncher launcher = ui::launch_instance;
+        ui::DemoLauncher demo_launcher = ui::launch_demo;
         if (testing) launcher = [&](std::optional<std::filesystem::path> document) -> std::expected<void, std::string> {
             launched.push_back(std::move(document)); return {};
         };
-        App app(window.get(), **clipboard, std::move(launcher));
+        if (testing) demo_launcher = [&](std::string_view name) -> std::expected<void, std::string> {
+            demos.emplace_back(name); return {};
+        };
+        App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher));
         if (!testing && !snapshot) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
-            self_test(app, renderer.get(), session_directory, launched);
+            self_test(app, renderer.get(), session_directory, launched, demos);
             if (!child_test) {
                 const auto child = ui::test_child_process();
                 if (!child) throw std::runtime_error(child.error());
