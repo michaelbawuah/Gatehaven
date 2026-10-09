@@ -192,6 +192,8 @@ jobs:
         run: python tools/audit_legacy.py build/compat/gatehaven-cli build/reference/samples > build/legacy-audit.json
       - name: Compare all samples and seeded mixed circuits
         run: python tools/compare_reference.py build/reference-adapter build/compat/gatehaven-cli build/reference/samples > build/behavior.json
+      - name: Record same-host throughput without a noisy shared-runner timing gate
+        run: python bench/compare_reference.py build/reference-adapter build/compat/gatehaven-cli build/reference/samples --runs 3 --ticks 1000 > build/reference-performance.json
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: Gatehaven-compatibility-evidence
@@ -200,3 +202,4 @@ jobs:
           path: |
             build/legacy-audit.json
             build/behavior.json
+            build/reference-performance.json
