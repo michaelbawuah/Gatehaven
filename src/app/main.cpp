@@ -1803,6 +1803,16 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(inspections.back().starts_with("Cell (2147483647, 2147483647)"), "Keyboard cursor wrapped at coordinate limits");
     key(SDLK_ESCAPE);
     require(app.open(save_path), "Could not restore save workflow fixture");
+    const auto malformed_path = session_directory / "broken.ccsb";
+    require(replace_file(malformed_path, "CCPG").has_value(), "Could not stage malformed import");
+    key(SDLK_F10);
+    const auto before_failed_open = app.circuit;
+    const auto failed_open_tick = app.simulation.ticks();
+    require(!app.open(malformed_path) && app.circuit == before_failed_open && app.simulation.ticks() == failed_open_tick,
+            "Failed legacy import replaced the active circuit or simulation");
+    key(SDLK_S, SDL_KMOD_CTRL);
+    require(read_bounded_file(malformed_path, 32).value() == "CCPG" && load_document(save_path).value() == app.simulation.document_snapshot(app.circuit),
+            "Failed import redirected Save to the broken file");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
     require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
     // The injected test prompt declines replacement; both versions must survive.
