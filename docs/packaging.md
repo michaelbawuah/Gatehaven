@@ -35,16 +35,16 @@ metadata and a vector icon; update the desktop and MIME caches using your
 distribution's normal installation process. The executable must be on `PATH`
 for the desktop launcher. macOS bundles declare the `.ghv` document type.
 
-These builds are development previews. Signing, notarization, Windows file
-registration, final installer acceptance, clean-machine checks, and physical desktop acceptance
+These builds are development previews. Signing, notarization, final installer acceptance, clean-machine checks, and physical desktop acceptance
 remain release work. No step in this build disables operating-system protections.
 
 ## Optional native installer previews
 
 Add `-DGATEHAVEN_BUILD_INSTALLERS=ON` with `GATEHAVEN_BUILD_PACKAGES=ON` to
-produce a Debian `.deb` on Linux or a `.dmg` on macOS alongside the archive.
-Windows continues to provide a ZIP. These options require platform packaging
-tools: `dpkg-deb`/`dpkg-shlibdeps` on Debian-based Linux and `hdiutil` on macOS.
+produce a Debian `.deb` on Linux, a `.dmg` on macOS, or an NSIS `.exe`
+on Windows alongside the archive. These options require platform packaging
+tools: `dpkg-deb`/`dpkg-shlibdeps` on Debian-based Linux, `hdiutil` on macOS,
+and NSIS 3.13 on Windows.
 
 DEBs install under `/usr`, declare the runtime dependencies discovered from
 built binaries, and include launcher/MIME resources. Install only the package
@@ -56,4 +56,16 @@ These checks do not install into the CI host's system directories.
 Every installer has a SHA-256 sidecar and is included in its architecture's
 Actions artifact. DMGs remain unsigned and unnotarized; no build step bypasses
 Gatekeeper. Clean-machine installation/removal, automatic associations, signing,
-Windows installers, and broader Linux distribution coverage remain release gates.
+broader Linux distribution coverage remain release gates.
+
+## Windows installer behavior
+
+The unsigned NSIS preview installs the app, compiler runtime, lessons, notices,
+and offline guides. It requires administrator approval and adds Start Menu
+shortcuts plus a `.ghv` Open With choice. It preserves the current default file
+handler and does not change PATH. Uninstall removes only its own association;
+saved circuits, preferences, shared sessions, and recovery data are retained.
+
+Windows CI installs into a temporary path, launches both executables, checks the
+quoted file-open command, and uninstalls. This uses the disposable CI machine;
+interactive clean-machine and signing acceptance still remain.
