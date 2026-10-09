@@ -230,7 +230,7 @@ public:
             if (!dialog_pending_ && discard_changes()) quit = true;
             return;
         }
-        if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
+        if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
             cancel_gesture(); accumulator_ = 0;
         }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
@@ -929,8 +929,6 @@ private:
 
     void file_dialog(bool saving) {
         if (dialog_pending_) return;
-        if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
-            e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
         cancel_gesture();
         running = false;
         dialog_pending_ = true;
@@ -944,8 +942,6 @@ private:
 
     void communicator_dialog(Point point) {
         if (dialog_pending_) return;
-        if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
-            e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
         cancel_gesture(); running = false; dialog_pending_ = true;
         const bool output = circuit.at(point) == Element::file_output;
         for (const auto& group : communicator_groups(circuit)) {
