@@ -103,6 +103,7 @@ static int run_cli(int argc, char** argv) {
         std::cout << "{\"cells\":" << circuit->size() << ",\"ticks\":" << simulation.ticks()
                   << ",\"powered\":" << simulation.powered_count() << ",\"total_ms\":" << elapsed
                   << ",\"topology_builds\":" << metrics.topology_builds << ",\"propagations\":" << metrics.propagations
+                  << ",\"frontier_visits\":" << metrics.frontier_visits
                   << ",\"settled_ticks\":" << metrics.settled_ticks << "}\n";
         return std::cout ? 0 : 1;
     }

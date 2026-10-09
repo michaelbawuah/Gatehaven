@@ -80,3 +80,8 @@ with tempfile.TemporaryDirectory(prefix="gatehaven digest ") as directory:
         ports = 15 if ticks else 0
         expected = digest_bytes([(-2, -1, 3, ports, 0, 0), (-1, -1, 1, ports, 0, 0)], ticks)
         assert json.loads(run("digest", path, ticks)) == {"schema": 1, "ticks": ticks, "digest": expected}
+
+with tempfile.TemporaryDirectory(prefix="gatehaven metrics ") as directory:
+    path = Path(directory) / "source.ghv"
+    path.write_text("GATEHAVEN 1\n0 0 source\n1 0 wire\n", encoding="utf-8")
+    assert json.loads(run("profile", path, 3))["frontier_visits"] == 4
