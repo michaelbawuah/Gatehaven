@@ -12,6 +12,9 @@ namespace gatehaven {
 [[nodiscard]] std::expected<std::vector<Cell>, std::string> pencil_line(
     Point from, Point to, Element element, std::size_t max_length = 1'000'000);
 
+[[nodiscard]] std::expected<std::vector<Cell>, std::string> clipped_pencil_line(
+    Point from, Point to, Element element, Bounds clip, std::size_t max_length = 1'000'000);
+
 class History {
 public:
     explicit History(std::size_t max_changes = 1'000'000) : max_changes_(max_changes) {}

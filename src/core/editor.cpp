@@ -26,6 +26,29 @@ std::expected<std::vector<Cell>, std::string> pencil_line(Point from, Point to, 
     return edits;
 }
 
+std::expected<std::vector<Cell>, std::string> clipped_pencil_line(
+    Point from, Point to, Element element, Bounds clip, std::size_t max_length) {
+    const auto dx = static_cast<std::int64_t>(to.x) - from.x;
+    const auto dy = static_cast<std::int64_t>(to.y) - from.y;
+    const bool horizontal = std::abs(dx) >= std::abs(dy);
+    const auto distance = horizontal ? dx : dy;
+    if (static_cast<std::uint64_t>(std::abs(distance)) + 1 > max_length) return std::unexpected("Stroke is too long");
+    if (static_cast<std::size_t>(element) >= element_names.size()) return std::unexpected("Invalid pencil element");
+    if (clip.min.x > clip.max.x || clip.min.y > clip.max.y) return std::vector<Cell>{};
+    if (horizontal) {
+        if (from.y < clip.min.y || from.y > clip.max.y) return std::vector<Cell>{};
+        const auto lo = std::max(std::min(from.x, to.x), clip.min.x);
+        const auto hi = std::min(std::max(from.x, to.x), clip.max.x);
+        if (lo > hi) return std::vector<Cell>{};
+        return pencil_line({distance < 0 ? hi : lo, from.y}, {distance < 0 ? lo : hi, from.y}, element, max_length);
+    }
+    if (from.x < clip.min.x || from.x > clip.max.x) return std::vector<Cell>{};
+    const auto lo = std::max(std::min(from.y, to.y), clip.min.y);
+    const auto hi = std::min(std::max(from.y, to.y), clip.max.y);
+    if (lo > hi) return std::vector<Cell>{};
+    return pencil_line({from.x, distance < 0 ? hi : lo}, {from.x, distance < 0 ? lo : hi}, element, max_length);
+}
+
 std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<const Cell> edits) {
     last_changes_.clear();
     for (const auto& edit : edits) {
