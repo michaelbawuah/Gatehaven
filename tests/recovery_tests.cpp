@@ -25,3 +25,17 @@ TEST("recovery ignores live windows and takes ownership of abandoned snapshots")
     last.reset();
     CHECK(RecoveryStore::open(directory.path).value()->scan()->empty());
 }
+
+TEST("failed and malformed restores preserve the last recoverable copy") {
+    RecoveryDirectory directory;
+    auto writer = RecoveryStore::open(directory.path).value(); Circuit circuit; circuit.set({0, 0}, Element::source);
+    CHECK(writer->write(circuit)); const auto identity = writer->id(); writer.reset();
+    auto reader = RecoveryStore::open(directory.path).value();
+    std::filesystem::create_directory(directory.path / (reader->id() + ".ghv"));
+    CHECK(!reader->restore(identity)); CHECK(reader->scan()->size() == 1);
+    std::filesystem::remove(directory.path / (reader->id() + ".ghv"));
+    CHECK(!reader->restore("../outside")); CHECK(!reader->remove("session-../../outside"));
+    CHECK(replace_file(directory.path / (identity + ".ghv"), "malformed"));
+    CHECK(!reader->restore(identity)); CHECK(reader->scan()->size() == 1);
+    CHECK(reader->remove(identity)); CHECK(reader->scan()->empty());
+}
