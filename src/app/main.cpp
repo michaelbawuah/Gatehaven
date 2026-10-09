@@ -1341,6 +1341,9 @@ private:
             return;
         }
         if (cell.element == Element::wire || cell.element == Element::crossing || cell.element == Element::signal) {
+            // A crossing's two axes can carry different levels.
+            const float horizontal_stroke = std::max(2.0F, s * (high_contrast_ && (ports & 10) != 0 ? 0.22F : 0.13F));
+            const float vertical_stroke = std::max(2.0F, s * (high_contrast_ && (ports & 5) != 0 ? 0.22F : 0.13F));
             const auto horizontal = (ports & 10) != 0 ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
             const auto vertical = (ports & 5) != 0 ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
             const auto connected = [&](Direction direction) {
@@ -1349,15 +1352,15 @@ private:
             };
             const bool east = connected(Direction::east), west = connected(Direction::west);
             const bool north = connected(Direction::north), south = connected(Direction::south);
-            if (west) rectangle(r, x, y + center - stroke / 2, center + stroke / 2, stroke, preview ? theme().orange : horizontal);
-            if (east) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
-                                center + stroke / 2, stroke, preview ? theme().orange : horizontal);
+            if (west) rectangle(r, x, y + center - horizontal_stroke / 2, center + horizontal_stroke / 2, horizontal_stroke, preview ? theme().orange : horizontal);
+            if (east) rectangle(r, x + center - horizontal_stroke / 2, y + center - horizontal_stroke / 2,
+                                center + horizontal_stroke / 2, horizontal_stroke, preview ? theme().orange : horizontal);
             if (cell.element == Element::crossing && (north || south)) {
-                rectangle(r, x + center - stroke, y, stroke * 2, s, theme().paper);
+                rectangle(r, x + center - vertical_stroke, y, vertical_stroke * 2, s, theme().paper);
             }
-            if (north) rectangle(r, x + center - stroke / 2, y, stroke, center + stroke / 2, preview ? theme().orange : vertical);
-            if (south) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
-                                 stroke, center + stroke / 2, preview ? theme().orange : vertical);
+            if (north) rectangle(r, x + center - vertical_stroke / 2, y, vertical_stroke, center + vertical_stroke / 2, preview ? theme().orange : vertical);
+            if (south) rectangle(r, x + center - vertical_stroke / 2, y + center - vertical_stroke / 2,
+                                 vertical_stroke, center + vertical_stroke / 2, preview ? theme().orange : vertical);
             if (!north && !south && !east && !west) {
                 rectangle(r, x + center - stroke, y + center - stroke, stroke * 2, stroke * 2, color);
             }

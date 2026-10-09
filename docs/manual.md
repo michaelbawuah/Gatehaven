@@ -105,6 +105,17 @@ keyboard input while open. Simulation pauses behind these overlays and resumes
 its previous play state when they close. Keyboard navigation is implemented;
 screen-reader integration and a full accessibility audit remain release work.
 
+The status strip names the focused control. F8 opens its description, shortcut,
+and current mouse/touch bindings in a text dialog. F12 describes the current
+window, unsaved state, simulation, chosen file-connection count, and focused cell
+or control. These dialogs pause elapsed-time accumulation while open.
+
+F11 toggles high contrast. The choice is saved with your tool bindings and speed;
+older preferences still load with the standard colors. Powered wires become
+thicker, with each crossing axis shown independently, so power has a shape cue
+as well as a color cue. F8 also reports each axis in words. This mode improves
+legibility; it does not establish full screen-reader or accessibility compliance.
+
 ## Files changed in another window
 
 Saving an already opened file checks whether its contents changed on disk.
