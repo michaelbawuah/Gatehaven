@@ -164,13 +164,13 @@ public:
         recovery_ = std::move(*opened);
     }
 
-    void show_recovery() {
+    void show_recovery(bool only_if_available = false) {
         if (!recovery_) return;
         cancel_gesture();
         const auto entries = recovery_->scan();
         if (!entries) { status_ = "RECOVERY: " + entries.error(); return; }
         recovery_entries_ = *entries; recovery_index_ = 0;
-        recovery_menu_ = true; help_ = false; examples_menu_ = false;
+        recovery_menu_ = !only_if_available || !recovery_entries_.empty(); help_ = false; examples_menu_ = false;
     }
 
     void finish_recovery() {
@@ -443,7 +443,7 @@ public:
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
-        if (beginner_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
+        if (beginner_ && !recovery_menu_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
         if (recovery_menu_) render_recovery(r);
@@ -1567,6 +1567,7 @@ int main(int argc, char** argv) {
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Gatehaven", "The circuit could not be opened.", window.get());
         }
         app.enable_recovery(session_directory.parent_path() / "recovery-v1");
+        if (argc == 1) app.show_recovery(true);
         auto previous = std::chrono::steady_clock::now();
         while (!app.quit) {
             dispatch(app, renderer.get());
