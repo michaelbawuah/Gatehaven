@@ -89,13 +89,22 @@ def main():
         # Validate the exact image before replacing an existing output artifact.
         verify = work / "verify"; verify.mkdir()
         run(candidate, "--appimage-extract", cwd=verify)
-        assert "Gatehaven" in run(verify / "squashfs-root/AppRun", "--cli", "--version")
+        extracted = verify / "squashfs-root"
+        if "Gatehaven" not in run(extracted / "AppRun", "--cli", "--version"):
+            raise ValueError("the packaged CLI did not identify itself")
+        build_information = run(extracted / "AppRun", "--cli", "--build-info")
+        if run(extracted / "AppRun", "--build-info") != build_information:
+            raise ValueError("desktop and CLI build metadata differ")
+        build_metadata = json.loads((extracted / "usr/share/gatehaven/build-metadata.json").read_text())
+        if build_metadata["source_revision"] not in build_information:
+            raise ValueError("packaged source revision does not match the executable")
         shutil.copy2(candidate, output)
     digest = hashlib.sha256(output.read_bytes()).hexdigest()
     Path(str(output) + ".sha256").write_text(f"{digest}  {output.name}\n", encoding="utf-8")
     Path(str(output) + ".json").write_text(json.dumps({"schema": 1, "architecture": arch,
         "tool_version": lock["tool_version"], "runtime_revision": lock["runtime_revision"],
         "assets": assets, "bundled_libraries": bundled, "sha256": digest,
+        "build_information": build_information, "build_metadata": build_metadata,
         "system_requirements": "glibc 2.39 or newer; working X11 or Wayland session and native dialog services"}, indent=2) + "\n")
     print(output)
 if __name__ == "__main__": main()

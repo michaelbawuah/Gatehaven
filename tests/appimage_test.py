@@ -14,6 +14,7 @@ expected = Path(str(image) + ".sha256").read_text().split()[0]
 assert hashlib.sha256(image.read_bytes()).hexdigest() == expected
 metadata = json.loads(Path(str(image) + ".json").read_text())
 assert metadata["sha256"] == expected and metadata["runtime_revision"]
+assert metadata["build_metadata"]["source_revision"] in metadata["build_information"]
 with tempfile.TemporaryDirectory(prefix="gatehaven extracted image ") as directory:
     run(image, "--appimage-extract", cwd=directory)
     root = Path(directory) / "squashfs-root"
