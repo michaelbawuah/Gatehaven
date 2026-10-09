@@ -428,6 +428,7 @@ public:
         if (beginner_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
+        if (recovery_menu_) render_recovery(r);
         if (clipboard_menu_) render_clipboard_menu(r);
         if (speed_edit_) render_speed_dialog(r);
         if (dialog_pending_) {
@@ -446,6 +447,9 @@ private:
     bool placing_{};
     bool help_{};
     bool examples_menu_{};
+    bool recovery_menu_{};
+    std::vector<RecoveryEntry> recovery_entries_;
+    std::size_t recovery_index_{};
     std::size_t example_index_{};
     bool beginner_{};
     bool dialog_pending_{};
@@ -835,6 +839,22 @@ private:
         speed_edit_.reset();
         accumulator_ = 0;
         status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
+    }
+
+    static ViewRect recovery_button(std::size_t row) { return {390, 270 + static_cast<double>(row) * 54, 500, 42}; }
+    void render_recovery(SDL_Renderer* r) const {
+        rectangle(r, 350, 180, 580, 460, ink);
+        ui::text(r, 390, 212, "RECOVER UNSAVED CIRCUITS", white, 2);
+        if (recovery_entries_.empty()) ui::text(r, 390, 294, "NO ABANDONED SNAPSHOTS", white, 1.5F);
+        const auto start = (recovery_index_ / 5) * 5;
+        for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
+            const auto box = recovery_button(i - start);
+            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), i == recovery_index_ ? teal : muted);
+            const auto label = "CIRCUIT " + std::to_string(i + 1) + "  " + std::to_string(recovery_entries_[i].bytes) + " BYTES";
+            ui::text(r, 406, static_cast<float>(box.y + 14), label, white, 1.5F);
+        }
+        ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", white, 1.25F);
+        ui::text(r, 390, 592, "ESC: KEEP FOR LATER   NEWEST FIRST", white, 1.25F);
     }
 
     void render_speed_dialog(SDL_Renderer* r) const {
