@@ -71,6 +71,31 @@ void Simulation::propagate() {
     metrics_.frontier_visits += frontier_.size();
 }
 
+void Simulation::initialize(const Circuit& circuit, bool reset_levels) {
+    reset();
+    topology_ = CompiledCircuit(circuit);
+    topology_revision_ = circuit.revision();
+    const auto& nodes = topology_.nodes();
+    power_.assign(nodes.size(), 0); previous_.clear();
+    sent_.assign(nodes.size(), false); received_.assign(nodes.size(), false);
+    materials_.resize(nodes.size()); valid_.assign(nodes.size(), true);
+    frontier_.clear(); frontier_.reserve(nodes.size());
+    const auto mask = reset_levels ? 1U : 2U;
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        materials_[i] = material(nodes[i].cell.element, (nodes[i].cell.state & mask) != 0);
+        if (materials_[i] == Material::source) { power_[i] = 15; frontier_.emplace_back(i, std::uint8_t{15}); }
+    }
+    metrics_.topology_builds = 1; metrics_.propagations = 1;
+    propagate(); snapshot_dirty_ = true;
+}
+
+bool Simulation::conductive(Point point) const {
+    const auto index = topology_.index(point);
+    if (index == no_node || index >= materials_.size()) return false;
+    const auto element = topology_.nodes()[index].cell.element;
+    return (element == Element::positive_relay || element == Element::negative_relay) && materials_[index] == Material::conductor;
+}
+
 void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     if (topology_revision_ != circuit.revision()) {
         CompiledCircuit rebuilt(circuit);

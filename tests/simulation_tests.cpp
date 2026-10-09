@@ -204,3 +204,24 @@ TEST("state fingerprints ignore insertion order but include ticks and received b
     x.step(a, [](const CommunicatorGroup&, bool) { return true; }); y.step(b);
     CHECK(state_digest(a, x) != state_digest(b, y));
 }
+
+TEST("tick zero propagates saved gate states without advancing time") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::or_gate, 2); circuit.set({1, 0}, Element::wire);
+    circuit.set({2, 0}, Element::signal); circuit.set({3, 0}, Element::or_gate);
+    Simulation engine; engine.initialize(circuit);
+    CHECK(engine.ticks() == 0 && engine.powered({2, 0}));
+    CHECK(!engine.powered({3, 0}));
+    engine.step(circuit); CHECK(engine.powered({3, 0}));
+    engine.initialize(circuit, true); CHECK(engine.ticks() == 0 && !engine.powered({0, 0}));
+}
+TEST("relay saved conductivity and wire display bits have distinct meanings") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::positive_relay, 2);
+    circuit.set({2, 0}, Element::wire); circuit.set({9, 9}, Element::wire, 3);
+    Simulation engine; engine.initialize(circuit);
+    CHECK(engine.conductive({1, 0}) && engine.powered({2, 0}));
+    CHECK(!engine.powered({9, 9}));
+    engine.initialize(circuit, true);
+    CHECK(!engine.conductive({1, 0}) && !engine.powered({2, 0}));
+}
