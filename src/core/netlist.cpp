@@ -58,7 +58,10 @@ Netlist::Netlist(const CompiledCircuit& topology) {
         if (element == Element::source) sources_.push_back(terminals_[i][0]);
         if (receives_signal(element) && !is_communicator(element)) {
             NetControl control{element, terminals_[i][0]};
-            for (const auto next : nodes[i].adjacent) if (next != no_node && nodes[next].cell.element == Element::signal) { control.input_nodes[control.count] = next; control.inputs[control.count++] = terminals_[next][0]; }
+            control.node = i;
+            control.seek_high = element == Element::positive_relay || element == Element::or_gate || element == Element::nor_gate;
+            control.invert = element == Element::and_gate || element == Element::nor_gate;
+            for (const auto next : nodes[i].adjacent) if (next != no_node && nodes[next].cell.element == Element::signal) control.inputs[control.count++] = terminals_[next][0];
             controls_.push_back(control);
         }
         if (!is_relay(element)) continue;
@@ -70,6 +73,9 @@ Netlist::Netlist(const CompiledCircuit& topology) {
             links_[relay].push_back(target); links_[target].push_back(relay);
         }
     }
+    std::stable_sort(controls_.begin(), controls_.end(), [](const auto& a, const auto& b) {
+        return std::tie(a.element, a.count) < std::tie(b.element, b.count);
+    });
     unique(sources_);
     for (auto& links : links_) unique(links);
     node_groups_.assign(nodes.size(), no_node);

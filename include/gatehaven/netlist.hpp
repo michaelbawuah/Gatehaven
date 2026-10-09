@@ -6,8 +6,10 @@ struct NetControl {
     Element element;
     std::size_t output;
     std::array<std::size_t, 4> inputs{no_node, no_node, no_node, no_node};
-    std::array<std::size_t, 4> input_nodes{no_node, no_node, no_node, no_node};
+    std::size_t node{};
     unsigned count{};
+    bool seek_high{};
+    bool invert{};
 };
 // Fixed wire components are vertices; each relay is one independently switched
 // vertex. Crossings have separate horizontal and vertical component identifiers.

@@ -3,19 +3,6 @@
 #include <algorithm>
 
 namespace gatehaven {
-namespace {
-bool control(Element element, unsigned on, unsigned count) {
-    switch (element) {
-    case Element::positive_relay:
-    case Element::or_gate: return on != 0;
-    case Element::negative_relay: return on < count;
-    case Element::and_gate: return on == count;
-    case Element::nand_gate: return on != count;
-    case Element::nor_gate: return on == 0;
-    default: return false;
-    }
-}
-}
 void Simulation::rebuild(const Circuit& circuit) {
     topology_ = CompiledCircuit(circuit);
     nets_ = Netlist(topology_);
@@ -89,10 +76,15 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     };
     const auto evaluate = [&]<bool NodeInputs>(auto sample) {
         for (const auto& gate : nets_.controls()) {
-            const auto& inputs = NodeInputs ? gate.input_nodes : gate.inputs;
-            unsigned active = 0;
-            for (unsigned i = 0; i < gate.count; ++i) if (sample(inputs[i])) ++active;
-            const bool on = control(gate.element, active, gate.count);
+            bool found = false;
+            if constexpr (NodeInputs) {
+                for (const auto input : nodes[gate.node].adjacent) {
+                    if (input != no_node && nodes[input].cell.element == Element::signal && sample(input) == gate.seek_high) { found = true; break; }
+                }
+            } else {
+                for (unsigned i = 0; i < gate.count; ++i) if (sample(gate.inputs[i]) == gate.seek_high) { found = true; break; }
+            }
+            const bool on = found != gate.invert;
             if (is_relay(gate.element)) enabled_[gate.output] = static_cast<std::uint8_t>(on);
             else if (on) energize(gate.output);
         }
