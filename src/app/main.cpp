@@ -18,6 +18,8 @@
 #include "gatehaven/recovery_schedule.hpp"
 #include "gatehaven/version.hpp"
 #include "gatehaven/paths.hpp"
+#include "gatehaven/resources.hpp"
+#include "gatehaven/process.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -847,9 +849,14 @@ private:
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
         case SDLK_F3: cancel_gesture(); help_ = false; examples_menu_ = true; break;
         case SDLK_F4: show_recovery(); break;
-        case SDLK_F1:
-            if (!SDL_OpenURL("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md")) status_ = SDL_GetError();
+        case SDLK_F1: {
+            const auto executable = current_executable();
+            const auto local = executable ? manual_path(*executable) : std::nullopt;
+            const auto uri = local ? file_uri(*local) : std::expected<std::string, std::string>(std::string("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md"));
+            if (!uri) status_ = uri.error();
+            else if (!SDL_OpenURL(uri->c_str())) status_ = SDL_GetError();
             break;
+        }
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_HOME: view.frame(circuit.bounds()); break;
         case SDLK_EQUALS:
