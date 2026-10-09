@@ -1219,7 +1219,7 @@ private:
             second = "DOUBLE CLICK: ELECTRICAL NET. TRIPLE CLICK: WHOLE CIRCUIT.";
         } else if (tools_[0].kind == ToolKind::panner) {
             first = "DRAG TO MOVE THE CAMERA. SCROLL TO ZOOM AT THE CURSOR.";
-            second = "F FRAMES YOUR CIRCUIT. CLICK A TOOL WITH ANY BUTTON TO BIND IT.";
+            second = "DOUBLE CLICK CENTERS A CELL. F FRAMES THE WHOLE CIRCUIT.";
         } else if (tools_[0].kind == ToolKind::eraser) {
             first = "DRAG TO ERASE A LINE. SHIFT CHAINS ERASER SEGMENTS.";
             second = "CTRL Z RESTORES THE WHOLE EDIT.";
@@ -1241,7 +1241,7 @@ private:
     void render_help(SDL_Renderer* r) const {
         rectangle(r, 338, 132, 846, 608, ink);
         ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
-        constexpr std::array<std::string_view, 18> lines{
+        constexpr std::array<std::string_view, 20> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
             "F5/F6/F7: SCREEN / FILE IN / FILE OUT",
             "I: INTERACT WITH SCREENS AND FILE PORTS",
@@ -1258,10 +1258,12 @@ private:
             "[ AND ]: ROTATE     H/V: FLIP",
             "ARROWS: MOVE SELECTION  CTRL: X4",
             "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
-            "F1: MANUAL    F3: CIRCUIT EXAMPLES",
+            "F1: MANUAL   F3: EXAMPLES   F4: RECOVERY",
+            "TAB: FOCUS CONTROLS. ENTER: ACTIVATE",
+            "TWO FINGERS: PAN AND PINCH TO ZOOM",
             "F2 OR ESC: CLOSE    B: BEGINNER HINTS"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            ui::text(r, 378, 216 + static_cast<float>(i) * 28, lines[i], white, 1.75F);
+            ui::text(r, 378, 216 + static_cast<float>(i) * 25, lines[i], white, 1.75F);
         }
     }
 };
