@@ -15,6 +15,20 @@
     <key>CFBundleTypeRole</key><string>Editor</string>
     <key>LSHandlerRank</key><string>Owner</string>
     <key>LSItemContentTypes</key><array><string>com.michaelbaffourawuah.gatehaven.circuit</string></array>
+  </dict><dict>
+    <key>CFBundleTypeName</key><string>Legacy circuit</string>
+    <key>CFBundleTypeRole</key><string>Editor</string>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>LSItemContentTypes</key><array><string>com.michaelbaffourawuah.gatehaven.ccsb</string></array>
+  </dict></array>
+  <key>UTImportedTypeDeclarations</key><array><dict>
+    <key>UTTypeIdentifier</key><string>com.michaelbaffourawuah.gatehaven.ccsb</string>
+    <key>UTTypeDescription</key><string>Legacy circuit</string>
+    <key>UTTypeConformsTo</key><array><string>public.data</string></array>
+    <key>UTTypeTagSpecification</key><dict>
+      <key>public.filename-extension</key><array><string>ccsb</string></array>
+      <key>public.mime-type</key><string>application/x-ccsb</string>
+    </dict>
   </dict></array>
   <key>UTExportedTypeDeclarations</key><array><dict>
     <key>UTTypeIdentifier</key><string>com.michaelbaffourawuah.gatehaven.circuit</string>
