@@ -1477,6 +1477,17 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto help_ticks = app.simulation.ticks(); app.update(0.25);
     require(app.circuit == before_touch && app.simulation.ticks() == help_ticks, "Help allowed hidden editor actions");
     key(SDLK_ESCAPE);
+    const auto recovery_directory = session_directory / "recovery";
+    auto abandoned = RecoveryStore::open(recovery_directory).value();
+    Circuit lost_circuit; lost_circuit.set({42, -17}, Element::source);
+    require(abandoned->write(lost_circuit).has_value(), "Could not stage abandoned circuit"); abandoned.reset();
+    app.enable_recovery(recovery_directory); app.show_recovery();
+    key(SDLK_RETURN);
+    require(app.circuit == before_touch, "Recovery replaced a modified circuit");
+    key(SDLK_ESCAPE); app.history.mark_saved(); app.show_recovery(); key(SDLK_RETURN);
+    require(app.circuit == lost_circuit && app.history.modified() && !app.running, "Recovery did not create an unsaved paused document");
+    require(!app.history.can_undo(), "Recovery retained the previous document history");
+    app.finish_recovery();
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
