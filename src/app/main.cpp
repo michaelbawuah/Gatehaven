@@ -90,15 +90,16 @@ std::array<Button, 10> buttons(bool running, unsigned speed) {
              {{1094, 22, 156, 40}, "NEW CIRCUIT"}}};
 }
 
-struct DialogResult { bool save{}; bool canceled{}; std::string path; std::string error; std::optional<Point> endpoint; };
+struct DialogResult { bool save{}; bool canceled{}; std::string path; std::string error; std::optional<Point> endpoint; int filter{}; };
 struct Mailbox { std::mutex mutex; std::optional<DialogResult> result; };
 struct DialogRequest { std::shared_ptr<Mailbox> mailbox; bool save; std::string location; std::optional<Point> endpoint; };
 
-void SDLCALL dialog_callback(void* userdata, const char* const* paths, int) {
+void SDLCALL dialog_callback(void* userdata, const char* const* paths, int filter) {
     // Ownership crosses the C API once; the callback reclaims it even on cancel.
     std::unique_ptr<DialogRequest> request(static_cast<DialogRequest*>(userdata));
     DialogResult result;
     result.save = request->save;
+    result.filter = filter;
     result.endpoint = request->endpoint;
     if (!paths) result.error = SDL_GetError();
     else if (!paths[0]) result.canceled = true;
@@ -260,7 +261,7 @@ public:
                         status_ = chosen ? "COMMUNICATOR FILE CONNECTED" : chosen.error();
                     }
                 } else if (result->save) {
-                    if (!path.has_extension()) path += ".ghv";
+                    if (!path.has_extension()) path += result->filter == 1 ? ".ccsb" : ".ghv";
                     if (save(path) && close_after_save_) quit = true;
                 } else launch_open(path);
             }
@@ -1162,12 +1163,13 @@ private:
         cancel_gesture();
         running = false;
         dialog_pending_ = true;
-        static const SDL_DialogFileFilter filter{"Gatehaven circuit", "ghv"};
+        static const SDL_DialogFileFilter save_filters[]{{"Gatehaven circuit", "ghv"}, {"Legacy circuit", "ccsb"}};
+        static const SDL_DialogFileFilter open_filters[]{{"Circuit files", "ghv;ccsb"}, {"All files", "*"}};
         const auto utf8 = path_.empty() ? std::u8string(u8"circuit.ghv") : path_.u8string();
         auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, saving, {utf8.begin(), utf8.end()}, std::nullopt});
         const auto location = request->location.c_str();
-        if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, &filter, 1, location);
-        else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, &filter, 1, nullptr, false);
+        if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, save_filters, 2, location);
+        else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, open_filters, 2, nullptr, false);
     }
 
     void communicator_dialog(Point point) {
@@ -1680,7 +1682,7 @@ int main(int argc, char** argv) {
         const std::string_view mode = argc > 1 ? argv[1] : "";
         if (mode == "--version" && argc == 2) { std::cout << "Gatehaven " << version << " (SDL3)\n"; return 0; }
         if ((mode == "--help" || mode == "-h") && argc == 2) {
-            std::cout << "Gatehaven [FILE.ghv | --new | --demo=NAME | --version]\n"
+            std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version]\n"
                          "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";
             return 0;
         }
@@ -1694,7 +1696,7 @@ int main(int argc, char** argv) {
             return 2;
         }
         if ((testing && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && argc > 2)) {
-            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
+            std::cerr << "Usage: gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
             return 2;
         }
         SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
