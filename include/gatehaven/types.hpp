@@ -24,6 +24,7 @@ struct Point {
 struct Bounds {
     Point min;
     Point max;
+    bool operator==(const Bounds&) const = default;
     [[nodiscard]] constexpr bool contains(Point p) const {
         return p.x >= min.x && p.x <= max.x && p.y >= min.y && p.y <= max.y;
     }
