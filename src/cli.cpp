@@ -29,8 +29,7 @@ static int run_cli(int argc, char** argv) {
         std::cout << path_utf8(*manual) << '\n'; return std::cout ? 0 : 1;
     }
     if (argc == 2 && std::string_view(argv[1]) == "--build-info") {
-        std::cout << "Gatehaven " << version << "\nCompiler: " << compiler_id << ' ' << compiler_version
-                  << "\nTarget: " << target_system << ' ' << target_processor << "\nLanguage: C++23\n";
+        std::cout << build_information();
         return std::cout ? 0 : 1;
     }
     if (argc == 2 && std::string_view(argv[1]) == "examples") {

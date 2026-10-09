@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 namespace gatehaven {
 inline constexpr char version[] = "@PROJECT_VERSION@-dev";
 inline constexpr char application_id[] = "com.michaelbaffourawuah.gatehaven";
@@ -9,4 +10,12 @@ inline constexpr char compiler_id[] = "@CMAKE_CXX_COMPILER_ID@";
 inline constexpr char compiler_version[] = "@CMAKE_CXX_COMPILER_VERSION@";
 inline constexpr char target_system[] = "@CMAKE_SYSTEM_NAME@";
 inline constexpr char target_processor[] = "@GATEHAVEN_TARGET_ARCH@";
+}
+
+namespace gatehaven {
+inline constexpr char source_revision[] = "@GATEHAVEN_SOURCE_REVISION@";
+[[nodiscard]] inline std::string build_information() {
+    return std::string("Gatehaven ") + version + "\nCompiler: " + compiler_id + " " + compiler_version +
+        "\nTarget: " + target_system + " " + target_processor + "\nLanguage: C++23\nSource revision: " + source_revision + "\n";
+}
 }
