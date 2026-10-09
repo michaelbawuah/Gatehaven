@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 development preview
+
+- Indexed paste previews, clipped pencil/polyline previews, faster selection
+  capture and history coalescing, plus a large-circuit editor benchmark.
+- External-change save confirmation, safer file choices, recovery deletion with
+  confirmation and paging, numeric keypad support, and separate port TX/RX info.
+- Bundled offline HTML manuals, portable state digests, native text normalization,
+  exact toolchain reporting, and package provenance metadata.
+- Windows x64 NSIS installer previews and native Windows ARM64 build/test jobs.
+- Regression coverage for save conflicts, recovery cleanup, clipped geometry,
+  independent digest encoding, package relocation, and targeted static analysis.
+
+Legacy `.ccsb` interoperability, external performance parity, release signing,
+and physical-device/clean-machine acceptance remain incomplete.
+
 ## 0.3 development preview — 9 October 2026
 
 - Indexed circuit topology, reusable propagation buffers, lazy snapshots, cached
