@@ -15,6 +15,7 @@ struct Preferences {
         {ToolKind::selector}, {ToolKind::interactor}, {ToolKind::pencil}}};
     unsigned speed{5};
     bool beginner{};
+    bool high_contrast{};
     bool operator==(const Preferences&) const = default;
 };
 [[nodiscard]] std::string encode_preferences(const Preferences& preferences);
