@@ -12,8 +12,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from compare_reference import compare
 
-def profile(binary, sample, ticks):
-    return json.loads(subprocess.run([str(binary), "profile", str(sample), str(ticks)],
+def profile(binary, sample, ticks, screens=False):
+    return json.loads(subprocess.run([str(binary), "screen-profile" if screens else "profile", str(sample), str(ticks)],
                                     capture_output=True, text=True, check=True, timeout=120).stdout)
 
 def main():
@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--runs", type=int, default=7)
     parser.add_argument("--ticks", type=int, default=10000)
     parser.add_argument("--require-no-regression", action="store_true")
+    parser.add_argument("--screens", action="store_true", help="use gatehaven_screen_peer and matching active screen events")
     args = parser.parse_args()
     if not 3 <= args.runs <= 30 or not 100 <= args.ticks <= 1000000:
         parser.error("use 3..30 runs and 100..1000000 ticks")
@@ -33,13 +34,13 @@ def main():
     records, regressions = [], []
     for sample in samples:
         sample = sample.resolve()
-        correctness = compare(reference, candidate, sample, args.ticks)
+        correctness = compare(reference, candidate, sample, args.ticks, args.screens)
         if correctness["mismatches"]: raise RuntimeError(f"state mismatch for {sample.name}")
         pairs = []
         for iteration in range(args.runs):
             binaries = [("reference", reference), ("candidate", candidate)]
             if iteration % 2: binaries.reverse()
-            pairs.append({label: profile(binary, sample, args.ticks) for label, binary in binaries})
+            pairs.append({label: profile(binary, sample, args.ticks, args.screens and label == "reference") for label, binary in binaries})
         medians = {phase: {label: statistics.median(run[label][phase] for run in pairs)
                            for label in ("reference", "candidate")} for phase in ("compile_ms", "steps_ms")}
         for phase, values in medians.items():
@@ -50,7 +51,7 @@ def main():
     print(json.dumps({"schema": 1, "recorded_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                       "host": platform.platform(), "machine": platform.machine(), "candidate_toolchain": metadata,
                       "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6", "reference_flags": "C++23 -O3 -DNDEBUG -pthread",
-                      "ticks": args.ticks, "samples": records, "median_regressions": regressions,
-                      "limits": ["Shared host; timing noise is possible", "Headless simulation only", "No attached file streams or rendering"]}, indent=2))
+                      "ticks": args.ticks, "active_screens": args.screens, "samples": records, "median_regressions": regressions,
+                      "limits": ["Shared host; timing noise is possible", "Deterministic changing screen input" if args.screens else "Headless simulation only", "No attached file streams or rendering"]}, indent=2))
     return 1 if args.require_no_regression and regressions else 0
 if __name__ == "__main__": raise SystemExit(main())
