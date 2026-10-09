@@ -49,8 +49,8 @@ operating-system file dialogs.
   normal build. Local leak detection is unavailable because this environment
   blocks LeakSanitizer's `/proc` task inspection; the GitHub job keeps leak
   detection enabled so that check can run on a normal runner.
-- All three local sanitizer suites pass with ASan and UBSan enabled. The core,
-  CLI, and separate clipboard processes are included in that run.
+- The initial sanitizer suites passed with ASan and UBSan enabled. See the
+  0.5 record below for the expanded current suites.
 
 ## Cross-platform milestone
 
@@ -85,8 +85,8 @@ communicator workloads, including run-to-run ranges and remaining profiling work
 - ThreadSanitizer for any future shared state or simulation workers.
 - Native file associations, signing, and clean-machine installation. Automated
   package tests validate contents and execution on the build host only.
-- Legacy file import, external protocol compatibility, and comprehensive
-  acceptance against the remaining product brief.
+- Active external protocol compatibility, rendering/active-I/O performance, and
+  comprehensive acceptance against the remaining product brief.
 
 ## 0.3 candidate verification
 
@@ -102,9 +102,10 @@ communicator workloads, including run-to-run ranges and remaining profiling work
   checks run before package upload.
 
 Review the current Actions run before using a candidate: earlier green runs do
-not validate later commits. The remaining brief requires independently verified
-`.ccsb` compatibility, original-application performance comparisons, real native
-dialog/display/touch checks, release signatures, and clean-machine installation.
+not validate later commits. At that milestone the remaining brief included `.ccsb` interoperability and
+external timing comparisons, now covered within the 0.5 scope below. Real native
+dialog/display/touch checks, release signatures, and clean-machine installation
+remain open.
 New gameplay modes remain deferred until those sandbox requirements are met.
 
 ## 0.4 candidate verification
@@ -126,3 +127,34 @@ New gameplay modes remain deferred until those sandbox requirements are met.
 Configured jobs are not evidence until the exact candidate finishes successfully.
 A local dummy SDL run does not validate native dialogs, touch hardware, display
 scaling, signing, or the full clean-machine matrix.
+
+## 0.5 local verification, 9 October 2026
+
+Clean Linux x86-64 builds with GNU 13.3.0, CMake 4.4.4 and SDL 3.4.18 passed:
+
+- **153/153 core/platform test cases**, including compiled nets, stateful codecs,
+  dormant endpoint wake-up, diagnostic fingerprints and inspection.
+- **9/9 desktop CTest suites**, including installed execution, ten UI snapshots,
+  callbacks from a background thread, failed-open preservation, current-level
+  selection movement, keyboard construction/interaction and coordinate limits.
+- **9/9 Release suites**, including six simulation workloads and the large-editor
+  benchmark invariants.
+- **7/7 ASan/UBSan suites**. Leak detection is disabled only in this restricted
+  local environment; CI still enables it on its runner.
+- **Six byte-exact legacy round trips**, checked against an independent decoder.
+- **430 matching external observations**, plus the explicitly asserted
+  Source/Signal brief/reference difference. The checked-in reports identify
+  input hashes, source tree, toolchain, and comparison limits.
+- **Seven alternating runs per engine and sample** with 10,000 ticks each. All
+  six compile/tick medians improved in that disconnected-endpoint scenario;
+  settling explains the largest reductions. This is headless evidence only.
+- **TGZ, DEB, and AppImage checks**, including exact hashes, metadata, extraction,
+  relocation, desktop self-test, offline guides, legacy CLI and runtime baseline.
+- Starter, shortcut help, and keyboard-canvas frames were visually inspected.
+  These are software-rendered captures, not physical-display acceptance.
+
+The records describe local source-tree content; GitHub produces new artifacts
+and measurements for the published commit. Check the exact Actions run before
+using its packages. [Release acceptance](release-checklist.md) separates the
+remaining hardware, native dialog, attached-stream, accessibility, clean-machine,
+and signing work from automated evidence.
