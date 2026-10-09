@@ -58,8 +58,9 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
     if (line.starts_with("\xEF\xBB\xBF")) line.erase(0, 3);
     if (line.starts_with("CCPG")) return std::unexpected(DocumentError{1,
         "Legacy .ccsb data is not supported yet; renaming it does not convert it"});
-    if (!*result || line != "GATEHAVEN 1") {
-        return std::unexpected(DocumentError{1, "Expected GATEHAVEN 1 document header"});
+    const bool stateful = line == "GATEHAVEN 2";
+    if (!*result || (line != "GATEHAVEN 1" && !stateful)) {
+        return std::unexpected(DocumentError{1, "Expected GATEHAVEN 1 or GATEHAVEN 2 document header"});
     }
     for (std::size_t number = 2;; ++number) {
         result = read_line(input, line, number, limits.max_line_bytes);
@@ -69,9 +70,15 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
         const auto start = line.find_first_not_of(" \t");
         if (start == std::string::npos || line[start] == '#') continue;
         std::istringstream fields(line);
-        std::string x_text, y_text, element_text, extra;
-        if (!(fields >> x_text >> y_text >> element_text) || (fields >> extra)) {
+        std::string x_text, y_text, element_text, extra, state_text;
+        if (!(fields >> x_text >> y_text >> element_text) || (stateful && !(fields >> state_text)) || (fields >> extra)) {
             return std::unexpected(DocumentError{number, "Expected x y element"});
+        }
+        unsigned state = 0;
+        if (stateful) {
+            const auto parsed = std::from_chars(state_text.data(), state_text.data() + state_text.size(), state);
+            if (parsed.ec != std::errc{} || parsed.ptr != state_text.data() + state_text.size() || state > 3)
+                return std::unexpected(DocumentError{number, "Saved state must be 0 through 3"});
         }
         const auto x = coordinate(x_text);
         const auto y = coordinate(y_text);
@@ -86,18 +93,22 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
         if (circuit.size() >= limits.max_cells) {
             return std::unexpected(DocumentError{number, "Document exceeds cell limit"});
         }
-        circuit.set({*x, *y}, *element);
+        circuit.set({*x, *y}, *element, static_cast<std::uint8_t>(state));
     }
     return circuit;
 }
 
 std::expected<void, DocumentError> write_document(std::ostream& output, const Circuit& circuit) {
-    output << "GATEHAVEN 1\n";
+    bool stateful = false;
+    if (const auto bounds = circuit.bounds()) circuit.visit(*bounds, [&](const Cell& cell) { stateful = stateful || cell.state != 0; });
+    output << (stateful ? "GATEHAVEN 2\n" : "GATEHAVEN 1\n");
     circuit.visit({{std::numeric_limits<Coordinate>::min(), std::numeric_limits<Coordinate>::min()},
                    {std::numeric_limits<Coordinate>::max(), std::numeric_limits<Coordinate>::max()}}, [&](const Cell& cell) {
         // to_chars through to_string is independent of the stream's number locale.
         output << std::to_string(cell.position.x) << ' ' << std::to_string(cell.position.y)
-               << ' ' << name(cell.element) << '\n';
+               << ' ' << name(cell.element);
+        if (stateful) output << ' ' << std::to_string(cell.state);
+        output << '\n';
     });
     if (!output) return std::unexpected(DocumentError{0, "Could not write document"});
     return {};

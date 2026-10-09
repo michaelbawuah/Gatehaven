@@ -24,7 +24,7 @@ TEST("native documents round trip every element in deterministic order") {
 }
 
 TEST("parser rejects malformed or ambiguous documents") {
-    for (const auto text : {"", "GATEHAVEN 2\n", "GATEHAVEN 1\n0 0 potato\n",
+    for (const auto text : {"", "GATEHAVEN 3\n", "GATEHAVEN 1\n0 0 potato\n",
                             "GATEHAVEN 1\n0 0 empty\n", "GATEHAVEN 1\n0 0 wire extra\n",
                             "GATEHAVEN 1\n0 0 wire\n0 0 source\n",
                             "GATEHAVEN 1\n2147483648 0 wire\n",
@@ -88,4 +88,16 @@ TEST("UTF-8 text editor BOMs are accepted only before the document header") {
     CHECK(read_document(input)->at({0, 0}) == Element::source);
     std::istringstream bad("GATEHAVEN 1\n\xEF\xBB\xBF" "0 0 source\n");
     CHECK(!read_document(bad));
+}
+
+TEST("native revision two preserves state and rejects ambiguous state columns") {
+    Circuit circuit; circuit.set({-3, 9}, Element::nand_gate, 3);
+    std::ostringstream bytes; CHECK(write_document(bytes, circuit));
+    CHECK(bytes.str() == "GATEHAVEN 2\n-3 9 nand 3\n");
+    std::istringstream input(bytes.str()); CHECK(read_document(input).value() == circuit);
+    for (const auto text : {"GATEHAVEN 2\n0 0 wire\n", "GATEHAVEN 2\n0 0 wire 4\n",
+                            "GATEHAVEN 2\n0 0 wire -1\n", "GATEHAVEN 1\n0 0 wire 0\n",
+                            "GATEHAVEN 2\n0 0 wire 0 extra\n"}) {
+        std::istringstream invalid(text); CHECK(!read_document(invalid));
+    }
 }
