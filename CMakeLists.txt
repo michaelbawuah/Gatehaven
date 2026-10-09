@@ -50,6 +50,7 @@ find_package(Threads REQUIRED)
 add_library(gatehaven_platform src/platform/clipboard_session.cpp src/platform/process.cpp)
 target_sources(gatehaven_platform PRIVATE src/platform/file_io.cpp)
 target_sources(gatehaven_platform PRIVATE src/platform/file_endpoints.cpp)
+target_sources(gatehaven_platform PRIVATE src/platform/recovery.cpp)
 target_link_libraries(gatehaven_platform PUBLIC gatehaven_core PRIVATE Threads::Threads)
 gatehaven_defaults(gatehaven_platform)
 
