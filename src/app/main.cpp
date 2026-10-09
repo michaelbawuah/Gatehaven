@@ -399,8 +399,7 @@ public:
 
 private:
     SDL_Window* window_; // Non-owning; main owns the window for the entire App lifetime.
-    std::array<InputTool, 6> tools_{{{ToolKind::pencil}, {ToolKind::eraser}, {ToolKind::panner},
-        {ToolKind::selector}, {ToolKind::panner}, {ToolKind::pencil}}};
+    std::array<InputTool, 6> tools_{Preferences{}.bindings};
     InputTool drag_tool_;
     bool eyedropper_{};
     bool placing_{};
@@ -466,7 +465,7 @@ private:
         preview_.clear();
         if (!drag_ || drag_tool_.kind == ToolKind::selector) return;
         auto element = drag_tool_.kind == ToolKind::eraser ? Element::empty : drag_tool_.element;
-        if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay) {
+        if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay && !is_communicator(element)) {
             element = Element::signal;
         }
         const auto stroke = pencil_line(*drag_, end, element);
@@ -1250,6 +1249,8 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_ESCAPE);
     key(SDLK_F5);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3});
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3});
+    require(app.circuit.at({10, 3}) == Element::screen, "Repainting a screen converted it into a Signal");
     key(SDLK_1);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3});
     key(SDLK_I);
