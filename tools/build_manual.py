@@ -27,6 +27,7 @@ def inline(text):
 def render(text, title):
     body, paragraph, code = [], [], None
     listing = False
+    table = False
     def flush():
         if paragraph:
             body.append("<p>" + inline(" ".join(paragraph)) + "</p>")
@@ -43,6 +44,21 @@ def render(text, title):
         if code is not None:
             code.append(line)
             continue
+        if line.strip().startswith("|"):
+            flush()
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            if all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+                continue
+            header = not table
+            if header:
+                body.append("<table>")
+                table = True
+            tag = "th" if header else "td"
+            body.append("<tr>" + "".join(f"<{tag}>" + inline(cell) + f"</{tag}>" for cell in cells) + "</tr>")
+            continue
+        if table:
+            body.append("</table>")
+            table = False
         bullet = re.match(r"^\s*(?:[-*]|\d+\.)\s+(.*)", line)
         if listing and not bullet:
             body.append("</ul>")
@@ -62,6 +78,8 @@ def render(text, title):
         else:
             paragraph.append(line.strip())
     flush()
+    if table:
+        body.append("</table>")
     if listing:
         body.append("</ul>")
     if code is not None:
@@ -69,7 +87,7 @@ def render(text, title):
     return """<!doctype html>
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>""" + html.escape(title) + """ — Gatehaven</title>
-<style>body{font:18px/1.65 system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1.5rem;color:#1f2d40;background:#f6f8f8}a{color:#006e5c}nav{border-bottom:1px solid #a7b6bd;padding-bottom:1rem}pre{overflow:auto;padding:1rem;background:#e8eeee}code{font-size:.92em}h1,h2,h3{line-height:1.25}a:focus-visible{outline:3px solid #dc6228;outline-offset:3px}@media print{nav{display:none}body{font-size:11pt;background:white}}</style>
+<style>body{font:18px/1.65 system-ui,sans-serif;max-width:850px;margin:2rem auto;padding:0 1.5rem;color:#1f2d40;background:#f6f8f8}a{color:#006e5c}nav{border-bottom:1px solid #a7b6bd;padding-bottom:1rem}pre{overflow:auto;padding:1rem;background:#e8eeee}code{font-size:.92em}h1,h2,h3{line-height:1.25}table{border-collapse:collapse;width:100%;font-size:.9em}td,th{border:1px solid #a7b6bd;padding:.5em;text-align:left}a:focus-visible{outline:3px solid #dc6228;outline-offset:3px}@media print{nav{display:none}body{font-size:11pt;background:white}}</style>
 <nav aria-label="Manual navigation"><a href="manual.html">Manual</a> · <a href="communicators.html">File ports</a> · <a href="architecture.html">Simulation</a> · <a href="verification.html">Release status</a></nav>
 <main>""" + "\n".join(body) + "</main></html>\n"
 
