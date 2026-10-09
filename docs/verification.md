@@ -7,7 +7,7 @@ operating-system file dialogs.
 
 ## Verified locally
 
-- 73 core/platform test cases pass in the local debug build. Parameterized cases
+- Core/platform tests run in the local debug build. Parameterized cases
   exercise all four gates with zero through four inputs and every active-input
   count, relay behavior, delayed rising/falling edges, crossing isolation,
   deterministic insertion order, and coordinate boundaries.
@@ -30,16 +30,16 @@ operating-system file dialogs.
   headless smoke workflow independently.
 - The expanded SDL workflow covers snapped polylines and retracing, connected
   selection, Shift-add/Alt-subtract selection, sparse duplication, example-menu
-  navigation, screen holds/releases, repaint preservation, and dropped-file opens.
+  navigation, screen holds/releases, own-pencil Signal placement, and dropped-file opens.
 - Communicator checks cover adjacency groups, previous-tick sending, every byte
   value through both protocol decoding and a simulated file-output circuit,
   reserved commands, queue bounds, I/O failures, EOF resumption, merge/split file
   ownership, and reset without rewinding streams.
 - CLI integration checks parse JSON statistics, CSV tick traces, SVG diagrams,
   six generated lessons, and failure exit codes from real files.
-- Five desktop CTest suites pass: core/platform, CLI, cross-process clipboards,
-  installed-product checks, and SDL desktop events. The installed app runs from
-  a fresh directory containing spaces and renders seven distinct UI states.
+- Desktop CTest covers core/platform, CLI, cross-process clipboards, recovery
+  processes, installed-product checks, and SDL events. The installed app runs
+  from a fresh directory containing spaces and renders nine distinct UI states.
 - A local CPack archive was generated and its SHA-256, executable locations,
   six lessons, manuals, and exact SDL notice bytes were verified. CI performs
   these checks before uploading native preview packages.
@@ -87,3 +87,22 @@ communicator workloads, including run-to-run ranges and remaining profiling work
   package tests validate contents and execution on the build host only.
 - Legacy file import, external protocol compatibility, and comprehensive
   acceptance against the remaining product brief.
+
+## 0.3 candidate verification
+
+- Differential simulation compares seeded mixed circuits, edits, replacements,
+  reset/invalidation, coordinate extremes, and copied feedback engines against
+  Gatehaven's frozen earlier implementation. No external source is the oracle.
+- Touch tests inject native finger events through SDL coordinate conversion at
+  different window sizes, including pinch cancellation and focus loss.
+- Recovery tests terminate a native writer, compete for one abandoned snapshot,
+  reject malformed/linked files, and preserve data on a failed replacement.
+- Keyboard traversal, modal help, Unicode CLI paths, profiling counters, and
+  output limits have integration checks. DEB extraction and DMG read-only mount
+  checks run before package upload.
+
+Review the current Actions run before using a candidate: earlier green runs do
+not validate later commits. The remaining brief requires independently verified
+`.ccsb` compatibility, original-application performance comparisons, real native
+dialog/display/touch checks, release signatures, and clean-machine installation.
+New gameplay modes remain deferred until those sandbox requirements are met.
