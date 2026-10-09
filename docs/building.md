@@ -114,3 +114,10 @@ and the actual desktop executable from a directory containing spaces.
 
 Run `gatehaven --help` or `gatehaven-cli --help` without opening a graphical
 window. `gatehaven-cli profile FILE.ghv STEPS` emits JSON simulation metrics.
+
+## Windows ARM64
+
+CI also uses the native `windows-11-arm` runner. Both SDL and Gatehaven configure
+with `-A ARM64` to avoid accidentally producing x64 binaries. The ARM64 job runs
+the same core, process, desktop, and installed-product checks and publishes an
+ARM64 ZIP. The NSIS installer preview currently targets Windows x64 only.
