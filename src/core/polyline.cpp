@@ -9,6 +9,21 @@ Point snapped_endpoint(Point from, Point target) {
     return std::abs(dx) >= std::abs(dy) ? Point{target.x, from.y} : Point{from.x, target.y};
 }
 
+std::expected<std::size_t, std::string> polyline_work(std::span<const Point> vertices, std::size_t limit) {
+    if (vertices.empty()) return 0;
+    if (vertices.size() > 65536 || limit == 0) return std::unexpected("Polyline exceeds edit limit");
+    std::size_t work = 1;
+    for (std::size_t i = 1; i < vertices.size(); ++i) {
+        const auto dx = static_cast<std::int64_t>(vertices[i].x) - vertices[i - 1].x;
+        const auto dy = static_cast<std::int64_t>(vertices[i].y) - vertices[i - 1].y;
+        if (dx != 0 && dy != 0) return std::unexpected("Polyline segment must follow a grid axis");
+        const auto distance = static_cast<std::uint64_t>(std::abs(dx) + std::abs(dy));
+        if (distance > limit - work) return std::unexpected("Polyline exceeds edit limit");
+        work += static_cast<std::size_t>(distance);
+    }
+    return work;
+}
+
 std::expected<std::vector<Cell>, std::string> polyline_stroke(
     std::span<const Point> vertices, Element element, std::size_t limit) {
     if (vertices.empty()) return std::vector<Cell>{};
@@ -48,7 +63,7 @@ std::expected<bool, std::string> Polyline::append(Point target) {
     if (next == vertices_.back()) return false;
     auto candidate = vertices_;
     candidate.push_back(next);
-    const auto result = polyline_stroke(candidate, element_);
+    const auto result = polyline_work(candidate);
     if (!result) return std::unexpected(result.error());
     vertices_ = std::move(candidate);
     return true;
