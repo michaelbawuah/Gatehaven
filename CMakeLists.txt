@@ -39,7 +39,7 @@ gatehaven_defaults(gatehaven-cli)
 
 if(GATEHAVEN_BUILD_TESTS)
     enable_testing()
-    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp)
+    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp)
     target_link_libraries(gatehaven_tests PRIVATE gatehaven_core)
     gatehaven_defaults(gatehaven_tests)
     add_test(NAME gatehaven_core COMMAND gatehaven_tests)
