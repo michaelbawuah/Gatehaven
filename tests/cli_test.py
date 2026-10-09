@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven cli ") as directory:
     run("example", "unknown", path, code=2)
     rows = list(csv.DictReader(io.StringIO(run("trace", path, 2))))
     output = [r for r in rows if r["x"] == "8" and r["y"] == "0"]
-    assert [r["ports"] for r in output] == ["0", "15"]
+    assert [r["ports"] for r in output] == ["15", "15"]
     assert len(rows) == 98
     svg = Path(directory) / "diagram.svg"
     run("svg", path, svg)
@@ -77,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven digest ") as directory:
     path = Path(directory) / "deterministic.ghv"
     path.write_text("GATEHAVEN 1\n-2 -1 source\n-1 -1 wire\n", encoding="utf-8")
     for ticks in (0, 1, 2, 100):
-        ports = 15 if ticks else 0
+        ports = 15
         expected = digest_bytes([(-2, -1, 3, ports, 0, 0), (-1, -1, 1, ports, 0, 0)], ticks)
         assert json.loads(run("digest", path, ticks)) == {"schema": 1, "ticks": ticks, "digest": expected}
 

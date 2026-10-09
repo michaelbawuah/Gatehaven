@@ -1664,7 +1664,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto legacy_path = session_directory / "legacy workflow.ccsb";
     Circuit legacy_fixture; legacy_fixture.set({0, 0}, Element::positive_relay, 3);
     require(save_document(legacy_path, legacy_fixture).has_value() && app.open(legacy_path), "Legacy open failed");
-    key(SDLK_s, SDL_KMOD_CTRL);
+    key(SDLK_S, SDL_KMOD_CTRL);
     require(load_document(legacy_path).value() == legacy_fixture, "Legacy save lost saved levels");
     require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");

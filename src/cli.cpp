@@ -108,7 +108,7 @@ static int run_cli(int argc, char** argv) {
         return std::cout ? 0 : 1;
     }
     if (command == "digest") {
-        Simulation simulation;
+        Simulation simulation; simulation.initialize(*circuit);
         for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
         std::cout << "{\"schema\":1,\"ticks\":" << simulation.ticks() << ",\"digest\":\""
                   << state_digest(*circuit, simulation) << "\"}\n";
@@ -132,7 +132,7 @@ static int run_cli(int argc, char** argv) {
         if (!circuit->empty() && steps > max_trace_rows / circuit->size()) {
             std::cerr << "Trace exceeds 5000000 rows; reduce the tick count or circuit size\n"; return 2;
         }
-        Simulation simulation;
+        Simulation simulation; simulation.initialize(*circuit);
         std::cout << "tick,x,y,element,ports,sending\n";
         for (std::uint64_t i = 0; i < steps; ++i) {
             simulation.step(*circuit);
@@ -145,7 +145,7 @@ static int run_cli(int argc, char** argv) {
     }
     std::cout << "Valid document: " << circuit->size() << " cells\n";
     if (command == "check") return 0;
-    Simulation simulation;
+    Simulation simulation; simulation.initialize(*circuit);
     for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
     std::cout << "Ticks: " << simulation.ticks() << "\nPowered cells: " << simulation.powered_count() << '\n';
     simulation.visit_state([&](Point point, Power power, bool, bool) {

@@ -29,3 +29,15 @@ comments matter to you.
 For repeatable comparisons, use the same native circuit, explicit tick count,
 and digest schema. Profiling includes topology compilation; benchmark tools
 separate cold setup from steady simulation. Times depend on the machine and load.
+
+## Legacy interoperability
+
+Every file-reading command accepts native `.ghv` and binary `.ccsb` content,
+identified by its header. `convert INPUT OUTPUT.ccsb` writes a legacy document;
+`convert INPUT OUTPUT.ghv` preserves signed coordinates and saved/reset levels in
+the native format. Export to legacy translates the bounding box to zero.
+
+`state FILE 0` emits CSV observations of the initialized circuit without advancing
+it. Power propagates from sources and saved gate levels at tick zero. Subsequent
+`state`, `run`, `trace`, and `digest` observations use this same initialization.
+Conversion itself preserves stored levels, rather than advancing the simulation.
