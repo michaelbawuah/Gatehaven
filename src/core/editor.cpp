@@ -1,0 +1,131 @@
+#include "gatehaven/editor.hpp"
+
+#include <algorithm>
+#include <cstdlib>
+#include <map>
+#include <utility>
+
+namespace gatehaven {
+
+std::expected<std::vector<Cell>, std::string> pencil_line(Point from, Point to, Element element,
+                                                        std::size_t max_length) {
+    const auto dx = static_cast<std::int64_t>(to.x) - from.x;
+    const auto dy = static_cast<std::int64_t>(to.y) - from.y;
+    const bool horizontal = std::abs(dx) >= std::abs(dy);
+    const auto distance = horizontal ? dx : dy;
+    const auto count = static_cast<std::uint64_t>(std::abs(distance)) + 1;
+    if (count > max_length) return std::unexpected("Stroke is too long");
+    const std::int64_t step = distance < 0 ? -1 : 1;
+    std::vector<Cell> edits;
+    edits.reserve(static_cast<std::size_t>(count));
+    for (std::uint64_t i = 0; i < count; ++i) {
+        const auto delta = step * static_cast<std::int64_t>(i);
+        edits.push_back({*translated(from, horizontal ? delta : 0, horizontal ? 0 : delta), element});
+    }
+    return edits;
+}
+
+std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<const Cell> edits) {
+    last_changes_.clear();
+    std::map<Point, Element> final;
+    for (const auto& edit : edits) {
+        if (static_cast<std::size_t>(edit.element) >= element_names.size()) {
+            return std::unexpected("Invalid element in edit");
+        }
+        final.insert_or_assign(edit.position, edit.element);
+    }
+    Command command;
+    for (const auto& [point, element] : final) {
+        const auto before = circuit.at(point);
+        if (before != element) command.push_back({point, before, element});
+    }
+    if (command.empty()) return false;
+    if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
+    for (const auto& delta : command) {
+        circuit.set(delta.point, delta.after);
+        last_changes_.push_back(delta.point);
+    }
+    for (const auto& stale : redo_) stored_changes_ -= stale.size();
+    redo_.clear();
+    stored_changes_ += command.size();
+    undo_.push_back(std::move(command));
+    while (stored_changes_ > max_changes_ && undo_.size() > 1) {
+        stored_changes_ -= undo_.front().size();
+        undo_.pop_front();
+    }
+    return true;
+}
+
+bool History::undo(Circuit& circuit) {
+    last_changes_.clear();
+    if (undo_.empty()) return false;
+    auto command = std::move(undo_.back());
+    undo_.pop_back();
+    for (const auto& delta : command) {
+        circuit.set(delta.point, delta.before);
+        last_changes_.push_back(delta.point);
+    }
+    redo_.push_back(std::move(command));
+    return true;
+}
+
+bool History::redo(Circuit& circuit) {
+    last_changes_.clear();
+    if (redo_.empty()) return false;
+    auto command = std::move(redo_.back());
+    redo_.pop_back();
+    for (const auto& delta : command) {
+        circuit.set(delta.point, delta.after);
+        last_changes_.push_back(delta.point);
+    }
+    undo_.push_back(std::move(command));
+    return true;
+}
+
+void History::clear() {
+    undo_.clear();
+    redo_.clear();
+    last_changes_.clear();
+    stored_changes_ = 0;
+}
+
+Stamp capture(const Circuit& circuit, Bounds region) {
+    if (region.min.x > region.max.x || region.min.y > region.max.y) return {};
+    Stamp stamp{static_cast<std::int64_t>(region.max.x) - region.min.x + 1,
+                static_cast<std::int64_t>(region.max.y) - region.min.y + 1, {}};
+    for (const auto& cell : circuit.cells_in(region)) {
+        stamp.cells.push_back({static_cast<std::int64_t>(cell.position.x) - region.min.x,
+                               static_cast<std::int64_t>(cell.position.y) - region.min.y, cell.element});
+    }
+    return stamp;
+}
+
+void Stamp::rotate_clockwise() {
+    for (auto& cell : cells) {
+        const auto old_x = cell.x;
+        cell.x = height - 1 - cell.y;
+        cell.y = old_x;
+    }
+    std::swap(width, height);
+}
+
+void Stamp::flip_horizontal() {
+    for (auto& cell : cells) cell.x = width - 1 - cell.x;
+}
+
+void Stamp::flip_vertical() {
+    for (auto& cell : cells) cell.y = height - 1 - cell.y;
+}
+
+std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point origin) {
+    std::vector<Cell> edits;
+    edits.reserve(stamp.cells.size());
+    for (const auto& cell : stamp.cells) {
+        const auto point = translated(origin, cell.x, cell.y);
+        if (!point) return std::unexpected("Pasted circuit would exceed coordinate limits");
+        edits.push_back({*point, cell.element});
+    }
+    return edits;
+}
+
+} // namespace gatehaven
