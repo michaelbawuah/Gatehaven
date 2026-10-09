@@ -22,6 +22,7 @@ if sys.platform.startswith("linux"):
             assert (root / "share/gatehaven/docs/manual.md").is_file()
             assert "Gatehaven" in run(root / "bin/gatehaven-cli", "--version")
 elif sys.platform == "darwin":
+    import plistlib
     packages = list(build.glob("Gatehaven-*.dmg"))
     assert len(packages) == 1, packages
     for package in packages:
@@ -32,6 +33,10 @@ elif sys.platform == "darwin":
             try:
                 apps = list(mount.rglob("gatehaven.app"))
                 assert len(apps) == 1
+                info = plistlib.loads((apps[0] / "Contents/Info.plist").read_bytes())
+                imported = info["UTImportedTypeDeclarations"]
+                assert imported[0]["UTTypeTagSpecification"]["public.filename-extension"] == ["ccsb"]
+                assert any(entry["LSHandlerRank"] == "Alternate" for entry in info["CFBundleDocumentTypes"])
                 app = apps[0] / "Contents/MacOS/gatehaven"
                 assert "Gatehaven" in run(app, "--version")
                 assert (apps[0] / "Contents/Resources/docs/manual.md").is_file()
