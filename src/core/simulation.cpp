@@ -8,8 +8,6 @@
 namespace gatehaven {
 namespace {
 
-enum class Material { blocked, conductor, crossing, source };
-
 constexpr bool control(Element element, unsigned on, unsigned count) {
     switch (element) {
     case Element::positive_relay:
@@ -22,7 +20,19 @@ constexpr bool control(Element element, unsigned on, unsigned count) {
     }
 }
 
-constexpr Material material(Element element, bool enabled) {
+
+constexpr bool signal_connects(Element element) {
+    return element == Element::wire || element == Element::crossing || element == Element::signal;
+}
+
+constexpr bool connects(Element a, Element b) {
+    return (a != Element::signal || signal_connects(b)) &&
+           (b != Element::signal || signal_connects(a));
+}
+
+} // namespace
+
+Simulation::Material Simulation::material(Element element, bool enabled) {
     switch (element) {
     case Element::empty: return Material::blocked;
     case Element::crossing: return Material::crossing;
@@ -42,17 +52,6 @@ constexpr Material material(Element element, bool enabled) {
     return Material::blocked;
 }
 
-constexpr bool signal_connects(Element element) {
-    return element == Element::wire || element == Element::crossing || element == Element::signal;
-}
-
-constexpr bool connects(Element a, Element b) {
-    return (a != Element::signal || signal_connects(b)) &&
-           (b != Element::signal || signal_connects(a));
-}
-
-} // namespace
-
 void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     if (topology_revision_ != circuit.revision()) {
         CompiledCircuit rebuilt(circuit);
@@ -66,18 +65,17 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         topology_revision_ = circuit.revision();
     }
     const auto& nodes = topology_.nodes();
-    const auto previous = power_;
+    power_.swap(previous_);
     power_.assign(nodes.size(), 0);
-    std::vector<Material> materials(nodes.size());
-    std::vector<bool> received(nodes.size());
-    std::vector<std::pair<std::size_t, std::uint8_t>> frontier;
-    frontier.reserve(nodes.size()); sent_.assign(nodes.size(), false);
+    materials_.resize(nodes.size());
+    received_.assign(nodes.size(), false);
+    frontier_.clear(); frontier_.reserve(nodes.size()); sent_.assign(nodes.size(), false);
     for (const auto& group : topology_.groups()) {
         bool sending = false;
-        for (const auto input : group.inputs) sending = sending || previous[input] != 0;
+        for (const auto input : group.inputs) sending = sending || previous_[input] != 0;
         const bool receiving = exchange && exchange(group.endpoint, sending);
         for (const auto member : group.members) {
-            received[member] = receiving; sent_[member] = sending;
+            received_[member] = receiving; sent_[member] = sending;
         }
     }
     for (std::size_t i = 0; i < nodes.size(); ++i) {
@@ -86,24 +84,24 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         if (element >= Element::positive_relay && !is_communicator(element)) {
             for (const auto adjacent : nodes[i].adjacent) {
                 if (adjacent == no_node || nodes[adjacent].cell.element != Element::signal) continue;
-                ++inputs; if (previous[adjacent] != 0) ++active;
+                ++inputs; if (previous_[adjacent] != 0) ++active;
             }
         }
-        materials[i] = material(element, is_communicator(element) ? received[i] : control(element, active, inputs));
-        if (materials[i] == Material::source) { power_[i] = 15; frontier.emplace_back(i, std::uint8_t{15}); }
+        materials_[i] = material(element, is_communicator(element) ? received_[i] : control(element, active, inputs));
+        if (materials_[i] == Material::source) { power_[i] = 15; frontier_.emplace_back(i, std::uint8_t{15}); }
     }
-    for (std::size_t head = 0; head < frontier.size(); ++head) {
-        const auto [from, outgoing] = frontier[head];
+    for (std::size_t head = 0; head < frontier_.size(); ++head) {
+        const auto [from, outgoing] = frontier_[head];
         for (std::size_t direction = 0; direction < 4; ++direction) {
             if ((outgoing & (1U << direction)) == 0) continue;
             const auto next = nodes[from].adjacent[direction];
-            if (next == no_node || materials[next] == Material::blocked || !connects(nodes[from].cell.element, nodes[next].cell.element)) continue;
-            const auto channel = materials[next] == Material::crossing
+            if (next == no_node || materials_[next] == Material::blocked || !connects(nodes[from].cell.element, nodes[next].cell.element)) continue;
+            const auto channel = materials_[next] == Material::crossing
                 ? static_cast<std::uint8_t>(direction % 2 == 0 ? 5 : 10) : std::uint8_t{15};
             const auto added = static_cast<std::uint8_t>(channel & static_cast<std::uint8_t>(~power_[next]));
             if (added == 0) continue;
             power_[next] = static_cast<std::uint8_t>(power_[next] | added);
-            frontier.emplace_back(next, added);
+            frontier_.emplace_back(next, added);
         }
     }
     valid_.assign(nodes.size(), true); snapshot_dirty_ = true;

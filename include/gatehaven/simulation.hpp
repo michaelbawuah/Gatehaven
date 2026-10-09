@@ -31,9 +31,15 @@ public:
     [[nodiscard]] const std::map<Point, Power>& snapshot() const;
 
 private:
+    enum class Material { blocked, conductor, crossing, source };
+    static Material material(Element element, bool enabled);
     std::uint64_t topology_revision_{std::numeric_limits<std::uint64_t>::max()};
     CompiledCircuit topology_;
     std::vector<std::uint8_t> power_;
+    std::vector<std::uint8_t> previous_;
+    std::vector<Material> materials_;
+    std::vector<bool> received_;
+    std::vector<std::pair<std::size_t, std::uint8_t>> frontier_;
     std::vector<bool> valid_;
     std::vector<bool> sent_;
     mutable std::map<Point, Power> state_;
