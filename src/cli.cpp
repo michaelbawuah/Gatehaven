@@ -1,6 +1,7 @@
 #include "gatehaven/document.hpp"
 #include "gatehaven/examples.hpp"
 #include "gatehaven/simulation.hpp"
+#include "gatehaven/statistics.hpp"
 
 #include <charconv>
 #include <iostream>
@@ -19,10 +20,11 @@ int main(int argc, char** argv) {
         return 0;
     }
     const std::string_view command = argc >= 2 ? argv[1] : "";
-    if ((command != "check" && command != "run") || argc < 3 || argc > 4 ||
-        (command == "check" && argc != 3)) {
+    if ((command != "check" && command != "run" && command != "stats") || argc < 3 || argc > 4 ||
+        ((command == "check" || command == "stats") && argc != 3)) {
         std::cerr << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
+                     "  gatehaven-cli stats FILE.ghv\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli --version\n";
         return 2;
@@ -41,6 +43,7 @@ int main(int argc, char** argv) {
         std::cerr << "Line " << circuit.error().line << ": " << circuit.error().message << '\n';
         return 1;
     }
+    if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }
     std::cout << "Valid document: " << circuit->size() << " cells\n";
     if (command == "check") return 0;
     Simulation simulation;
