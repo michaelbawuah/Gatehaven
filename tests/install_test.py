@@ -1,5 +1,6 @@
 """Execute the installed product from a fresh path containing spaces."""
 import os
+import json
 from pathlib import Path
 import plistlib
 import subprocess
@@ -21,6 +22,12 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     cli = root / "bin" / ("gatehaven-cli" + suffix)
     resources = root / "share" / "gatehaven"
     assert "Gatehaven" in run(cli, "--version")
+    metadata = json.loads((resources / "build-metadata.json").read_text(encoding="utf-8"))
+    assert metadata["schema"] == 1 and metadata["product"] == "Gatehaven"
+    assert metadata["version"] in run(cli, "--version")
+    assert metadata["compiler"]["version"] in run(cli, "--build-info")
+    assert metadata["target"]["architecture"] in run(cli, "--build-info")
+    assert (resources / metadata["sdl_notice"]).is_file()
     assert "Gatehaven CLI" in run(cli, "--help")
     assert Path(run(cli, "--manual-path", cwd=root).strip()) == resources / "docs/manual.html"
     for sample in (resources / "samples").glob("*.ghv"):
