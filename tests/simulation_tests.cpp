@@ -1,4 +1,5 @@
 #include "test.hpp"
+#include "gatehaven/digest.hpp"
 #include "gatehaven/simulation.hpp"
 
 #include <algorithm>
@@ -192,4 +193,14 @@ TEST("streamed state matches snapshots before and after edits and reset") {
     compare(); s.step(c); compare();
     const std::array removed{Point{3, -4}}; s.invalidate(removed); compare();
     s.reset(); compare();
+}
+
+TEST("state fingerprints ignore insertion order but include ticks and received bits") {
+    Circuit a, b; a.set({1, 0}, Element::screen); a.set({-2, 0}, Element::wire);
+    b.set({-2, 0}, Element::wire); b.set({1, 0}, Element::screen);
+    Simulation x, y; CHECK(state_digest(a, x) == state_digest(b, y));
+    x.step(a); CHECK(state_digest(a, x) != state_digest(b, y));
+    y.step(b); CHECK(state_digest(a, x) == state_digest(b, y));
+    x.step(a, [](const CommunicatorGroup&, bool) { return true; }); y.step(b);
+    CHECK(state_digest(a, x) != state_digest(b, y));
 }
