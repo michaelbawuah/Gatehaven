@@ -27,22 +27,19 @@ std::expected<std::size_t, std::string> polyline_work(std::span<const Point> ver
 std::expected<std::vector<Cell>, std::string> polyline_stroke(
     std::span<const Point> vertices, Element element, std::size_t limit) {
     if (vertices.empty()) return std::vector<Cell>{};
-    if (limit == 0) return std::unexpected("Polyline exceeds edit limit");
+    const auto budget = polyline_work(vertices, limit);
+    if (!budget) return std::unexpected(budget.error());
     if (vertices.size() > 65536 || static_cast<std::size_t>(element) >= element_names.size()) {
         return std::unexpected("Invalid polyline size or element");
     }
     std::map<Point, Element> cells;
     cells[vertices.front()] = element;
-    std::size_t work = 1;
     for (std::size_t i = 1; i < vertices.size(); ++i) {
         if (vertices[i - 1].x != vertices[i].x && vertices[i - 1].y != vertices[i].y) {
             return std::unexpected("Polyline segment must follow a grid axis");
         }
         const auto segment = pencil_line(vertices[i - 1], vertices[i], element, limit);
-        if (!segment || segment->size() - 1 > limit - std::min(work, limit)) {
-            return std::unexpected("Polyline exceeds edit limit");
-        }
-        work += segment->size() - 1;
+        if (!segment) return std::unexpected(segment.error());
         for (const auto& cell : *segment) cells[cell.position] = cell.element;
     }
     if (element == Element::crossing) {
@@ -76,6 +73,7 @@ std::expected<std::vector<Cell>, std::string> Polyline::preview(Point target) co
     return polyline_stroke(candidate, element_);
 }
 std::expected<std::vector<Cell>, std::string> Polyline::preview(Point target, Bounds clip) const {
+    if (static_cast<std::size_t>(element_) >= element_names.size()) return std::unexpected("Invalid polyline element");
     auto vertices = vertices_;
     const auto next = snapped_endpoint(vertices.back(), target);
     if (next != vertices.back()) vertices.push_back(next);

@@ -59,3 +59,10 @@ TEST("clipped polyline previews preserve crossing corners and retraced overlaps"
     CHECK(!polyline_work(line.vertices(), 203));
     CHECK(line.backtrack()); CHECK(line.preview({0, 0}, clip));
 }
+
+TEST("polyline validation rejects over-budget retracing before materializing cells") {
+    const std::array vertices{Point{0, 0}, Point{999999, 0}, Point{0, 0}};
+    CHECK(!polyline_work(vertices)); CHECK(!polyline_stroke(vertices, Element::wire));
+    Polyline invalid({0, 0}, static_cast<Element>(255));
+    CHECK(!invalid.preview({0, 0}, {{-1, -1}, {1, 1}}));
+}
