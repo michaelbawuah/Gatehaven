@@ -218,6 +218,7 @@ public:
     }
 
     void update(double elapsed) {
+        if (!std::isfinite(elapsed) || elapsed < 0) elapsed = 0;
         if (recovery_) {
             if (recovery_schedule_.poll(circuit.revision(), history.modified(), elapsed)) checkpoint();
             recovery_cleanup_wait_ = std::max(0.0, recovery_cleanup_wait_ - std::clamp(elapsed, 0.0, 30.0));
@@ -1359,6 +1360,10 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(demos.size() == 1 && app.circuit == original, "Example chooser changed the active document");
     key(SDLK_SPACE);
     require(app.running, "Play event failed");
+    app.update(std::numeric_limits<double>::quiet_NaN());
+    app.update(std::numeric_limits<double>::infinity());
+    app.update(-1);
+    require(app.simulation.ticks() == 0, "Invalid elapsed time advanced the simulation");
     app.update(0.21);
     require(app.simulation.ticks() == 1, "Clock did not step");
     key(SDLK_SPACE);
