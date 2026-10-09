@@ -81,6 +81,8 @@ if(GATEHAVEN_BUILD_APP)
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-help.bmp help
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-examples.bmp examples
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-gallery.bmp gate-gallery
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-recovery.bmp recovery
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-keyboard.bmp keyboard
         DEPENDS gatehaven VERBATIM)
     if(APPLE)
         set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE

@@ -139,6 +139,12 @@ public:
     bool prepare_snapshot(std::string_view state) {
         if (state == "help") help_ = true;
         else if (state == "examples") examples_menu_ = true;
+        else if (state == "keyboard") keyboard_focus_ = 2;
+        else if (state == "recovery") {
+            recovery_menu_ = true;
+            const auto date = std::chrono::sys_days{std::chrono::year{2026}/10/9};
+            recovery_entries_.push_back({"preview", std::chrono::file_clock::from_sys(date), 2048});
+        }
         else if (state == "hints") { beginner_ = true; tools_[0] = {ToolKind::interactor}; }
         else if (state == "speed") edit_speed();
         else if (state == "clipboard") clipboard_menu_ = 'v';
@@ -1632,7 +1638,7 @@ int main(int argc, char** argv) {
         }
         if (snapshot) {
             if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
-                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, or clipboard.\n";
+                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, or recovery.\n";
                 return 2;
             }
             app.simulation.step(app.circuit); app.simulation.step(app.circuit);
