@@ -7,6 +7,8 @@
 #include "gatehaven/file_io.hpp"
 #include "gatehaven/version.hpp"
 #include "gatehaven/paths.hpp"
+#include "gatehaven/resources.hpp"
+#include "gatehaven/process.hpp"
 
 #include <charconv>
 #include <chrono>
@@ -19,6 +21,12 @@ static int run_cli(int argc, char** argv) {
     if (argc == 2 && std::string_view(argv[1]) == "--version") {
         std::cout << "Gatehaven " << version << " (C++23)\n";
         return 0;
+    }
+    if (argc == 2 && std::string_view(argv[1]) == "--manual-path") {
+        const auto executable = current_executable();
+        const auto manual = executable ? manual_path(*executable) : std::nullopt;
+        if (!manual) { std::cerr << "Bundled manual was not found\n"; return 1; }
+        std::cout << path_utf8(*manual) << '\n'; return std::cout ? 0 : 1;
     }
     if (argc == 2 && std::string_view(argv[1]) == "--build-info") {
         std::cout << "Gatehaven " << version << "\nCompiler: " << compiler_id << ' ' << compiler_version
@@ -61,7 +69,7 @@ static int run_cli(int argc, char** argv) {
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
-                     "  gatehaven-cli --version\n  gatehaven-cli --build-info\n";
+                     "  gatehaven-cli --version\n  gatehaven-cli --build-info\n  gatehaven-cli --manual-path\n";
         return help && argc == 2 ? 0 : 2;
     }
     std::uint64_t steps = 10;

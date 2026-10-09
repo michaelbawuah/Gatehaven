@@ -21,7 +21,7 @@ namespace gatehaven {
 [[nodiscard]] inline std::optional<std::filesystem::path> manual_path(const std::filesystem::path& executable) {
     const auto directory = executable.parent_path();
     for (const auto& candidate : {directory / "../Resources/docs/manual.html", directory / "../share/gatehaven/docs/manual.html",
-                                  directory / "manual/manual.html", directory / "../manual/manual.html"}) {
+                                  directory / "manual/manual.html", directory / "../manual/manual.html", directory / "../../../manual/manual.html"}) {
         std::error_code error;
         if (std::filesystem::is_regular_file(candidate, error) && !error) return candidate.lexically_normal();
     }
