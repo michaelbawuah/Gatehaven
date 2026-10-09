@@ -479,7 +479,7 @@ private:
         preview_.clear();
         if (!drag_ || drag_tool_.kind == ToolKind::selector) return;
         auto element = drag_tool_.kind == ToolKind::eraser ? Element::empty : drag_tool_.element;
-        if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay && !is_communicator(element)) {
+        if (*drag_ == end && circuit.at(end) == element && element >= Element::positive_relay) {
             element = Element::signal;
         }
         const auto stroke = pencil_line(*drag_, end, element);
@@ -1270,7 +1270,8 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_F5);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3});
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3});
-    require(app.circuit.at({10, 3}) == Element::screen, "Repainting a screen converted it into a Signal");
+    require(app.circuit.at({10, 3}) == Element::signal, "A communicator's own pencil did not place its Signal input");
+    key(SDLK_Z, SDL_KMOD_CTRL);
     key(SDLK_1);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3});
     key(SDLK_I);

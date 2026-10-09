@@ -15,6 +15,7 @@ whole circuit. These actions do not edit your circuit.
 Plus/minus zoom without a mouse wheel; Home also frames the circuit. A panner
 click centers the clicked cell, while a drag moves the existing view.
 
+Clicking a gate, relay, or communicator with its own pencil places a Signal input.
 Ordinary strokes snap to a horizontal or vertical line. Hold Shift and click to
 start a polyline. Further clicks add snapped segments; Backspace removes the last
 segment. Double-click, Enter, or click after releasing Shift to finish. Escape
