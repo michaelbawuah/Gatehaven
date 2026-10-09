@@ -744,8 +744,10 @@ private:
             if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER || e.key == SDLK_SPACE) {
                 const auto box = focus_rect(*keyboard_focus_);
                 SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
+                if (shift && *keyboard_focus_ >= 10) click.which = SDL_TOUCH_MOUSEID;
                 click.x = static_cast<float>(box.x + box.width / 2); click.y = static_cast<float>(box.y + box.height / 2);
-                mouse_down(click); return;
+                const bool palette_control = *keyboard_focus_ >= 10;
+                mouse_down(click); if (palette_control) keyboard_focus_.reset(); return;
             }
         }
         if (polyline_ && e.key == SDLK_BACKSPACE) {
