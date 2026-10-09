@@ -23,6 +23,8 @@ public:
     [[nodiscard]] bool can_redo() const noexcept { return !redo_.empty(); }
     [[nodiscard]] std::size_t undo_depth() const noexcept { return undo_.size(); }
     [[nodiscard]] std::size_t redo_depth() const noexcept { return redo_.size(); }
+    [[nodiscard]] std::size_t stored_changes() const noexcept { return stored_changes_; }
+    [[nodiscard]] std::size_t capacity() const noexcept { return max_changes_; }
     void mark_saved() { saved_revision_ = revision_; }
     void mark_unsaved() { revision_ = next_revision_++; }
     [[nodiscard]] bool modified() const noexcept { return revision_ != saved_revision_; }

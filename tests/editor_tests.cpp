@@ -183,3 +183,12 @@ TEST("history keeps last-write semantics across interleaved duplicate coordinate
     CHECK(h.last_changes().size() == 2); CHECK(h.undo(c)); CHECK(c.empty());
     CHECK(h.redo(c)); CHECK(c.at({1, 0}) == Element::nor_gate);
 }
+
+TEST("history accounting includes redo and releases abandoned branches") {
+    Circuit c; History h(4);
+    CHECK(h.capacity() == 4 && h.stored_changes() == 0);
+    CHECK(h.apply(c, *pencil_line({0, 0}, {2, 0}, Element::wire)));
+    CHECK(h.undo(c)); CHECK(h.stored_changes() == 3);
+    CHECK(h.apply(c, *pencil_line({5, 0}, {5, 0}, Element::source)));
+    CHECK(h.stored_changes() == 1); h.clear(); CHECK(h.stored_changes() == 0);
+}
