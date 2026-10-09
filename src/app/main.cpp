@@ -844,12 +844,13 @@ private:
             cancel_gesture(); keyboard_cursor_.reset(); selection_.clear(); placing_ = false; help_ = false; return;
         }
         if (keyboard_cursor_ && !control && (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER)) {
+            view.center_on(*keyboard_cursor_);
             const auto [x, y] = view.screen(*keyboard_cursor_);
             SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
             click.x = static_cast<float>(x + view.scale / 2); click.y = static_cast<float>(y + view.scale / 2);
             mouse_down(click);
             if (interaction_button_) return; // A screen stays held until Enter is released.
-            SDL_Event release{}; release.type = SDL_EVENT_MOUSE_BUTTON_UP; release.button = click;
+            SDL_Event release{}; release.button = click; release.type = SDL_EVENT_MOUSE_BUTTON_UP;
             event(release);
             return;
         }
@@ -1752,7 +1753,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(SDL_PushEvent(&repeated), "Could not repeat keyboard navigation"); dispatch(app, renderer); key(SDLK_F8);
     require(inspections.back().starts_with("Cell (4, 5)") && app.circuit == moving && app.simulation.ticks() == navigation_tick,
             "Keyboard navigation repeated an edit or advanced the simulation");
-    key(SDLK_1); key(SDLK_RETURN);
+    key(SDLK_1); key(SDLK_F); key(SDLK_RETURN);
     require(app.circuit.at({4, 5}) == Element::wire, "Keyboard pencil did not place its component");
     key(SDLK_Q); key(SDLK_RETURN); key(SDLK_C, SDL_KMOD_CTRL);
     require((*peer)->read(0)->cells.size() == 1 && (*peer)->read(0)->cells[0].element == Element::wire,
@@ -1768,6 +1769,13 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.simulation.ticks() == dialog_tick, "Time in the native inspector advanced simulation");
     key(SDLK_SPACE);
     key(SDLK_Z, SDL_KMOD_CTRL);
+    key(SDLK_ESCAPE);
+    const Point edge{std::numeric_limits<Coordinate>::max(), std::numeric_limits<Coordinate>::max()};
+    app.view.center_on(edge);
+    SDL_Event edge_motion{}; edge_motion.type = SDL_EVENT_MOUSE_MOTION; edge_motion.motion.x = 760; edge_motion.motion.y = 430;
+    require(SDL_PushEvent(&edge_motion), "Could not target coordinate boundary"); dispatch(app, renderer);
+    key(SDLK_F9); key(SDLK_RIGHT, SDL_KMOD_CTRL); key(SDLK_DOWN); key(SDLK_F8);
+    require(inspections.back().starts_with("Cell (2147483647, 2147483647)"), "Keyboard cursor wrapped at coordinate limits");
     key(SDLK_ESCAPE);
     require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
