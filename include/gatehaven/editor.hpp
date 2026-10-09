@@ -34,7 +34,7 @@ public:
     [[nodiscard]] std::span<const Point> last_changes() const noexcept { return last_changes_; }
 
 private:
-    struct Delta { Point point; Element before; Element after; };
+    struct Delta { Point point; Element before; Element after; std::uint8_t before_state; std::uint8_t after_state; };
     struct Command : std::vector<Delta> { std::uint64_t before_revision{}; std::uint64_t after_revision{}; };
     std::deque<Command> undo_;
     std::deque<Command> redo_;

@@ -52,7 +52,8 @@ std::expected<std::vector<Cell>, std::string> clipped_pencil_line(
 std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<const Cell> edits) {
     last_changes_.clear();
     for (const auto& edit : edits) {
-        if (static_cast<std::size_t>(edit.element) >= element_names.size()) {
+        if (static_cast<std::size_t>(edit.element) >= element_names.size() || edit.state > 3 ||
+            (edit.element == Element::empty && edit.state != 0)) {
             return std::unexpected("Invalid element in edit");
         }
     }
@@ -64,9 +65,9 @@ std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<cons
     for (std::size_t i = 0; i < final.size(); ++i) {
         if (i + 1 < final.size() && final[i].position == final[i + 1].position) continue;
         const auto& [point, element, state] = final[i];
-        static_cast<void>(state);
         const auto before = circuit.at(point);
-        if (before != element) command.push_back({point, before, element});
+        const auto before_state = circuit.saved_state(point);
+        if (before != element || before_state != state) command.push_back({point, before, element, before_state, state});
         if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
     }
     if (command.empty()) return false;
@@ -74,7 +75,7 @@ std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<cons
     command.before_revision = revision_;
     command.after_revision = next_revision_++;
     for (const auto& delta : command) {
-        circuit.set(delta.point, delta.after);
+        circuit.set(delta.point, delta.after, delta.after_state);
         last_changes_.push_back(delta.point);
     }
     for (const auto& stale : redo_) stored_changes_ -= stale.size();
@@ -96,7 +97,7 @@ bool History::undo(Circuit& circuit) {
     revision_ = command.before_revision;
     undo_.pop_back();
     for (const auto& delta : command) {
-        circuit.set(delta.point, delta.before);
+        circuit.set(delta.point, delta.before, delta.before_state);
         last_changes_.push_back(delta.point);
     }
     redo_.push_back(std::move(command));
@@ -110,7 +111,7 @@ bool History::redo(Circuit& circuit) {
     revision_ = command.after_revision;
     redo_.pop_back();
     for (const auto& delta : command) {
-        circuit.set(delta.point, delta.after);
+        circuit.set(delta.point, delta.after, delta.after_state);
         last_changes_.push_back(delta.point);
     }
     undo_.push_back(std::move(command));

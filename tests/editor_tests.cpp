@@ -238,3 +238,17 @@ TEST("indexed stamp previews match clipped cells after rotations and replacement
     preview.reset({}); unsigned count = 0;
     preview.visit({0, 0}, {{-10, -10}, {10, 10}}, [&](Cell) { ++count; }); CHECK(count == 0);
 }
+
+TEST("state-only edits are undoable and restore overwritten levels") {
+    Circuit circuit; circuit.set({0, 0}, Element::or_gate, 3);
+    History history;
+    const std::array edits{Cell{{0, 0}, Element::or_gate, 1}};
+    CHECK(history.apply(circuit, edits).value());
+    CHECK(circuit.saved_state({0, 0}) == 1 && history.modified());
+    CHECK(history.undo(circuit) && circuit.saved_state({0, 0}) == 3);
+    CHECK(!history.modified());
+    CHECK(history.redo(circuit) && circuit.saved_state({0, 0}) == 1);
+    const std::array invalid{Cell{{0, 0}, Element::wire, 4}};
+    CHECK(!history.apply(circuit, invalid));
+    CHECK(circuit.saved_state({0, 0}) == 1);
+}
