@@ -50,6 +50,9 @@ elif sys.platform == "win32":
             try:
                 assert "Gatehaven" in run(root / "bin/gatehaven-cli.exe", "--version")
                 assert (root / "share/gatehaven/docs/manual.html").is_file()
+                for extension in (".ghv", ".ccsb"):
+                    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\Classes\\" + extension + "\\OpenWithProgids") as key:
+                        assert winreg.QueryValueEx(key, "Gatehaven.Circuit")[0] == ""
                 env = dict(os.environ, SDL_VIDEODRIVER="dummy")
                 subprocess.run([str(root / "bin/gatehaven.exe"), "--self-test"], env=env, check=True, timeout=60)
                 with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"Software\Classes\Gatehaven.Circuit\shell\open\command") as key:
@@ -60,6 +63,14 @@ elif sys.platform == "win32":
                 if uninstaller.exists():
                     subprocess.run(f'"{uninstaller}" /S _?={root}', check=True, timeout=90)
             assert not (root / "bin/gatehaven.exe").exists()
+            for extension in (".ghv", ".ccsb"):
+                try:
+                    with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\Classes\\" + extension + "\\OpenWithProgids") as key:
+                        winreg.QueryValueEx(key, "Gatehaven.Circuit")
+                except FileNotFoundError:
+                    pass
+                else:
+                    raise AssertionError("Uninstaller retained its Open With registration")
 else:
     packages = []
 for package in packages:
