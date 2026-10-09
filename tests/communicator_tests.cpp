@@ -12,3 +12,16 @@ TEST("communicator groups join only adjacent cells of the same type") {
     c.set({1, 0}, Element::empty);
     CHECK(communicator_groups(c)[0].cells.size() == 1);
 }
+TEST("communicators exchange once per group and send only previous-step signals") {
+    Circuit c;
+    c.set({0, 0}, Element::source); c.set({1, 0}, Element::wire); c.set({2, 0}, Element::signal);
+    c.set({3, 0}, Element::screen); c.set({4, 0}, Element::screen); c.set({5, 0}, Element::wire);
+    Simulation sim; unsigned calls = 0; bool sent = false;
+    const Simulation::Exchange endpoint = [&](const CommunicatorGroup& group, bool value) {
+        ++calls; CHECK(group.cells.size() == 2); sent = value; return true;
+    };
+    sim.step(c, endpoint); CHECK(calls == 1 && !sent && sim.powered({5, 0}));
+    sim.step(c, endpoint); CHECK(calls == 2 && sent && sim.sent({4, 0}));
+    sim.reset(); CHECK(!sim.sent({4, 0}));
+    sim.step(c); CHECK(!sim.powered({5, 0}));
+}

@@ -1,10 +1,12 @@
 #pragma once
 
 #include "gatehaven/circuit.hpp"
+#include "gatehaven/communicator.hpp"
 
 #include <cstdint>
 #include <map>
 #include <span>
+#include <functional>
 
 namespace gatehaven {
 
@@ -17,17 +19,20 @@ struct Power {
 
 class Simulation {
 public:
-    void step(const Circuit& circuit);
+    using Exchange = std::function<bool(const CommunicatorGroup&, bool)>;
+    void step(const Circuit& circuit, const Exchange& exchange = {});
     void reset();
     void invalidate(std::span<const Point> points);
     [[nodiscard]] bool powered(Point point) const { return ports(point) != 0; }
     [[nodiscard]] std::uint8_t ports(Point point) const;
     [[nodiscard]] std::uint64_t ticks() const noexcept { return ticks_; }
     [[nodiscard]] std::size_t powered_count() const;
+    [[nodiscard]] bool sent(Point point) const { const auto it = sent_.find(point); return it != sent_.end() && it->second; }
     [[nodiscard]] const std::map<Point, Power>& snapshot() const noexcept { return state_; }
 
 private:
     std::map<Point, Power> state_;
+    std::map<Point, bool> sent_;
     std::uint64_t ticks_{};
 };
 

@@ -57,10 +57,25 @@ constexpr std::uint8_t bit(Direction direction) {
 
 } // namespace
 
-void Simulation::step(const Circuit& circuit) {
+void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     std::map<Point, Node> nodes;
     std::vector<std::pair<Point, std::uint8_t>> frontier;
     frontier.reserve(circuit.size());
+    std::map<Point, bool> received;
+    sent_.clear();
+    for (const auto& group : communicator_groups(circuit)) {
+        bool sending = false;
+        for (const auto point : group.cells) {
+            for (const auto direction : directions) {
+                const auto next = neighbor(point, direction);
+                if (!next || circuit.at(*next) != Element::signal) continue;
+                const auto previous = state_.find(*next);
+                if (previous != state_.end() && previous->second.element == Element::signal && previous->second.ports != 0) sending = true;
+            }
+        }
+        const bool receiving = exchange && exchange(group, sending);
+        for (const auto point : group.cells) { received[point] = receiving; sent_[point] = sending; }
+    }
 
     // Read only state_ here. New power cannot affect controls in this step.
     for (const auto& cell : circuit.cells()) {
@@ -74,7 +89,7 @@ void Simulation::step(const Circuit& circuit) {
             if (previous != state_.end() && previous->second.element == Element::signal &&
                 previous->second.ports != 0) ++on_count;
         }
-        const auto active_material = material(cell.element, control(cell.element, on_count, input_count));
+        const auto active_material = material(cell.element, is_communicator(cell.element) ? received.at(cell.position) : control(cell.element, on_count, input_count));
         auto& node = nodes.emplace(cell.position, Node{cell.element, active_material, 0}).first->second;
         if (active_material == Material::source) {
             node.ports = 15;
@@ -111,11 +126,12 @@ void Simulation::step(const Circuit& circuit) {
 
 void Simulation::reset() {
     state_.clear();
+    sent_.clear();
     ticks_ = 0;
 }
 
 void Simulation::invalidate(std::span<const Point> points) {
-    for (const auto point : points) state_.erase(point);
+    for (const auto point : points) { state_.erase(point); sent_.erase(point); }
 }
 
 std::uint8_t Simulation::ports(Point point) const {
