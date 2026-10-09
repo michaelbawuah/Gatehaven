@@ -1130,6 +1130,18 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         require(selected && selected->cells.size() == (clicks == 2 ? 9U : 27U), "Connected selection gesture chose the wrong circuit");
     }
     key(SDLK_ESCAPE);
+    key(SDLK_F5);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3});
+    key(SDLK_1);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3});
+    key(SDLK_I);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {10, 3});
+    key(SDLK_RIGHT);
+    require(app.simulation.powered({11, 3}), "Held screen did not drive the adjacent wire");
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {10, 3}); key(SDLK_RIGHT);
+    require(!app.simulation.powered({11, 3}), "Screen stayed powered after Interact was released");
+    key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_R);
+    require(app.circuit == edited, "Screen interaction changed circuit structure");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
