@@ -65,20 +65,26 @@ jobs:
           ref: 829a65d769d935c4852f8159e964312c0957260a # release-3.4.18
           path: build/deps/SDL
       - run: python -m pip install cmake==4.4.4
+      - name: Install Linux display development libraries
+        if: runner.os == 'Linux'
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev
+          libxss-dev libxtst-dev libwayland-dev libxkbcommon-dev wayland-protocols
+          libdecor-0-dev libegl1-mesa-dev libgl1-mesa-dev
       - name: Configure pinned SDL3
         run: >-
           cmake -S build/deps/SDL -B build/deps/sdl-build
           -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/deps/sdl-install
           -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST_LIBRARY=OFF
           -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF
-          ${{ runner.os == 'Linux' && '-DSDL_UNIX_CONSOLE_BUILD=ON -DSDL_X11=OFF -DSDL_WAYLAND=OFF' || '' }}
-          -DSDL_OPENGL=OFF -DSDL_OPENGLES=OFF
+          ${{ runner.os == 'Linux' && '-DSDL_X11=ON -DSDL_WAYLAND=ON' || '-DSDL_OPENGL=OFF -DSDL_OPENGLES=OFF' }}
           -DSDL_VULKAN=OFF -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_SENSOR=OFF
       - run: cmake --build build/deps/sdl-build --config Release --parallel 2
       - run: cmake --install build/deps/sdl-build --config Release
       - name: Build desktop application
         run: >-
-          cmake -S . -B build/app -DGATEHAVEN_BUILD_APP=ON -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build/app -DGATEHAVEN_BUILD_APP=ON -DGATEHAVEN_BUILD_PACKAGES=ON -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_PREFIX_PATH=${{ github.workspace }}/build/deps/sdl-install
       - run: cmake --build build/app --config Release --parallel 2
       - run: ctest --test-dir build/app -C Release --output-on-failure
@@ -86,6 +92,19 @@ jobs:
         run: cmake --build build/app --config Release --target gatehaven_snapshot
         env:
           SDL_VIDEODRIVER: dummy
+      - name: Package development archive and checksum
+        run: cmake --build build/app --config Release --target package
+      - name: Upload native preview
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: Gatehaven-${{ runner.os }}-${{ runner.arch }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            build/app/Gatehaven-*.zip
+            build/app/Gatehaven-*.tar.gz
+            build/app/Gatehaven-*.sha256
+            build/app/gatehaven.bmp
 
   benchmark:
     name: Simulation benchmark
@@ -97,3 +116,6 @@ jobs:
       - run: cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DGATEHAVEN_BUILD_BENCHMARKS=ON
       - run: cmake --build build/bench --parallel 2
       - run: build/bench/gatehaven-bench 10000 20
+      - run: build/bench/gatehaven-bench 10000 20 wire-grid
+      - run: build/bench/gatehaven-bench 10000 20 gates
+      - run: build/bench/gatehaven-bench 10000 20 screens

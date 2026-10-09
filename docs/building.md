@@ -61,8 +61,8 @@ cmake --build build/installed-sdl --config Debug
 ```
 
 Desktop CI builds on Linux, macOS, and Windows use exactly SDL commit
-`829a65d769d935c4852f8159e964312c0957260a` (release-3.4.18). The Linux job disables
-real display backends. All three use a software renderer and dummy video driver
+`829a65d769d935c4852f8159e964312c0957260a` (release-3.4.18). The Linux package enables
+X11 and Wayland. All three use a software renderer and dummy video driver
 for automation; these runs do not establish physical display or native dialog QA.
 
 ## Tests and tools
@@ -95,6 +95,7 @@ Use `clang-format` with the repository configuration and `clang-tidy` with
 
 ## Packaging
 
-There are no signed installers or release binaries yet. A distributable desktop
-package must include dependency license texts, required shared libraries, native
-file associations, and platform-specific clean-machine verification.
+See [portable builds](packaging.md) for CPack archives and installed-product tests.
+Successful desktop CI jobs upload native preview archives, SHA-256 checksums, and
+screenshots as Actions artifacts retained for 30 days. These are unsigned
+development builds; signing and clean-machine release verification remain open.
