@@ -16,8 +16,17 @@ TEST("the running executable is resolved independently of the working directory"
 }
 
 TEST("file URIs preserve Unicode and escape browser control characters") {
-    const auto uri = file_uri(utf8_path("manual #100% é.html"));
+    const auto uri = gatehaven::file_uri(gatehaven::utf8_path("manual #100% é.html"));
     CHECK(uri && uri->starts_with("file://"));
     CHECK(uri->find("%23") != std::string::npos && uri->find("%25") != std::string::npos);
     CHECK(uri->find("%C3%A9") != std::string::npos && uri->find(' ') == std::string::npos);
+}
+
+TEST("manual lookup uses executable location rather than current working directory") {
+    const auto executable = gatehaven::current_executable(); CHECK(executable);
+    const auto before = gatehaven::manual_path(*executable);
+    const auto cwd = std::filesystem::current_path();
+    struct Restore { std::filesystem::path path; ~Restore() { std::error_code e; std::filesystem::current_path(path, e); } } restore{cwd};
+    std::filesystem::current_path(std::filesystem::temp_directory_path());
+    CHECK(gatehaven::manual_path(*executable) == before);
 }
