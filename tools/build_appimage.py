@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Build a relocatable Linux AppImage from an existing tested desktop build."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import tempfile
+import urllib.request
+
+ROOT = Path(__file__).resolve().parents[1]
+
+def run(*args, cwd=None, env=None):
+    result = subprocess.run(list(map(str, args)), cwd=cwd, env=env, text=True, capture_output=True, timeout=240)
+    if result.returncode:
+        raise RuntimeError(f"{args[0]} failed ({result.returncode}): {result.stdout[-4000:]} {result.stderr[-4000:]}")
+    return result.stdout
+
+def download(asset, cache):
+    target = cache / asset["sha256"]
+    if not target.exists():
+        with urllib.request.urlopen(asset["url"], timeout=60) as response:
+            data = response.read(32 * 1024 * 1024 + 1)
+        if len(data) > 32 * 1024 * 1024 or hashlib.sha256(data).hexdigest() != asset["sha256"]:
+            raise ValueError("packaging dependency checksum or size mismatch")
+        target.write_bytes(data)
+    if hashlib.sha256(target.read_bytes()).hexdigest() != asset["sha256"]:
+        raise ValueError("cached packaging dependency checksum mismatch")
+    target.chmod(0o755)
+    return target
+
+def stage_appdir(cmake, build, appdir):
+    run(cmake, "--install", build, "--config", "Release", "--prefix", appdir / "usr")
+    for name in ("gatehaven", "gatehaven-cli"):
+        if not (appdir / "usr/bin" / name).is_file(): raise ValueError("a desktop build is required")
+    shutil.copy2(ROOT / "packaging/linux/AppRun", appdir / "AppRun")
+    (appdir / "AppRun").chmod(0o755)
+    shutil.copy2(ROOT / "packaging/linux/com.michaelbaffourawuah.gatehaven.desktop", appdir / "gatehaven.desktop")
+    shutil.copy2(ROOT / "packaging/gatehaven.svg", appdir / "gatehaven.svg")
+    shutil.copy2(ROOT / "packaging/gatehaven.svg", appdir / ".DirIcon")
+    library_dir = appdir / "usr/lib"
+    library_dir.mkdir(exist_ok=True)
+    bundled = []
+    for binary in (appdir / "usr/bin/gatehaven", appdir / "usr/bin/gatehaven-cli"):
+        for line in run("ldd", binary).splitlines():
+            match = re.match(r"\s*(libstdc\+\+\.so\.6|libgcc_s\.so\.1) => (\S+) ", line)
+            if match:
+                name, source = match.groups()
+                shutil.copy2(source, library_dir / name)
+                if name not in bundled: bundled.append(name)
+    notices = appdir / "usr/share/gatehaven/third_party"
+    if bundled:
+        copyright_file = Path("/usr/share/doc/libstdc++6/copyright")
+        if not copyright_file.is_file(): raise ValueError("GCC runtime distribution copyright notice is required")
+        shutil.copy2(copyright_file.resolve(), notices / "gcc-runtime-copyright.txt")
+        for name in ("GPL-3", "LGPL-3"):
+            shutil.copy2(Path("/usr/share/common-licenses") / name, notices / (name + ".txt"))
+    return bundled
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("build", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--cmake", default="cmake")
+    parser.add_argument("--cache", type=Path)
+    args = parser.parse_args()
+    if platform.system() != "Linux": parser.error("AppImages are built on Linux")
+    arch = platform.machine()
+    lock = json.loads((ROOT / "packaging/linux/appimage-tools.json").read_text())
+    if arch not in lock["architectures"]: parser.error("supported architectures: x86_64 and aarch64")
+    cache = args.cache or args.build / "appimage-cache"
+    cache = cache.resolve(); cache.mkdir(parents=True, exist_ok=True)
+    assets = lock["architectures"][arch]
+    tool, runtime = download(assets["tool"], cache), download(assets["runtime"], cache)
+    output = args.output.resolve(); output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="gatehaven appimage ") as temporary:
+        work = Path(temporary); appdir = work / "Gatehaven.AppDir"
+        bundled = stage_appdir(args.cmake, args.build.resolve(), appdir)
+        run(tool, "--appimage-extract", cwd=work)
+        env = dict(os.environ, ARCH=arch)
+        candidate = work / "Gatehaven.AppImage"
+        run(work / "squashfs-root/AppRun", "--no-appstream", "--runtime-file", runtime,
+            appdir, candidate, cwd=work, env=env)
+        candidate.chmod(0o755)
+        # Validate the exact image before replacing an existing output artifact.
+        verify = work / "verify"; verify.mkdir()
+        run(candidate, "--appimage-extract", cwd=verify)
+        assert "Gatehaven" in run(verify / "squashfs-root/AppRun", "--cli", "--version")
+        shutil.copy2(candidate, output)
+    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    Path(str(output) + ".sha256").write_text(f"{digest}  {output.name}\n", encoding="utf-8")
+    Path(str(output) + ".json").write_text(json.dumps({"schema": 1, "architecture": arch,
+        "tool_version": lock["tool_version"], "runtime_revision": lock["runtime_revision"],
+        "assets": assets, "bundled_libraries": bundled, "sha256": digest,
+        "system_requirements": "glibc 2.39 or newer; working X11 or Wayland session and native dialog services"}, indent=2) + "\n")
+    print(output)
+if __name__ == "__main__": main()
