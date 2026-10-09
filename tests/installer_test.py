@@ -37,6 +37,29 @@ elif sys.platform == "darwin":
                 assert (apps[0] / "Contents/Resources/docs/manual.md").is_file()
             finally:
                 run("hdiutil", "detach", mount)
+elif sys.platform == "win32":
+    import os
+    import winreg
+    packages = list(build.glob("Gatehaven-*.exe"))
+    assert len(packages) == 1, packages
+    for package in packages:
+        with tempfile.TemporaryDirectory(prefix="gatehaven installer ") as directory:
+            root = Path(directory) / "app"
+            # NSIS /D consumes the remaining command line and must be last.
+            subprocess.run(f'"{package}" /S /D={root}', check=True, timeout=90)
+            try:
+                assert "Gatehaven" in run(root / "bin/gatehaven-cli.exe", "--version")
+                assert (root / "share/gatehaven/docs/manual.html").is_file()
+                env = dict(os.environ, SDL_VIDEODRIVER="dummy")
+                subprocess.run([str(root / "bin/gatehaven.exe"), "--self-test"], env=env, check=True, timeout=60)
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"Software\Classes\Gatehaven.Circuit\shell\open\command") as key:
+                    command = winreg.QueryValueEx(key, "")[0]
+                    assert str(root / "bin/gatehaven.exe") in command and '"%1"' in command
+            finally:
+                uninstaller = root / "Uninstall.exe"
+                if uninstaller.exists():
+                    subprocess.run(f'"{uninstaller}" /S _?={root}', check=True, timeout=90)
+            assert not (root / "bin/gatehaven.exe").exists()
 else:
     packages = []
 for package in packages:
