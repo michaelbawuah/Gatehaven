@@ -77,3 +77,15 @@ TEST("enumeration order is independent of insertion order") {
     CHECK(second.empty());
     CHECK(!second.bounds());
 }
+
+TEST("viewport visitors include boundaries and never visit distant rows or columns") {
+    Circuit circuit;
+    circuit.set({-1000000, 0}, Element::source); circuit.set({1000000, 0}, Element::wire);
+    circuit.set({-1, -1}, Element::wire); circuit.set({1, 1}, Element::crossing);
+    circuit.set({0, 1000000}, Element::signal);
+    std::vector<Cell> visited;
+    circuit.visit({{-1, -1}, {1, 1}}, [&](Cell cell) { visited.push_back(cell); });
+    CHECK(visited.size() == 2); CHECK(visited[0].position == Point{-1, -1}); CHECK(visited[1].position == Point{1, 1});
+    unsigned calls = 0;
+    circuit.visit({{1, 1}, {-1, -1}}, [&](Cell) { ++calls; }); CHECK(calls == 0);
+}
