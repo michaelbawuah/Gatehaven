@@ -243,6 +243,7 @@ public:
     }
 
     void update(double elapsed) {
+        if (discard_elapsed_) { elapsed = 0; discard_elapsed_ = false; }
         if (!std::isfinite(elapsed) || elapsed < 0) elapsed = 0;
         if (recovery_) {
             if (recovery_schedule_.poll(circuit.revision(), history.modified(), elapsed)) checkpoint();
@@ -570,6 +571,7 @@ private:
     bool speed_replace_{};
     bool speed_error_{};
     double accumulator_{};
+    bool discard_elapsed_{};
     std::unique_ptr<RecoveryStore> recovery_;
     RecoverySchedule recovery_schedule_;
     bool recovery_dirty_{};
@@ -923,6 +925,7 @@ private:
             if (hover_) {
                 cancel_gesture(); accumulator_ = 0;
                 if (!inspection_dialog_(window_, describe_cell(circuit, simulation, *hover_))) status_ = SDL_GetError();
+                discard_elapsed_ = true;
             } else status_ = "POINT AT A CELL, THEN PRESS F8 TO INSPECT";
             break;
         case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
@@ -1761,6 +1764,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     SDL_Event enter_up{}; enter_up.type = SDL_EVENT_KEY_UP; enter_up.key.key = SDLK_RETURN;
     require(SDL_PushEvent(&enter_up), "Could not release keyboard interaction"); dispatch(app, renderer);
     key(SDLK_F10); require(!app.simulation.received({4, 5}), "Keyboard screen remained held after release");
+    const auto dialog_tick = app.simulation.ticks(); key(SDLK_SPACE); key(SDLK_F8); app.update(30);
+    require(app.simulation.ticks() == dialog_tick, "Time in the native inspector advanced simulation");
+    key(SDLK_SPACE);
     key(SDLK_Z, SDL_KMOD_CTRL);
     key(SDLK_ESCAPE);
     require(app.open(save_path), "Could not restore save workflow fixture");
