@@ -2,6 +2,7 @@
 #include "instances.hpp"
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
+#include "gatehaven/inspection.hpp"
 #include "gatehaven/document_path.hpp"
 #include "gatehaven/editor.hpp"
 #include "gatehaven/stamp_preview.hpp"
@@ -120,6 +121,11 @@ bool confirm_overwrite(SDL_Window* window) {
     return SDL_ShowMessageBox(&data, &choice) && choice == 1;
 }
 
+using InspectionDialog = std::function<bool(SDL_Window*, const std::string&)>;
+bool show_inspection(SDL_Window* window, const std::string& text) {
+    return SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Gatehaven cell inspector", text.c_str(), window);
+}
+
 class App {
 public:
     Circuit circuit = starter_circuit();
@@ -130,8 +136,8 @@ public:
     bool quit{};
 
     explicit App(SDL_Window* window, ClipboardSession& clipboards,
-                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo, OverwritePrompt overwrite = confirm_overwrite)
-        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)), confirm_overwrite_(std::move(overwrite)) {
+                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo, OverwritePrompt overwrite = confirm_overwrite, InspectionDialog inspection = show_inspection)
+        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)), confirm_overwrite_(std::move(overwrite)), inspection_dialog_(std::move(inspection)) {
         simulation.initialize(circuit);
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
@@ -537,6 +543,7 @@ private:
     ui::InstanceLauncher launcher_;
     ui::DemoLauncher demo_launcher_;
     OverwritePrompt confirm_overwrite_;
+    InspectionDialog inspection_dialog_;
     Stamp placement_;
     StampPreview placement_preview_;
     unsigned clipboard_{};
@@ -872,6 +879,12 @@ private:
         case SDLK_I: cancel_gesture(); tools_[0] = {ToolKind::interactor}; placing_ = false; break;
         case SDLK_F5: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::screen}; placing_ = false; break;
         case SDLK_F6: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_input}; placing_ = false; break;
+        case SDLK_F8:
+            if (hover_) {
+                cancel_gesture(); accumulator_ = 0;
+                if (!inspection_dialog_(window_, describe_cell(circuit, simulation, *hover_))) status_ = SDL_GetError();
+            } else status_ = "POINT AT A CELL, THEN PRESS F8 TO INSPECT";
+            break;
         case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
@@ -1364,7 +1377,7 @@ void dispatch(App& app, SDL_Renderer* renderer) {
 }
 
 void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& session_directory,
-               const std::vector<std::optional<std::filesystem::path>>& launched, const std::vector<std::string>& demos) {
+               const std::vector<std::optional<std::filesystem::path>>& launched, const std::vector<std::string>& demos, const std::vector<std::string>& inspections) {
     const auto require = [](bool ok, const char* message) {
         if (!ok) throw std::runtime_error(message);
     };
@@ -1681,6 +1694,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {3, 0}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {3, 0});
     key(SDLK_DOWN);
     require(app.circuit.saved_state({3, 1}) == 2 && app.simulation.powered({3, 1}), "Selection movement lost live output level");
+    const auto before_inspection = app.circuit;
+    const auto inspection_tick = app.simulation.ticks();
+    key(SDLK_F8);
+    require(!inspections.empty() && inspections.back().find("Component: empty") != std::string::npos,
+            "Native inspector did not report the hovered cell");
+    require(app.circuit == before_inspection && app.simulation.ticks() == inspection_tick, "Inspection changed the circuit");
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_ESCAPE);
     require(app.circuit == moving, "Stateful movement did not undo structure and stored levels");
     require(app.open(save_path), "Could not restore save workflow fixture");
@@ -1758,6 +1777,7 @@ int main(int argc, char** argv) {
         SDL_SetRenderVSync(renderer.get(), 1);
         std::vector<std::optional<std::filesystem::path>> launched;
         std::vector<std::string> demos;
+        std::vector<std::string> inspections;
         ui::InstanceLauncher launcher = ui::launch_instance;
         ui::DemoLauncher demo_launcher = ui::launch_demo;
         if (testing) launcher = [&](std::optional<std::filesystem::path> document) -> std::expected<void, std::string> {
@@ -1767,10 +1787,11 @@ int main(int argc, char** argv) {
             demos.emplace_back(name); return {};
         };
         App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher),
-                testing ? OverwritePrompt([](SDL_Window*) { return false; }) : OverwritePrompt(confirm_overwrite));
+                testing ? OverwritePrompt([](SDL_Window*) { return false; }) : OverwritePrompt(confirm_overwrite),
+                testing ? InspectionDialog([&](SDL_Window*, const std::string& text) { inspections.push_back(text); return true; }) : InspectionDialog(show_inspection));
         if (!testing && !snapshot) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
-            self_test(app, renderer.get(), session_directory, launched, demos);
+            self_test(app, renderer.get(), session_directory, launched, demos, inspections);
             if (!child_test) {
                 const auto child = ui::test_child_process();
                 if (!child) throw std::runtime_error(child.error());
