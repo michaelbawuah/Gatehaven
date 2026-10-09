@@ -9,6 +9,7 @@
 #include "gatehaven/polyline.hpp"
 #include "gatehaven/preferences.hpp"
 #include "gatehaven/file_io.hpp"
+#include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/viewport.hpp"
 
 #include <SDL3/SDL.h>
@@ -37,9 +38,10 @@ constexpr SDL_Color white{255, 255, 255, 255};
 constexpr SDL_Color border{217, 225, 229, 255};
 constexpr std::array palette{Element::wire, Element::crossing, Element::source,
     Element::signal, Element::and_gate, Element::or_gate, Element::nand_gate,
-    Element::nor_gate, Element::positive_relay, Element::negative_relay};
-constexpr std::array<std::string_view, 10> labels{"WIRE", "CROSSING", "SOURCE", "SIGNAL",
-    "AND", "OR", "NAND", "NOR", "+ RELAY", "- RELAY"};
+    Element::nor_gate, Element::positive_relay, Element::negative_relay,
+    Element::screen, Element::file_input, Element::file_output};
+constexpr std::array<std::string_view, 13> labels{"WIRE", "CROSSING", "SOURCE", "SIGNAL",
+    "AND", "OR", "NAND", "NOR", "+ RELAY", "- RELAY", "SCREEN", "FILE IN", "FILE OUT"};
 
 constexpr std::array<SDL_Color, 6> binding_colors{{{205, 63, 64, 255}, {53, 103, 205, 255},
     {36, 139, 74, 255}, {0, 150, 180, 255}, {179, 62, 169, 255}, {190, 153, 0, 255}}};
@@ -148,6 +150,7 @@ public:
         path_ = path;
         history.clear();
         simulation.reset();
+        endpoints_.clear();
         selection_.clear();
         placing_ = false;
         running = false;
@@ -186,7 +189,7 @@ public:
         const double interval = 1.0 / speed_;
         unsigned work = 0;
         while (accumulator_ >= interval && work < 8) {
-            simulation.step(circuit);
+            tick();
             accumulator_ -= interval;
             ++work;
         }
@@ -229,8 +232,15 @@ public:
             hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
             if (polyline_ && hover_) polyline_preview(*hover_);
+            if (interaction_button_) {
+                endpoints_.release_screens();
+                if (hover_ && circuit.at(*hover_) == Element::screen) endpoints_.hold_screen(*hover_);
+            }
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) mouse_down(e.button);
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == interaction_button_) {
+            interaction_button_.reset(); endpoints_.release_screens();
+        }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == pan_button_) pan_button_.reset();
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
             const auto end = view.cell(e.button.x, e.button.y);
@@ -312,24 +322,24 @@ public:
         ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    ARROWS: MOVE SELECTION    HOLD E: EYEDROPPER    SCROLL: ZOOM", muted, 1.25F);
         ui::text(r, 22, 121, "COMPONENTS", muted, 1.5F);
         for (std::size_t i = 0; i < palette.size(); ++i) {
-            const float y = 150 + static_cast<float>(i) * 36;
+            const float y = 146 + static_cast<float>(i) * 28;
             const InputTool tool{ToolKind::pencil, palette[i]};
             const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 32, selected ? SDL_Color{225, 241, 236, 255} : white);
-            if (selected) rectangle(r, 12, y, 3, 32, teal);
-            ui::text(r, 26, y + 10, std::to_string((i + 1) % 10), muted, 1.5F);
-            ui::text(r, 52, y + 9, labels[i], selected ? teal : ink, 2.0F);
-            draw_bindings(r, y + 9, tool);
+            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : white);
+            if (selected) rectangle(r, 12, y, 3, 26, teal);
+            if (i < 10) ui::text(r, 26, y + 8, std::to_string((i + 1) % 10), muted, 1.5F);
+            ui::text(r, 52, y + 7, labels[i], selected ? teal : ink, 1.75F);
+            draw_bindings(r, y + 6, tool);
         }
-        constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser};
-        constexpr std::array<std::string_view, 3> tool_labels{"Q  SELECT", "PAN", "ERASE"};
+        constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
+        constexpr std::array<std::string_view, 4> tool_labels{"Q  SELECT", "PAN", "ERASE", "I  INTERACT"};
         for (std::size_t i = 0; i < kinds.size(); ++i) {
-            const float y = 522 + static_cast<float>(i) * 36;
+            const float y = 522 + static_cast<float>(i) * 28;
             const InputTool tool{kinds[i]};
             const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 32, selected ? SDL_Color{225, 241, 236, 255} : paper);
-            ui::text(r, 26, y + 10, tool_labels[i], selected ? teal : ink, 1.5F);
-            draw_bindings(r, y + 9, tool);
+            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : paper);
+            ui::text(r, 26, y + 8, tool_labels[i], selected ? teal : ink, 1.5F);
+            draw_bindings(r, y + 6, tool);
         }
         ui::text(r, 22, 645, "CLICK A TOOL TO BIND", ink, 1.25F);
         for (std::size_t i = 0; i < binding_names.size(); ++i) {
@@ -373,6 +383,8 @@ private:
     std::optional<Point> drag_;
     std::size_t drag_button_{};
     std::optional<std::size_t> pan_button_;
+    std::optional<std::size_t> interaction_button_;
+    FileEndpoints endpoints_;
     std::vector<Cell> preview_;
     Selection selection_;
     SelectionMode selection_mode_{SelectionMode::replace};
@@ -399,6 +411,7 @@ private:
         drag_.reset();
         polyline_.reset();
         pan_button_.reset();
+        interaction_button_.reset(); endpoints_.release_screens();
         preview_.clear();
         eyedropper_ = false;
     }
@@ -435,8 +448,8 @@ private:
                 if (!toolbar[i].rect.contains(e.x, e.y)) continue;
                 switch (i) {
                 case 0: running = !running; accumulator_ = 0; break;
-                case 1: running = false; simulation.step(circuit); break;
-                case 2: simulation.reset(); accumulator_ = 0; break;
+                case 1: running = false; tick(); break;
+                case 2: reset_simulation(); break;
                 case 3: undo(false); break;
                 case 4: undo(true); break;
                 case 5: file_dialog(false); break;
@@ -449,13 +462,13 @@ private:
                 return;
             }
         }
-        if (ViewRect{12, 150, 216, 360}.contains(e.x, e.y)) {
-            tools_[*button] = {ToolKind::pencil, palette[static_cast<std::size_t>((e.y - 150) / 36)]};
+        if (ViewRect{12, 146, 216, 364}.contains(e.x, e.y)) {
+            tools_[*button] = {ToolKind::pencil, palette[static_cast<std::size_t>((e.y - 146) / 28)]};
             placing_ = false; return;
         }
-        if (ViewRect{12, 522, 216, 108}.contains(e.x, e.y)) {
-            constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser};
-            tools_[*button] = {kinds[static_cast<std::size_t>((e.y - 522) / 36)]};
+        if (ViewRect{12, 522, 216, 112}.contains(e.x, e.y)) {
+            constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
+            tools_[*button] = {kinds[static_cast<std::size_t>((e.y - 522) / 28)]};
             placing_ = false; return;
         }
         if (!view.area.contains(e.x, e.y)) return;
@@ -484,7 +497,11 @@ private:
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
         if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
-        if (tools_[*button].kind == ToolKind::interactor) { status_ = "CHOOSE A COMMUNICATOR TO INTERACT"; return; }
+        if (tools_[*button].kind == ToolKind::interactor) {
+            if (circuit.at(*hover_) == Element::screen) { interaction_button_ = *button; endpoints_.hold_screen(*hover_); }
+            else status_ = "CHOOSE A SCREEN TO INTERACT";
+            return;
+        }
         const auto modifiers = SDL_GetModState();
         selection_mode_ = (modifiers & SDL_KMOD_ALT) != 0 ? SelectionMode::subtract :
             (modifiers & SDL_KMOD_SHIFT) != 0 ? SelectionMode::add : SelectionMode::replace;
@@ -564,10 +581,14 @@ private:
         }
         switch (e.key) {
         case SDLK_SPACE: running = !running; accumulator_ = 0; break;
-        case SDLK_RIGHT: running = false; simulation.step(circuit); break;
-        case SDLK_R: simulation.reset(); accumulator_ = 0; break;
+        case SDLK_RIGHT: running = false; tick(); break;
+        case SDLK_R: reset_simulation(); break;
         case SDLK_Q: tools_[0] = {ToolKind::selector}; placing_ = false; break;
         case SDLK_E: eyedropper_ = true; break;
+        case SDLK_I: tools_[0] = {ToolKind::interactor}; placing_ = false; break;
+        case SDLK_F5: tools_[0] = {ToolKind::pencil, Element::screen}; break;
+        case SDLK_F6: tools_[0] = {ToolKind::pencil, Element::file_input}; break;
+        case SDLK_F7: tools_[0] = {ToolKind::pencil, Element::file_output}; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
         case SDLK_F1:
@@ -592,6 +613,12 @@ private:
             status_ = redo ? "REDONE" : "UNDONE";
         }
     }
+
+    void tick() {
+        endpoints_.prune(circuit);
+        simulation.step(circuit, [&](const CommunicatorGroup& group, bool sending) { return endpoints_.exchange(group, sending); });
+    }
+    void reset_simulation() { simulation.reset(); endpoints_.reset_protocols(); accumulator_ = 0; }
 
     void polyline_preview(Point target) {
         const auto result = polyline_->preview(target);
@@ -1001,8 +1028,8 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_ESCAPE);
     constexpr std::array<Uint8, 5> inputs{SDL_BUTTON_LEFT, SDL_BUTTON_RIGHT, SDL_BUTTON_MIDDLE, SDL_BUTTON_X1, SDL_BUTTON_X2};
     for (std::size_t i = 0; i < inputs.size(); ++i) {
-        pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 238, inputs[i], 0); // Bind this button to Source.
-        pointer(SDL_EVENT_MOUSE_BUTTON_UP, 94, 238, inputs[i], 0);
+        pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 94, 216, inputs[i], 0); // Bind this button to Source.
+        pointer(SDL_EVENT_MOUSE_BUTTON_UP, 94, 216, inputs[i], 0);
         const Point target{12, static_cast<Coordinate>(i) - 4};
         mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, target, inputs[i]);
         mouse(SDL_EVENT_MOUSE_BUTTON_UP, target, inputs[i]);
