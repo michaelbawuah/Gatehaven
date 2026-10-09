@@ -57,3 +57,18 @@ TEST("a long pause after a successful checkpoint does not remove the next edit d
     CHECK(!schedule.poll(1, true, 30)); CHECK(!schedule.poll(1, true, 30));
     CHECK(!schedule.poll(2, true, 0.5)); CHECK(schedule.poll(2, true, 1.5));
 }
+
+#ifndef _WIN32
+TEST("recovery rejects symlink roots and never follows snapshot links") {
+    RecoveryDirectory directory; std::filesystem::create_directories(directory.path);
+    const auto real = directory.path / "real"; std::filesystem::create_directory(real);
+    const auto link = directory.path / "linked"; std::filesystem::create_directory_symlink(real, link);
+    CHECK(!RecoveryStore::open(link));
+    auto store = RecoveryStore::open(real).value();
+    const auto outside = directory.path / "outside.ghv";
+    CHECK(replace_file(outside, "GATEHAVEN 1\n0 0 source\n"));
+    std::filesystem::create_symlink(outside, real / "session-abcdef.ghv");
+    CHECK(store->scan()->empty()); CHECK(!store->restore("session-abcdef"));
+    CHECK(load_document(outside)->size() == 1);
+}
+#endif
