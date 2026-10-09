@@ -174,7 +174,7 @@ public:
         cancel_gesture();
         const auto entries = recovery_->scan();
         if (!entries) { status_ = "RECOVERY: " + entries.error(); return; }
-        recovery_entries_ = *entries; recovery_index_ = 0;
+        recovery_entries_ = *entries; recovery_index_ = 0; recovery_delete_ = false;
         recovery_menu_ = !only_if_available || !recovery_entries_.empty(); help_ = false; examples_menu_ = false;
     }
 
@@ -288,6 +288,7 @@ public:
             return;
         }
         if (recovery_menu_) {
+            if (recovery_delete_) return;
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
                 const auto start = (recovery_index_ / 5) * 5;
                 for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
@@ -487,6 +488,7 @@ private:
     bool help_{};
     bool examples_menu_{};
     bool recovery_menu_{};
+    bool recovery_delete_{};
     std::vector<RecoveryEntry> recovery_entries_;
     std::size_t recovery_index_{};
     std::size_t example_index_{};
@@ -720,6 +722,12 @@ private:
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
         if (recovery_menu_) {
+            if (recovery_delete_) {
+                if (e.key == SDLK_ESCAPE) recovery_delete_ = false;
+                else if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER) delete_recovery();
+                return;
+            }
+            if (e.key == SDLK_DELETE && !recovery_entries_.empty()) { recovery_delete_ = true; return; }
             if (e.key == SDLK_ESCAPE || e.key == SDLK_F4) recovery_menu_ = false;
             else if (!recovery_entries_.empty()) {
                 if (e.key == SDLK_UP) recovery_index_ = (recovery_index_ + recovery_entries_.size() - 1) % recovery_entries_.size();
@@ -923,6 +931,16 @@ private:
         status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
     }
 
+    void delete_recovery() {
+        if (!recovery_ || recovery_index_ >= recovery_entries_.size()) return;
+        const auto removed = recovery_->remove(recovery_entries_[recovery_index_].id);
+        recovery_delete_ = false;
+        if (!removed) { status_ = "RECOVERY: " + removed.error(); return; }
+        recovery_entries_.erase(recovery_entries_.begin() + static_cast<std::ptrdiff_t>(recovery_index_));
+        if (recovery_index_ >= recovery_entries_.size()) recovery_index_ = recovery_entries_.empty() ? 0 : recovery_entries_.size() - 1;
+        status_ = "ABANDONED SNAPSHOT DELETED";
+    }
+
     void restore_recovery(std::size_t index) {
         if (!recovery_ || index >= recovery_entries_.size()) return;
         if (history.modified()) { status_ = "SAVE THIS CIRCUIT OR OPEN A NEW WINDOW BEFORE RECOVERING"; return; }
@@ -949,6 +967,12 @@ private:
     void render_recovery(SDL_Renderer* r) const {
         rectangle(r, 350, 180, 580, 460, ink);
         ui::text(r, 390, 212, "RECOVER UNSAVED CIRCUITS", white, 2);
+        if (recovery_delete_) {
+            ui::text(r, 390, 306, "DELETE THIS SNAPSHOT PERMANENTLY?", white, 1.5F);
+            ui::text(r, 390, 346, "YOUR SAVED CIRCUIT IS NOT AFFECTED.", white, 1.5F);
+            ui::text(r, 390, 402, "ENTER: DELETE     ESC: KEEP", white, 1.5F);
+            return;
+        }
         if (recovery_entries_.empty()) ui::text(r, 390, 294, "NO ABANDONED SNAPSHOTS", white, 1.5F);
         const auto start = (recovery_index_ / 5) * 5;
         for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
@@ -958,7 +982,7 @@ private:
             ui::text(r, 406, static_cast<float>(box.y + 14), label, white, 1.5F);
         }
         ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", white, 1.25F);
-        ui::text(r, 390, 592, "ESC: KEEP FOR LATER   NEWEST FIRST", white, 1.25F);
+        ui::text(r, 390, 592, "DEL: DELETE   ESC: KEEP FOR LATER", white, 1.25F);
     }
 
     void render_speed_dialog(SDL_Renderer* r) const {
