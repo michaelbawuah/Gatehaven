@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -121,3 +121,5 @@ jobs:
       - run: build/bench/gatehaven-bench 10000 20 wire-grid
       - run: build/bench/gatehaven-bench 10000 20 gates
       - run: build/bench/gatehaven-bench 10000 20 screens
+      - run: build/bench/gatehaven-bench 10000 20 pulsed-screens
+      - run: build/bench/gatehaven-bench 10000 20 feedback
