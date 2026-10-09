@@ -1329,6 +1329,20 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(!app.simulation.powered({11, 3}), "Screen stayed powered after Interact was released");
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_R);
     require(app.circuit == edited, "Screen interaction changed circuit structure");
+    const auto pan_before = app.view.center_x;
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}, SDL_BUTTON_RIGHT);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3}, SDL_BUTTON_RIGHT);
+    require(app.view.center_x == pan_before, "Single panner click unexpectedly centered");
+    const auto [pan_x, pan_y] = app.view.screen({11, 3});
+    SDL_Event double_pan{}; double_pan.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+    double_pan.button.button = SDL_BUTTON_RIGHT; double_pan.button.clicks = 2;
+    double_pan.button.x = static_cast<float>(pan_x + app.view.scale / 2);
+    double_pan.button.y = static_cast<float>(pan_y + app.view.scale / 2);
+    require(SDL_PushEvent(&double_pan), "Could not queue double pan");
+    double_pan.type = SDL_EVENT_MOUSE_BUTTON_UP;
+    require(SDL_PushEvent(&double_pan), "Could not release double pan"); dispatch(app, renderer);
+    require(app.view.center_x == 11.5 && app.view.center_y == 3.5, "Double panner click did not center the cell");
+    app.view.frame(app.circuit.bounds());
     const auto before_touch = app.circuit;
     const auto finger = [&](Uint32 type, SDL_FingerID id, float x, float y) {
         SDL_Event event{}; event.type = type; event.tfinger.touchID = 1; event.tfinger.fingerID = id;
