@@ -881,6 +881,16 @@ private:
         view.frame(circuit.bounds()); status_ = "CIRCUIT RECOVERED - SAVE TO KEEP YOUR WORK";
     }
 
+    static std::string recovery_date(std::filesystem::file_time_type time) {
+        const auto stamp = std::chrono::file_clock::to_sys(time);
+        const auto day = std::chrono::floor<std::chrono::days>(stamp);
+        const std::chrono::year_month_day date{day};
+        const std::chrono::hh_mm_ss clock{std::chrono::floor<std::chrono::seconds>(stamp - day)};
+        const auto pad = [](auto value) { auto text = std::to_string(value); return text.size() == 1 ? "0" + text : text; };
+        return std::to_string(static_cast<int>(date.year())) + "-" + pad(static_cast<unsigned>(date.month())) + "-" +
+            pad(static_cast<unsigned>(date.day())) + " " + pad(clock.hours().count()) + ":" + pad(clock.minutes().count()) + " UTC";
+    }
+
     static ViewRect recovery_button(std::size_t row) { return {390, 270 + static_cast<double>(row) * 54, 500, 42}; }
     void render_recovery(SDL_Renderer* r) const {
         rectangle(r, 350, 180, 580, 460, ink);
@@ -890,7 +900,7 @@ private:
         for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
             const auto box = recovery_button(i - start);
             rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), i == recovery_index_ ? teal : muted);
-            const auto label = "CIRCUIT " + std::to_string(i + 1) + "  " + std::to_string(recovery_entries_[i].bytes) + " BYTES";
+            const auto label = recovery_date(recovery_entries_[i].modified) + "  " + std::to_string((recovery_entries_[i].bytes + 1023) / 1024) + " KB";
             ui::text(r, 406, static_cast<float>(box.y + 14), label, white, 1.5F);
         }
         ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", white, 1.25F);
