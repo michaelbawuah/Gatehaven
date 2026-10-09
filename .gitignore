@@ -1,0 +1,9 @@
+/build/
+/out/
+/CMakeUserPresets.json
+/.cache/
+/.vs/
+*.user
+*.swp
+*.tmp
+.DS_Store
