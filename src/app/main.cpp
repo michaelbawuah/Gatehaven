@@ -721,7 +721,10 @@ private:
         return {12, 522 + static_cast<double>(index - 10 - palette.size()) * 28, 216, 26};
     }
 
-    void key(const SDL_KeyboardEvent& e) {
+    void key(SDL_KeyboardEvent e) {
+        if (e.key >= SDLK_KP_1 && e.key <= SDLK_KP_9) e.key = SDLK_1 + (e.key - SDLK_KP_1);
+        else if (e.key == SDLK_KP_0) e.key = SDLK_0;
+        else if (e.key == SDLK_KP_ENTER) e.key = SDLK_RETURN;
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
         if (recovery_menu_) {
@@ -1393,7 +1396,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_R);
     require(app.simulation.ticks() == 0, "Reset failed");
     key(SDLK_SPACE, SDL_KMOD_CTRL);
-    key(SDLK_2); key(SDLK_3); key(SDLK_RETURN);
+    key(SDLK_KP_2); key(SDLK_KP_3); key(SDLK_KP_ENTER);
     key(SDLK_SPACE);
     app.update(0.1);
     require(app.simulation.ticks() == 2, "Custom simulation speed was not applied");
