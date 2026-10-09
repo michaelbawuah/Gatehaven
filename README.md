@@ -9,12 +9,13 @@ logic gates, and step through a circuit to see how its signals change.
 
 ![Gatehaven desktop prototype](docs/images/desktop-prototype.png)
 
-**Status: 0.2 development preview, not a finished release.** Windows, macOS,
+**Status: 0.3 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
 for exactly what has been tested.
 
 The editor now includes chained polylines, connected and sparse selections,
 interactive screens, binary file communicators, persistent tool preferences,
+native pinch navigation, crash recovery, keyboard access to every control,
 and six built-in circuit lessons. Successful desktop jobs on the
 [Actions page](https://github.com/michaelbawuah/Gatehaven/actions/workflows/ci.yml)
 provide unsigned [native preview packages](docs/packaging.md).
@@ -84,11 +85,13 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Save / Save As / Open / New | Ctrl+S / Ctrl+Shift+S / Ctrl+O / Ctrl+N |
 | Screen / File In / File Out | F5 / F6 / F7 |
 | Interact with a communicator | I, then hold a screen or click a file port |
-| Manual / shortcuts / circuit lessons | F1 / F2 / F3 |
+| Manual / shortcuts / circuit lessons / recovery | F1 / F2 / F3 / F4 |
+| Navigate controls / activate | Tab or Shift+Tab / Enter |
+| Touch pan and zoom | Two fingers on the canvas |
 | Toggle beginner hints | B |
 
 Command can replace Ctrl on macOS. Undo records one drawing stroke as one edit.
-Gate and relay pencils place a Signal when clicked on an existing cell of the
+Gate, relay, and communicator pencils place a Signal when clicked on an existing cell of the
 same type. Native documents use `.ghv`; `.ccsb` import is still planned.
 
 New and Open launch separate Gatehaven instances and preserve the current
@@ -101,7 +104,9 @@ After an abrupt shutdown of every instance, the next launch clears abandoned dat
 The binding markers identify left (red), right (blue), middle (green), X1 (cyan),
 X2 (magenta), and touch (yellow). Bindings, speed, and beginner hints are saved
 when the window closes; the last window to save determines the next launch's
-preferences. Full multitouch navigation is still planned.
+preferences. One finger uses its binding; two fingers pan and pinch the canvas.
+Recovery snapshots protect unsaved work separately from session clipboards; F4
+restores abandoned circuits as unsaved documents. See the manual for timing and limits.
 
 Adjacent communicators of the same type operate as a group. Screen brightness
 shows the circuit's outgoing signal; holding it with Interact drives its incoming
@@ -112,6 +117,8 @@ or clipboard. Press F3 for editable [lessons](samples/README.md).
 ## Under the hood
 
 - A sparse circuit grid indexes occupied rows and columns for viewport queries.
+- Indexed topology and reusable buffers reduce repeated simulation work;
+  communicator-free circuits can skip propagation once they settle.
 - Two-phase simulation reads gate inputs from the previous tick before
   propagating power. Crossing wires keep horizontal and vertical channels separate.
 - The simulation library is independent of SDL and runs headlessly in tests.

@@ -39,7 +39,10 @@ Screen and file communicators now have protocol, lifecycle, and real-file tests.
 Six built-in lessons, CLI traces/statistics/SVG export, install rules, portable
 archives, and installed-product checks are available.
 
-Next: independently specified legacy import, full multitouch navigation,
-accessibility review, measured large-circuit improvements, native installers,
+Native multitouch, keyboard traversal, recovery snapshots, indexed simulation,
+and unsigned DEB/DMG previews are now implemented.
+
+Next: independently specified legacy import, screen-reader/accessibility review,
+external performance comparisons, Windows installers,
 signing, and hardware/clean-machine acceptance. Performance parity is not
 established. The final release still depends on these acceptance gates.
