@@ -86,9 +86,11 @@ Stamp capture_selection(const Circuit& circuit, const Selection& selection) {
     if (!region) return {};
     Stamp stamp{static_cast<std::int64_t>(region->max.x) - region->min.x + 1,
                 static_cast<std::int64_t>(region->max.y) - region->min.y + 1, {}};
-    for (const auto& cell : selection.cells(circuit)) {
-        stamp.cells.push_back({static_cast<std::int64_t>(cell.position.x) - region->min.x,
-                               static_cast<std::int64_t>(cell.position.y) - region->min.y, cell.element});
+    stamp.cells.reserve(selection.size());
+    for (const auto point : selection.points()) {
+        const auto element = circuit.at(point);
+        if (element != Element::empty) stamp.cells.push_back({static_cast<std::int64_t>(point.x) - region->min.x,
+                               static_cast<std::int64_t>(point.y) - region->min.y, element});
     }
     return stamp;
 }
