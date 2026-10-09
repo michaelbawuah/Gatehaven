@@ -1,6 +1,7 @@
 #include "test.hpp"
 #include "gatehaven/file_endpoints.hpp"
 #include "gatehaven/file_io.hpp"
+#include "gatehaven/simulation.hpp"
 #include <chrono>
 using namespace gatehaven;
 TEST("file endpoints read chosen files write flushed bytes and drop deleted bindings") {
@@ -47,4 +48,28 @@ TEST("pending input reads survive reloading a file without replaying bytes") {
     for (unsigned i = 0; i < 11; ++i) reply.push_back(endpoints.exchange(input, false) ? 1 : 0);
     CHECK(reply == serial_reply(0, 255, 8));
     for (unsigned i = 0; i < 5; ++i) CHECK(!endpoints.exchange(input, false));
+}
+
+TEST("real simulated signal frames write every byte and acknowledge on the return wire") {
+    const auto path = std::filesystem::temp_directory_path() / ("gatehaven-loop-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    struct Cleanup { std::filesystem::path p; ~Cleanup() { std::filesystem::remove(p); } } cleanup{path};
+    Circuit circuit;
+    circuit.set({-2, 0}, Element::wire); circuit.set({-1, 0}, Element::signal);
+    circuit.set({0, 0}, Element::file_output); circuit.set({1, 0}, Element::wire);
+    FileEndpoints endpoints; CHECK(endpoints.choose_output({0, 0}, path));
+    Simulation simulation;
+    const auto step = [&](bool bit) {
+        circuit.set({-3, 0}, bit ? Element::source : Element::empty);
+        simulation.step(circuit, [&](const CommunicatorGroup& group, bool sent) { return endpoints.exchange(group, sent); });
+        return simulation.powered({1, 0});
+    };
+    std::string expected;
+    for (unsigned byte = 0; byte < 256; ++byte) {
+        for (auto bit : serial_reply(0, static_cast<std::uint8_t>(byte), 8)) CHECK(!step(bit != 0));
+        CHECK(!step(false)); // The last data bit reaches the port one tick after the Signal.
+        expected.push_back(static_cast<char>(byte));
+        CHECK(read_bounded_file(path, 256).value() == expected); // Flush precedes acknowledgement.
+        CHECK(step(false)); CHECK(!step(false)); CHECK(!step(false));
+        CHECK(!simulation.powered({-1, 0})); // Return power cannot backfeed the request Signal.
+    }
 }
