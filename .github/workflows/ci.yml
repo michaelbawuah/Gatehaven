@@ -86,6 +86,7 @@ jobs:
         run: >-
           cmake -S . -B build/app -DGATEHAVEN_BUILD_APP=ON -DGATEHAVEN_BUILD_PACKAGES=ON -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_PREFIX_PATH=${{ github.workspace }}/build/deps/sdl-install
+          ${{ runner.os != 'Windows' && '-DGATEHAVEN_BUILD_INSTALLERS=ON' || '' }}
       - run: cmake --build build/app --config Release --parallel 2
       - run: ctest --test-dir build/app -C Release --output-on-failure
       - name: Render the starter circuit
@@ -96,6 +97,9 @@ jobs:
         run: cmake --build build/app --config Release --target package
       - name: Verify uploaded archive contents and checksum
         run: python tests/archive_test.py build/app
+      - name: Verify unsigned native installer
+        if: runner.os != 'Windows'
+        run: python tests/installer_test.py build/app
       - name: Upload native preview
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -105,7 +109,9 @@ jobs:
           path: |
             build/app/Gatehaven-*.zip
             build/app/Gatehaven-*.tar.gz
-            build/app/Gatehaven-*.sha256
+            build/app/Gatehaven-*.dmg
+            build/app/gatehaven_*.deb
+            build/app/*.sha256
             build/app/gatehaven*.bmp
 
   benchmark:
