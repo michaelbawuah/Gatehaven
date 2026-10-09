@@ -87,3 +87,23 @@ normal exit; the last successful save supplies defaults for future windows.
 Pin external library versions. Keep their license texts with redistributed
 binaries. Do not add another project's source files, sample circuits, icons,
 fonts, screenshots, or documentation to this repository.
+
+## Recovery and input ownership
+
+RecoveryStore owns an exclusive OS lock for each window's uniquely named
+snapshot. Scanners probe ownership and offer only abandoned regular files.
+Restoration validates the document, writes it under the receiving window's
+ownership, then consumes the old copy. A failed write retains the old copy.
+Lock files are never unlinked because another process may hold the same inode.
+The snapshot uses the bounded native document format and contains no file paths.
+
+RecoverySchedule separates idle debounce, continuous-edit deadlines, and I/O
+retry backoff. Normal exit explicitly discards a session; destruction alone
+releases the lock while preserving its snapshot. Real process-kill and competing
+consumer tests check this distinction across operating systems.
+
+TouchGesture owns contacts by device/finger identity. A second contact cancels
+staged drawing; two contacts produce a centroid transform and separation ratio.
+Remaining fingers cannot resume drawing until all contacts lift. TapSequence
+tracks short stationary taps separately. SDL converts normalized window input
+into render coordinates before the model sees it, including letterboxing.
