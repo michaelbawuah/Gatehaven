@@ -1,4 +1,6 @@
 #include "font.hpp"
+#include "instances.hpp"
+#include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
 #include "gatehaven/editor.hpp"
 #include "gatehaven/examples.hpp"
@@ -84,10 +86,20 @@ public:
     bool running{};
     bool quit{};
 
-    explicit App(SDL_Window* window) : window_(window) {
+    explicit App(SDL_Window* window, ClipboardSession& clipboards,
+                 ui::InstanceLauncher launcher = ui::launch_instance)
+        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)) {
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
     }
+
+    void start_blank() {
+        circuit.clear();
+        view.frame(std::nullopt);
+        status_ = "NEW CIRCUIT - CHOOSE A COMPONENT TO BEGIN";
+    }
+
+    void launch_open(const std::filesystem::path& path) { launch(path); }
 
     bool open(const std::filesystem::path& path) {
         auto loaded = load_document(path);
@@ -124,7 +136,7 @@ public:
                 if (result->save) {
                     if (!path.has_extension()) path += ".ghv";
                     save(path);
-                } else open(path);
+                } else launch_open(path);
             }
         }
         if (!running || dialog_pending_) { accumulator_ = 0; return; }
@@ -194,7 +206,7 @@ public:
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
         if (placing_ && hover_) {
-            const auto edits = paste(clipboards_[clipboard_], *hover_);
+            const auto edits = paste(placement_, *hover_);
             if (edits) for (const auto& cell : *edits) {
                 if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
             }
@@ -241,7 +253,7 @@ public:
         line(r, 22, 619, 216, 619, border);
         ui::text(r, 22, 641, "LEFT DRAG TO DRAW", ink, 1.25F);
         ui::text(r, 22, 664, "RIGHT DRAG TO ERASE", muted, 1.25F);
-        ui::text(r, 22, 693, "CLIPBOARD " + std::to_string(clipboard_) + " / 9", ink, 1.25F);
+        ui::text(r, 22, 693, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
         ui::text(r, 22, 716, "CTRL + DIGIT TO SWITCH", muted, 1.0F);
         ui::text(r, 22, 738, "B: KEYBOARD HELP", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
@@ -271,8 +283,10 @@ private:
     std::uint8_t drag_button_{};
     std::vector<Cell> preview_;
     std::optional<Bounds> selection_;
-    std::array<Stamp, 10> clipboards_;
-    std::size_t clipboard_{};
+    ClipboardSession& clipboards_;
+    ui::InstanceLauncher launcher_;
+    Stamp placement_;
+    unsigned clipboard_{};
     std::filesystem::path path_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
@@ -314,7 +328,7 @@ private:
                 case 2: simulation.reset(); accumulator_ = 0; break;
                 case 3: undo(false); break;
                 case 4: undo(true); break;
-                case 5: if (discard_changes()) file_dialog(false); break;
+                case 5: file_dialog(false); break;
                 case 6: request_save(false); break;
                 case 7: view.frame(circuit.bounds()); break;
                 case 8: speed_index_ = (speed_index_ + 1) % speeds_.size(); accumulator_ = 0; break;
@@ -335,7 +349,7 @@ private:
         hover_ = view.cell(e.x, e.y);
         if (!hover_) return;
         if (placing_ && e.button == SDL_BUTTON_LEFT) {
-            const auto edits = paste(clipboards_[clipboard_], *hover_);
+            const auto edits = paste(placement_, *hover_);
             if (edits) apply(*edits); else status_ = edits.error();
             placing_ = false; return;
         }
@@ -352,22 +366,21 @@ private:
         }
         if (control) {
             if (e.key >= SDLK_0 && e.key <= SDLK_9) {
-                clipboard_ = static_cast<std::size_t>(e.key - SDLK_0); return;
+                clipboard_ = static_cast<unsigned>(e.key - SDLK_0);
+                placing_ = false;
+                status_ = "SHARED CLIPBOARD " + std::to_string(clipboard_);
+                return;
             }
             switch (e.key) {
             case SDLK_S: request_save(shift); break;
-            case SDLK_O: if (discard_changes()) file_dialog(false); break;
+            case SDLK_O: file_dialog(false); break;
             case SDLK_N: fresh(); break;
             case SDLK_Z: undo(shift); break;
             case SDLK_Y: undo(true); break;
             case SDLK_A: selection_ = circuit.bounds(); selecting_ = true; break;
             case SDLK_C: copy(false); break;
             case SDLK_X: copy(true); break;
-            case SDLK_V:
-                placing_ = !clipboards_[clipboard_].cells.empty();
-                selecting_ = false;
-                status_ = placing_ ? "CLICK TO PLACE - BRACKETS ROTATE" : "CLIPBOARD IS EMPTY";
-                break;
+            case SDLK_V: begin_paste(); break;
             case SDLK_SPACE: speed_index_ = (speed_index_ + 1) % speeds_.size(); accumulator_ = 0; break;
             default: break;
             }
@@ -403,9 +416,20 @@ private:
 
     void copy(bool cut) {
         if (!selection_) { status_ = "SELECT A REGION FIRST"; return; }
-        clipboards_[clipboard_] = capture(circuit, *selection_);
+        const auto result = clipboards_.write(clipboard_, capture(circuit, *selection_));
+        if (!result) { status_ = "COPY FAILED: " + result.error(); return; }
         if (cut) erase_selection();
-        status_ = "COPIED TO CLIPBOARD " + std::to_string(clipboard_);
+        status_ = "COPIED TO SHARED CLIPBOARD " + std::to_string(clipboard_);
+    }
+
+    void begin_paste() {
+        const auto stamp = clipboards_.read(clipboard_);
+        placing_ = false;
+        if (!stamp) { status_ = "PASTE FAILED: " + stamp.error(); return; }
+        placement_ = *stamp; // Keep a stable preview if another window changes this slot.
+        placing_ = !placement_.cells.empty();
+        selecting_ = false;
+        status_ = placing_ ? "CLICK TO PLACE - BRACKETS ROTATE" : "CLIPBOARD IS EMPTY";
     }
 
     void erase_selection() {
@@ -417,14 +441,14 @@ private:
 
     void transform(char operation) {
         if (!placing_ && !selection_) return;
-        auto stamp = placing_ ? clipboards_[clipboard_] : capture(circuit, *selection_);
+        auto stamp = placing_ ? placement_ : capture(circuit, *selection_);
         if (operation == 'h') stamp.flip_horizontal();
         else if (operation == 'v') stamp.flip_vertical();
         else {
             const auto rotations = operation == 'l' ? 3 : 1;
             for (int i = 0; i < rotations; ++i) stamp.rotate_clockwise();
         }
-        if (placing_) { clipboards_[clipboard_] = std::move(stamp); return; }
+        if (placing_) { placement_ = std::move(stamp); return; }
         const auto target = paste(stamp, selection_->min);
         const auto corner = translated(selection_->min, stamp.width - 1, stamp.height - 1);
         if (!target || !corner) { status_ = "TRANSFORM EXCEEDS WORLD BOUNDARY"; return; }
@@ -448,13 +472,12 @@ private:
         return SDL_ShowMessageBox(&data, &selected) && selected == 1;
     }
 
-    void fresh() {
-        if (!discard_changes()) return;
-        circuit.clear(); history.clear(); simulation.reset(); selection_.reset();
-        preview_.clear(); drag_.reset(); path_.clear();
-        running = false; dirty_ = false; placing_ = false;
-        view.frame(std::nullopt); status_ = "NEW CIRCUIT - CHOOSE A COMPONENT TO BEGIN";
+    void launch(std::optional<std::filesystem::path> document) {
+        const auto result = launcher_(std::move(document));
+        status_ = result ? "OPENED IN A NEW GATEHAVEN WINDOW" : "NEW WINDOW FAILED: " + result.error();
     }
+
+    void fresh() { launch(std::nullopt); }
 
     void save(const std::filesystem::path& path) {
         const auto result = save_document(path, circuit);
@@ -575,7 +598,8 @@ void dispatch(App& app, SDL_Renderer* renderer) {
     }
 }
 
-void self_test(App& app, SDL_Renderer* renderer) {
+void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& session_directory,
+               const std::vector<std::optional<std::filesystem::path>>& launched) {
     const auto require = [](bool ok, const char* message) {
         if (!ok) throw std::runtime_error(message);
     };
@@ -611,25 +635,75 @@ void self_test(App& app, SDL_Renderer* renderer) {
     require(app.circuit.size() == original.size() + 5, "Keyboard redo failed");
     key(SDLK_R);
     require(app.simulation.ticks() == 0, "Reset failed");
+    const auto edited = app.circuit;
+    key(SDLK_N, SDL_KMOD_CTRL);
+    require(launched.size() == 1 && !launched[0], "New did not request a separate instance");
+    require(app.circuit == edited, "New replaced the current unsaved circuit");
+    const auto open_path = session_directory / "circuit with spaces.ghv";
+    app.launch_open(open_path);
+    require(launched.size() == 2 && launched[1] == open_path, "Open did not request a separate instance");
+    require(app.circuit == edited, "Open replaced the current unsaved circuit");
+    auto peer = ClipboardSession::join(session_directory);
+    require(peer.has_value(), "Could not join shared clipboard for editor test");
+    key(SDLK_3, SDL_KMOD_CTRL);
+    key(SDLK_A, SDL_KMOD_CTRL);
+    key(SDLK_C, SDL_KMOD_CTRL);
+    const auto copied = (*peer)->read(3);
+    require(copied && copied->cells.size() == edited.size(), "Editor copy was not shared");
+    const Stamp first{2, 1, {{0, 0, Element::source}, {1, 0, Element::wire}}};
+    require((*peer)->write(3, first).has_value(), "Peer copy failed");
+    key(SDLK_ESCAPE);
+    key(SDLK_V, SDL_KMOD_CTRL);
+    require((*peer)->write(3, {1, 1, {{0, 0, Element::nor_gate}}}).has_value(), "Peer overwrite failed");
+    key(SDLK_RIGHTBRACKET); // Rotate only the local placement snapshot.
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {13, -4});
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {13, -4});
+    require(app.circuit.at({13, -4}) == Element::source && app.circuit.at({13, -3}) == Element::wire,
+            "Shared clipboard changed an active paste preview");
+    const auto unchanged = (*peer)->read(3);
+    require(unchanged && unchanged->cells[0].element == Element::nor_gate, "Preview transform changed the shared slot");
+    key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.circuit == edited, "Pasted stamp did not undo as one edit");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
-    std::cout << "Desktop smoke passed: real SDL events, drawing, undo/redo, simulation, rendering\n";
+    std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
 }
 
 struct SdlLifetime { ~SdlLifetime() { SDL_Quit(); } };
+struct TestDirectory {
+    std::filesystem::path path;
+    ~TestDirectory() {
+        if (!path.empty()) { std::error_code error; std::filesystem::remove_all(path, error); }
+    }
+};
 } // namespace
 
 int main(int argc, char** argv) {
     try {
         const std::string_view mode = argc > 1 ? argv[1] : "";
-        const bool testing = mode == "--self-test";
+        const bool child_test = mode == "--self-test-child";
+        const bool testing = mode == "--self-test" || child_test;
         const bool snapshot = mode == "--snapshot";
+        const bool blank = mode == "--new";
         if ((testing && argc != 2) || (snapshot && argc != 3) || (!testing && !snapshot && argc > 2)) {
-            std::cerr << "Usage: gatehaven [FILE.ghv | --self-test | --snapshot OUTPUT.bmp]\n";
+            std::cerr << "Usage: gatehaven [FILE.ghv | --new | --self-test | --snapshot OUTPUT.bmp]\n";
             return 2;
         }
         if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
         const SdlLifetime lifetime;
+        TestDirectory test_directory;
+        std::filesystem::path session_directory;
+        if (testing || snapshot) {
+            test_directory.path = std::filesystem::temp_directory_path() /
+                ("gatehaven-smoke-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+            session_directory = test_directory.path;
+        } else {
+            const std::unique_ptr<char, decltype(&SDL_free)> preference(SDL_GetPrefPath("Gatehaven", "Gatehaven"), SDL_free);
+            if (!preference) throw std::runtime_error(SDL_GetError());
+            session_directory = utf8_path(preference.get()) / "clipboards-v1";
+        }
+        auto clipboard = ClipboardSession::join(session_directory);
+        if (!clipboard) throw std::runtime_error(clipboard.error());
         if (testing || snapshot) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
         auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
         if (testing || snapshot) flags |= SDL_WINDOW_HIDDEN;
@@ -644,8 +718,20 @@ int main(int argc, char** argv) {
         }
         SDL_SetWindowMinimumSize(window.get(), 800, 500);
         SDL_SetRenderVSync(renderer.get(), 1);
-        App app(window.get());
-        if (testing) { self_test(app, renderer.get()); return 0; }
+        std::vector<std::optional<std::filesystem::path>> launched;
+        ui::InstanceLauncher launcher = ui::launch_instance;
+        if (testing) launcher = [&](std::optional<std::filesystem::path> document) -> std::expected<void, std::string> {
+            launched.push_back(std::move(document)); return {};
+        };
+        App app(window.get(), **clipboard, std::move(launcher));
+        if (testing) {
+            self_test(app, renderer.get(), session_directory, launched);
+            if (!child_test) {
+                const auto child = ui::test_child_process();
+                if (!child) throw std::runtime_error(child.error());
+            }
+            return 0;
+        }
         if (snapshot) {
             app.simulation.step(app.circuit); app.simulation.step(app.circuit);
             app.render(renderer.get());
@@ -654,7 +740,8 @@ int main(int argc, char** argv) {
             if (!pixels || !SDL_SaveBMP(pixels.get(), argv[2])) throw std::runtime_error(SDL_GetError());
             return 0;
         }
-        if (argc == 2 && !app.open(utf8_path(argv[1]))) {
+        if (blank) app.start_blank();
+        else if (argc == 2 && !app.open(utf8_path(argv[1]))) {
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Gatehaven", "The circuit could not be opened.", window.get());
         }
         auto previous = std::chrono::steady_clock::now();
