@@ -5,6 +5,18 @@
 
 using namespace gatehaven;
 
+TEST("circuit revisions identify content changes without changing structural equality") {
+    Circuit first; CHECK(first.revision() == 0);
+    first.set({0, 0}, Element::wire); const auto revision = first.revision();
+    CHECK(!first.set({0, 0}, Element::wire) && first.revision() == revision);
+    Circuit copy = first; CHECK(copy.revision() == revision && copy == first);
+    copy.set({0, 0}, Element::source); CHECK(copy.revision() != revision);
+    copy.set({0, 0}, Element::wire); CHECK(copy == first && copy.revision() != first.revision());
+    Circuit moved = std::move(copy); CHECK(moved == first && copy.empty() && copy.count(Element::wire) == 0);
+    copy.set({4, 5}, Element::screen); CHECK(copy.size() == 1);
+    moved.clear(); CHECK(moved.empty() && moved.revision() != revision);
+}
+
 TEST("communicator element identifiers round trip by name") {
     for (const auto e : {Element::screen, Element::file_input, Element::file_output}) {
         CHECK(is_communicator(e)); CHECK(parse_element(name(e)).value() == e);

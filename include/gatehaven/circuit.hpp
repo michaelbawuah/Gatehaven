@@ -11,10 +11,16 @@ namespace gatehaven {
 
 class Circuit {
 public:
+    Circuit() = default;
+    Circuit(const Circuit&) = default;
+    Circuit& operator=(const Circuit&) = default;
+    Circuit(Circuit&& other) noexcept;
+    Circuit& operator=(Circuit&& other) noexcept;
     [[nodiscard]] Element at(Point point) const;
     bool set(Point point, Element element);
     [[nodiscard]] std::size_t size() const noexcept { return size_; }
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
+    [[nodiscard]] std::uint64_t revision() const noexcept { return revision_; }
     [[nodiscard]] std::size_t count(Element element) const noexcept {
         const auto index = static_cast<std::size_t>(element);
         return index < counts_.size() ? counts_[index] : 0;
@@ -23,13 +29,14 @@ public:
     [[nodiscard]] std::vector<Cell> cells() const;
     [[nodiscard]] std::vector<Cell> cells_in(Bounds bounds) const;
     [[nodiscard]] std::optional<Bounds> bounds() const;
-    bool operator==(const Circuit&) const = default;
+    bool operator==(const Circuit& other) const { return rows_ == other.rows_; }
 
 private:
     // Two ordered indexes permit viewport queries without scanning distant columns.
     std::map<Coordinate, std::map<Coordinate, Element>> rows_;
     std::size_t size_{};
     std::array<std::size_t, element_names.size()> counts_{};
+    std::uint64_t revision_{};
 };
 
 } // namespace gatehaven

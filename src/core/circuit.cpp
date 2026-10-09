@@ -3,8 +3,24 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <atomic>
+#include <utility>
 
 namespace gatehaven {
+namespace {
+std::uint64_t next_revision() { static std::atomic<std::uint64_t> value{1}; return value.fetch_add(1, std::memory_order_relaxed); }
+}
+
+Circuit::Circuit(Circuit&& other) noexcept { *this = std::move(other); }
+Circuit& Circuit::operator=(Circuit&& other) noexcept {
+    if (this != &other) {
+        rows_ = std::move(other.rows_); other.rows_.clear();
+        size_ = std::exchange(other.size_, 0);
+        counts_ = std::exchange(other.counts_, {});
+        revision_ = std::exchange(other.revision_, 0);
+    }
+    return *this;
+}
 
 Element Circuit::at(Point point) const {
     const auto row = rows_.find(point.y);
@@ -31,13 +47,16 @@ bool Circuit::set(Point point, Element element) {
     }
     if (before != Element::empty) --counts_[static_cast<std::size_t>(before)];
     if (element != Element::empty) ++counts_[static_cast<std::size_t>(element)];
+    revision_ = next_revision();
     return true;
 }
 
 void Circuit::clear() {
+    if (empty()) return;
     rows_.clear();
     size_ = 0;
     counts_.fill(0);
+    revision_ = next_revision();
 }
 
 std::vector<Cell> Circuit::cells() const {
