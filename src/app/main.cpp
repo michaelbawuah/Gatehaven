@@ -1644,6 +1644,17 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     auto inspector = RecoveryStore::open(recovery_directory).value();
     require(inspector->scan()->empty(), "Confirmed deletion retained its abandoned snapshot");
     require(app.circuit == lost_circuit, "Deleting a snapshot changed the active document");
+    const auto save_path = session_directory / "save workflow.ghv";
+    require(save_document(save_path, lost_circuit).has_value() && app.open(save_path), "Could not open save workflow fixture");
+    const std::array save_edit{Cell{{43, -17}, Element::wire}};
+    require(app.history.apply(app.circuit, save_edit).has_value(), "Could not edit save fixture");
+    key(SDLK_S, SDL_KMOD_CTRL);
+    require(!app.history.modified() && load_document(save_path).value() == app.circuit, "Ordinary Save failed");
+    require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
+    require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
+    // Dummy video cannot approve a native overwrite prompt; failure must preserve both versions.
+    key(SDLK_S, SDL_KMOD_CTRL);
+    require(app.history.modified() && load_document(save_path).value() == lost_circuit, "Unapproved conflict overwrote external work");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
