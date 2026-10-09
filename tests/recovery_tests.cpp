@@ -1,6 +1,7 @@
 #include "test.hpp"
 #include "gatehaven/recovery.hpp"
 #include "gatehaven/file_io.hpp"
+#include "gatehaven/recovery_schedule.hpp"
 #include <chrono>
 using namespace gatehaven;
 namespace {
@@ -38,4 +39,15 @@ TEST("failed and malformed restores preserve the last recoverable copy") {
     CHECK(replace_file(directory.path / (identity + ".ghv"), "malformed"));
     CHECK(!reader->restore(identity)); CHECK(reader->scan()->size() == 1);
     CHECK(reader->remove(identity)); CHECK(reader->scan()->empty());
+}
+
+TEST("recovery scheduling limits repeated writes and retries without losing active edits") {
+    RecoverySchedule schedule;
+    CHECK(!schedule.poll(1, false, 20)); CHECK(!schedule.poll(2, true, 1)); CHECK(schedule.poll(2, true, 1));
+    schedule.written(2); CHECK(!schedule.poll(2, true, 30));
+    CHECK(schedule.poll(3, true, 30)); schedule.failed();
+    CHECK(!schedule.poll(3, true, 20)); CHECK(schedule.poll(3, true, 10)); schedule.written(3);
+    for (std::uint64_t revision = 4; revision < 33; ++revision) CHECK(!schedule.poll(revision, true, 1));
+    CHECK(schedule.poll(33, true, 1));
+    CHECK(!schedule.poll(34, false, 30)); CHECK(!schedule.poll(35, true, -1));
 }
