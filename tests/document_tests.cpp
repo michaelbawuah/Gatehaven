@@ -82,3 +82,10 @@ TEST("document loader rejects directories before opening an input stream") {
     CHECK(!result && result.error().line == 0);
     CHECK(result.error().message.find("regular file") != std::string::npos);
 }
+
+TEST("UTF-8 text editor BOMs are accepted only before the document header") {
+    std::istringstream input("\xEF\xBB\xBF" "GATEHAVEN 1\r\n0 0 source\r\n");
+    CHECK(read_document(input)->at({0, 0}) == Element::source);
+    std::istringstream bad("GATEHAVEN 1\n\xEF\xBB\xBF" "0 0 source\n");
+    CHECK(!read_document(bad));
+}

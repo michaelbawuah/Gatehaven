@@ -55,6 +55,7 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
     std::string line;
     auto result = read_line(input, line, 1, limits.max_line_bytes);
     if (!result) return std::unexpected(result.error());
+    if (line.starts_with("\xEF\xBB\xBF")) line.erase(0, 3);
     if (!*result || line != "GATEHAVEN 1") {
         return std::unexpected(DocumentError{1, "Expected GATEHAVEN 1 document header"});
     }
