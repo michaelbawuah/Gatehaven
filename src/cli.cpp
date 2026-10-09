@@ -8,6 +8,7 @@
 #include "gatehaven/paths.hpp"
 
 #include <charconv>
+#include <chrono>
 #include <iostream>
 #include <string_view>
 #include <sstream>
@@ -42,13 +43,14 @@ static int run_cli(int argc, char** argv) {
     }
     const std::string_view command = argc >= 2 ? argv[1] : "";
     const bool help = command == "--help" || command == "-h";
-    if ((command != "check" && command != "run" && command != "stats" && command != "trace") || argc < 3 || argc > 4 ||
+    if ((command != "check" && command != "run" && command != "stats" && command != "trace" && command != "profile") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
         auto& output = help ? std::cout : std::cerr;
         output << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
                      "  gatehaven-cli stats FILE.ghv\n"
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
+                     "  gatehaven-cli profile FILE.ghv [STEPS]\n"
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
@@ -70,6 +72,18 @@ static int run_cli(int argc, char** argv) {
         return 1;
     }
     if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }
+    if (command == "profile") {
+        Simulation simulation;
+        const auto start = std::chrono::steady_clock::now();
+        for (std::uint64_t i = 0; i < steps; ++i) simulation.step(*circuit);
+        const double elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+        const auto& metrics = simulation.metrics();
+        std::cout << "{\"cells\":" << circuit->size() << ",\"ticks\":" << simulation.ticks()
+                  << ",\"powered\":" << simulation.powered_count() << ",\"total_ms\":" << elapsed
+                  << ",\"topology_builds\":" << metrics.topology_builds << ",\"propagations\":" << metrics.propagations
+                  << ",\"settled_ticks\":" << metrics.settled_ticks << "}\n";
+        return std::cout ? 0 : 1;
+    }
     if (command == "trace") {
         constexpr std::uint64_t max_trace_rows = 5'000'000;
         if (!circuit->empty() && steps > max_trace_rows / circuit->size()) {
