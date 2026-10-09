@@ -18,6 +18,8 @@ Circuit& Circuit::operator=(Circuit&& other) noexcept {
         size_ = std::exchange(other.size_, 0);
         counts_ = std::exchange(other.counts_, {});
         revision_ = std::exchange(other.revision_, 0);
+        bounds_dirty_ = other.bounds_dirty_; bounds_cache_ = other.bounds_cache_;
+        other.bounds_dirty_ = false; other.bounds_cache_.reset();
     }
     return *this;
 }
@@ -47,7 +49,7 @@ bool Circuit::set(Point point, Element element) {
     }
     if (before != Element::empty) --counts_[static_cast<std::size_t>(before)];
     if (element != Element::empty) ++counts_[static_cast<std::size_t>(element)];
-    revision_ = next_revision();
+    revision_ = next_revision(); bounds_dirty_ = true;
     return true;
 }
 
@@ -56,7 +58,7 @@ void Circuit::clear() {
     rows_.clear();
     size_ = 0;
     counts_.fill(0);
-    revision_ = next_revision();
+    revision_ = next_revision(); bounds_dirty_ = true;
 }
 
 std::vector<Cell> Circuit::cells() const {
@@ -75,7 +77,9 @@ std::vector<Cell> Circuit::cells_in(Bounds bounds) const {
 }
 
 std::optional<Bounds> Circuit::bounds() const {
-    if (empty()) return std::nullopt;
+    if (!bounds_dirty_) return bounds_cache_;
+    bounds_dirty_ = false;
+    if (empty()) { bounds_cache_.reset(); return std::nullopt; }
     auto min_x = std::numeric_limits<Coordinate>::max();
     auto max_x = std::numeric_limits<Coordinate>::min();
     for (const auto& [y, row] : rows_) {
@@ -83,7 +87,8 @@ std::optional<Bounds> Circuit::bounds() const {
         min_x = std::min(min_x, row.begin()->first);
         max_x = std::max(max_x, row.rbegin()->first);
     }
-    return Bounds{{min_x, rows_.begin()->first}, {max_x, rows_.rbegin()->first}};
+    bounds_cache_ = Bounds{{min_x, rows_.begin()->first}, {max_x, rows_.rbegin()->first}};
+    return bounds_cache_;
 }
 
 } // namespace gatehaven

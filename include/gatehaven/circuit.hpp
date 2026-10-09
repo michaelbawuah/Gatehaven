@@ -46,6 +46,8 @@ private:
     std::size_t size_{};
     std::array<std::size_t, element_names.size()> counts_{};
     std::uint64_t revision_{};
+    mutable bool bounds_dirty_{true};
+    mutable std::optional<Bounds> bounds_cache_;
 };
 
 } // namespace gatehaven
