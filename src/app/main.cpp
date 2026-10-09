@@ -3,6 +3,7 @@
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
 #include "gatehaven/editor.hpp"
+#include "gatehaven/stamp_preview.hpp"
 #include "gatehaven/examples.hpp"
 #include "gatehaven/simulation.hpp"
 #include "gatehaven/selection.hpp"
@@ -392,7 +393,7 @@ public:
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
         if (placing_ && hover_) {
-            visit_stamp(placement_, *hover_, visible, [&](Cell cell) { draw_cell(r, cell, 0, true); });
+            placement_preview_.visit(*hover_, visible, [&](Cell cell) { draw_cell(r, cell, 0, true); });
         }
         if (selection_) draw_selection(r, *selection_.bounds());
         if (drag_tool_.kind == ToolKind::selector && drag_ && hover_) {
@@ -519,6 +520,7 @@ private:
     ui::InstanceLauncher launcher_;
     ui::DemoLauncher demo_launcher_;
     Stamp placement_;
+    StampPreview placement_preview_;
     unsigned clipboard_{};
     std::optional<char> clipboard_menu_;
     std::filesystem::path path_;
@@ -825,7 +827,7 @@ private:
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
             case SDLK_D:
-                cancel_gesture(); placement_ = capture_selection(circuit, selection_);
+                cancel_gesture(); placement_ = capture_selection(circuit, selection_); placement_preview_.reset(placement_);
                 placing_ = !placement_.cells.empty(); status_ = "CLICK TO PLACE A DUPLICATE"; break;
             case SDLK_I: {
                 std::set<Point> points;
@@ -1068,6 +1070,7 @@ private:
         placing_ = false;
         if (!stamp) { status_ = "PASTE FAILED: " + stamp.error(); return; }
         placement_ = *stamp; // Keep a stable preview if another window changes this slot.
+        placement_preview_.reset(placement_);
         placing_ = !placement_.cells.empty();
         status_ = placing_ ? "CLICK TO PLACE - BRACKETS ROTATE" : "CLIPBOARD IS EMPTY";
     }
@@ -1088,7 +1091,7 @@ private:
             const auto rotations = operation == 'l' ? 3 : 1;
             for (int i = 0; i < rotations; ++i) stamp.rotate_clockwise();
         }
-        if (placing_) { placement_ = std::move(stamp); return; }
+        if (placing_) { placement_ = std::move(stamp); placement_preview_.reset(placement_); return; }
         const auto result = place_selection(circuit, selection_, stamp, selection_.bounds()->min);
         if (!result) { status_ = result.error(); return; }
         if (apply(result->edits)) { selection_ = result->selection; selection_changed_ = true; }
