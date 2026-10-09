@@ -65,6 +65,11 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
             ET.parse(root / "share" / "icons" / "hicolor" / "scalable" / "apps" / "gatehaven.svg")
         assert "Gatehaven" in run(app, "--help")
         assert run(app, "--build-info") == run(cli, "--build-info")
+        manual = (bundle / "Resources" if sys.platform == "darwin" else resources) / "docs/manual.html"
+        assert Path(run(app, "--manual-path", cwd=root).strip()).samefile(manual)
+        invalid = subprocess.run([str(app), "--unknown-gatehaven-option"], capture_output=True, text=True,
+                                 timeout=5, env=dict(os.environ, SDL_VIDEODRIVER="no-such-driver"))
+        assert invalid.returncode == 2 and "Unknown option" in invalid.stderr
         env = dict(os.environ, SDL_VIDEODRIVER="dummy")
         run(app, "--self-test", env=env, cwd=root)
         snapshot = root / "installed-preview.bmp"

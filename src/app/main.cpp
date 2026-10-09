@@ -1947,8 +1947,14 @@ int main(int argc, char** argv) {
         if (mode == "--build-info" && argc == 2) {
             std::cout << build_information(); return std::cout ? 0 : 1;
         }
+        if (mode == "--manual-path" && argc == 2) {
+            const auto executable = current_executable();
+            const auto manual = executable ? manual_path(*executable) : std::nullopt;
+            if (!manual) { std::cerr << "Installed manual not found\n"; return 1; }
+            std::cout << path_utf8(*manual) << '\n'; return std::cout ? 0 : 1;
+        }
         if ((mode == "--help" || mode == "-h") && argc == 2) {
-            std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version]\n"
+            std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --build-info | --manual-path]\n"
                          "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";
             return 0;
         }
@@ -1967,6 +1973,9 @@ int main(int argc, char** argv) {
             (argc > 3 && !parse_count(argv[3], frames)) || extra_cells > 1000000 || frames < 10 || frames > 600)) return 2;
         const bool blank = mode == "--new";
         const bool demo = mode.starts_with("--demo=");
+        if (mode.starts_with("--") && !blank && !demo && !testing && !snapshot && !benchmark) {
+            std::cerr << "Unknown option or incorrect argument count. Use --help.\n"; return 2;
+        }
         if (demo && !make_example(mode.substr(7))) {
             std::cerr << "Unknown example. Choose starter, oscillator, screen-switch, positive-relay, negative-relay, or gate-gallery.\n";
             return 2;
@@ -2038,7 +2047,7 @@ int main(int argc, char** argv) {
         if (benchmark) { render_benchmark(app, renderer.get(), extra_cells, frames); return std::cout ? 0 : 1; }
         if (snapshot) {
             if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
-                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, or recovery.\n";
+                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, canvas, contrast, or recovery.\n";
                 return 2;
             }
             app.simulation.step(app.circuit); app.simulation.step(app.circuit);
