@@ -1317,6 +1317,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         pointer(type, static_cast<float>(x + app.view.scale / 2), static_cast<float>(y + app.view.scale / 2), button, device);
     };
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
+    pointer(SDL_EVENT_MOUSE_BUTTON_UP, 50, 50, SDL_BUTTON_LEFT, 0);
+    require(app.circuit == original && !app.history.modified(), "Outside release committed a stroke");
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
     require(app.circuit.size() == original.size() + 5, "Mouse stroke failed");
     key(SDLK_Z, SDL_KMOD_CTRL);
@@ -1380,6 +1383,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit == edited, "Pasted stamp did not undo as one edit");
     key(SDLK_Q);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
+    pointer(SDL_EVENT_MOUSE_BUTTON_UP, 50, 50, SDL_BUTTON_LEFT, 0);
+    require(app.circuit == original && !app.history.modified(), "Outside release committed a stroke");
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
     mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
     key(SDLK_RIGHT);
     require(app.circuit.at({-5, -4}) == Element::empty && app.circuit.at({0, -4}) == Element::wire,
@@ -1392,6 +1398,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit == edited, "Selection moves did not undo cleanly");
     key(SDLK_ESCAPE);
     key(SDLK_Q);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4});
+    pointer(SDL_EVENT_MOUSE_BUTTON_UP, 50, 50, SDL_BUTTON_LEFT, 0);
+    require(app.circuit == original && !app.history.modified(), "Outside release committed a stroke");
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-5, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-4, -4});
     SDL_SetModState(SDL_KMOD_SHIFT);
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-2, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, -4});
