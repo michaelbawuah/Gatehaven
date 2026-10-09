@@ -57,7 +57,7 @@ public:
     void center_on(Point point) { center_x = static_cast<double>(point.x) + 0.5; center_y = static_cast<double>(point.y) + 0.5; }
 
     void zoom(double multiplier, double x, double y) {
-        if (!std::isfinite(multiplier) || multiplier <= 0) return;
+        if (!std::isfinite(multiplier) || multiplier <= 0 || !std::isfinite(x) || !std::isfinite(y)) return;
         const auto before = world(x, y);
         scale = std::clamp(scale * multiplier, 4.0, 80.0);
         const auto after = world(x, y);
@@ -78,6 +78,7 @@ private:
     static constexpr double lo = std::numeric_limits<Coordinate>::min();
     static constexpr double hi = std::numeric_limits<Coordinate>::max();
     static Coordinate bounded(double value) {
+        if (std::isnan(value)) return 0;
         return static_cast<Coordinate>(std::clamp(value, lo, hi));
     }
 };
