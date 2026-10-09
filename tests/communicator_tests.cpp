@@ -25,3 +25,14 @@ TEST("communicators exchange once per group and send only previous-step signals"
     sim.reset(); CHECK(!sim.sent({4, 0}));
     sim.step(c); CHECK(!sim.powered({5, 0}));
 }
+
+TEST("cached communicator groups refresh after shape edits and circuit replacement") {
+    Circuit first; first.set({0, 0}, Element::screen); first.set({2, 0}, Element::screen);
+    Simulation sim; unsigned calls = 0;
+    const Simulation::Exchange exchange = [&](const CommunicatorGroup&, bool) { ++calls; return true; };
+    sim.step(first, exchange); sim.step(first, exchange); CHECK(calls == 4);
+    first.set({1, 0}, Element::screen); calls = 0; sim.step(first, exchange); CHECK(calls == 1);
+    Circuit second; second.set({9, 9}, Element::file_input);
+    first = second; calls = 0; sim.step(first, exchange); CHECK(calls == 1 && sim.powered({9, 9}));
+    first.clear(); calls = 0; sim.step(first, exchange); CHECK(calls == 0);
+}

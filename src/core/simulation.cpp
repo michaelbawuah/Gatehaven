@@ -63,7 +63,11 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     frontier.reserve(circuit.size());
     std::map<Point, bool> received;
     sent_.clear();
-    for (const auto& group : communicator_groups(circuit)) {
+    if (group_revision_ != circuit.revision()) {
+        groups_ = communicator_groups(circuit);
+        group_revision_ = circuit.revision();
+    }
+    for (const auto& group : groups_) {
         bool sending = false;
         for (const auto point : group.cells) {
             for (const auto direction : directions) {

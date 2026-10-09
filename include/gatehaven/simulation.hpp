@@ -31,6 +31,8 @@ public:
     [[nodiscard]] const std::map<Point, Power>& snapshot() const noexcept { return state_; }
 
 private:
+    std::uint64_t group_revision_{std::numeric_limits<std::uint64_t>::max()};
+    std::vector<CommunicatorGroup> groups_;
     std::map<Point, Power> state_;
     std::map<Point, bool> sent_;
     std::uint64_t ticks_{};
