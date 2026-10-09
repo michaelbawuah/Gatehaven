@@ -70,14 +70,7 @@ std::vector<Cell> Circuit::cells() const {
 
 std::vector<Cell> Circuit::cells_in(Bounds bounds) const {
     std::vector<Cell> result;
-    if (bounds.min.x > bounds.max.x || bounds.min.y > bounds.max.y) return result;
-    for (auto row = rows_.lower_bound(bounds.min.y);
-         row != rows_.end() && row->first <= bounds.max.y; ++row) {
-        for (auto cell = row->second.lower_bound(bounds.min.x);
-             cell != row->second.end() && cell->first <= bounds.max.x; ++cell) {
-            result.push_back({{cell->first, row->first}, cell->second});
-        }
-    }
+    visit(bounds, [&](Cell cell) { result.push_back(cell); });
     return result;
 }
 

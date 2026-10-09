@@ -28,6 +28,15 @@ public:
     void clear();
     [[nodiscard]] std::vector<Cell> cells() const;
     [[nodiscard]] std::vector<Cell> cells_in(Bounds bounds) const;
+    // The visitor must not mutate this circuit while its indexes are traversed.
+    template<class Visitor> void visit(Bounds bounds, Visitor&& visitor) const {
+        if (bounds.min.x > bounds.max.x || bounds.min.y > bounds.max.y) return;
+        for (auto row = rows_.lower_bound(bounds.min.y); row != rows_.end() && row->first <= bounds.max.y; ++row) {
+            for (auto cell = row->second.lower_bound(bounds.min.x); cell != row->second.end() && cell->first <= bounds.max.x; ++cell) {
+                visitor(Cell{{cell->first, row->first}, cell->second});
+            }
+        }
+    }
     [[nodiscard]] std::optional<Bounds> bounds() const;
     bool operator==(const Circuit& other) const { return rows_ == other.rows_; }
 
