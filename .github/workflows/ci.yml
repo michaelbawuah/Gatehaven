@@ -112,6 +112,11 @@ jobs:
       - name: Verify unsigned native installer
         if: runner.os != 'Windows' || runner.arch == 'X64'
         run: python tests/installer_test.py build/app
+      - name: Build and verify portable Linux AppImage
+        if: runner.os == 'Linux'
+        run: |
+          python tools/build_appimage.py build/app build/app/Gatehaven-${{ runner.arch }}.AppImage
+          python tests/appimage_test.py build/app/Gatehaven-${{ runner.arch }}.AppImage
       - name: Upload native preview
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
@@ -123,6 +128,8 @@ jobs:
             build/app/Gatehaven-*.tar.gz
             build/app/Gatehaven-*.dmg
             build/app/Gatehaven-*.exe
+            build/app/Gatehaven-*.AppImage
+            build/app/Gatehaven-*.AppImage.json
             build/app/gatehaven_*.deb
             build/app/*.sha256
             build/app/gatehaven*.bmp
