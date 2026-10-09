@@ -27,8 +27,9 @@ std::expected<void, std::string> replace_file(const std::filesystem::path& path,
         if (!out) continue;
         struct Cleanup {
             std::filesystem::path path;
-            ~Cleanup() { std::error_code error; std::filesystem::remove(path, error); }
-        } cleanup{temporary};
+            std::ofstream& stream;
+            ~Cleanup() { if (stream.is_open()) stream.close(); std::error_code error; std::filesystem::remove(path, error); }
+        } cleanup{temporary, out};
         out.write(bytes.data(), static_cast<std::streamsize>(bytes.size())); out.flush();
         if (!out) return std::unexpected("Could not write temporary file");
         out.close();
