@@ -586,6 +586,14 @@ private:
             case SDLK_C: clipboard_action('c', shift); break;
             case SDLK_X: clipboard_action('x', shift); break;
             case SDLK_V: clipboard_action('v', shift); break;
+            case SDLK_D:
+                cancel_gesture(); placement_ = capture_selection(circuit, selection_);
+                placing_ = !placement_.cells.empty(); status_ = "CLICK TO PLACE A DUPLICATE"; break;
+            case SDLK_I: {
+                std::set<Point> points;
+                for (const auto& cell : circuit.cells()) if (!selection_.contains(cell.position)) points.insert(cell.position);
+                selection_ = Selection::points(std::move(points)); selection_changed_ = false; break;
+            }
             case SDLK_SPACE: edit_speed(); break;
             default: break;
             }

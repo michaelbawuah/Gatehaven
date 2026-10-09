@@ -19,6 +19,10 @@ segment. Double-click, Enter, or click after releasing Shift to finish. Escape
 cancels the preview. The whole polyline is one undo action. Insulated-wire turns
 use conductive wire so electricity can turn the corner.
 
+Ctrl+D previews a duplicate of the selection without replacing any shared
+clipboard. Ctrl+I inverts the selection among occupied cells. A successful paste
+selects the newly placed cells, ready to move or transform.
+
 ## Select, move, and copy
 
 Q assigns the selector to the left button. Drag a rectangle; hold Shift to add or
