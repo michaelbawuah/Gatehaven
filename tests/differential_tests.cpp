@@ -72,3 +72,13 @@ TEST("indexed adjacency matches reference at both coordinate extremes") {
         for (unsigned i = 0; i < 12; ++i) { fast.step(circuit); slow.step(circuit); CHECK(fast.snapshot() == slow.snapshot()); }
     }
 }
+
+TEST("copying a running feedback circuit keeps all engine workspaces independent") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::nor_gate); circuit.set({1, 0}, Element::wire);
+    circuit.set({1, 1}, Element::wire); circuit.set({0, 1}, Element::signal);
+    Simulation first; first.step(circuit); Simulation second = first;
+    first.step(circuit); CHECK(!first.powered({1, 1})); CHECK(second.powered({1, 1}));
+    const auto unchanged = second.snapshot(); first.step(circuit); first.reset();
+    CHECK(second.snapshot() == unchanged); second.step(circuit); CHECK(!second.powered({1, 1}));
+}
