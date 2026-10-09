@@ -603,6 +603,7 @@ private:
         if (*result) {
             
             simulation.invalidate(history.last_changes());
+            endpoints_.prune(circuit);
             status_ = "CIRCUIT UPDATED";
         }
         return true;
@@ -884,6 +885,8 @@ private:
         if (redo ? history.redo(circuit) : history.undo(circuit)) {
             selection_.clear(); placing_ = false;
              simulation.invalidate(history.last_changes());
+             endpoints_.prune(circuit);
+            endpoints_.prune(circuit);
             status_ = redo ? "REDONE" : "UNDONE";
         }
     }
