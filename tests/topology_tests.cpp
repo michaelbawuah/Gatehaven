@@ -32,3 +32,16 @@ TEST("linear row joins retain sparse gaps and bidirectional adjacency") {
         CHECK(node.adjacent[d] == (point ? topology.index(*point) : no_node));
     }
 }
+
+TEST("compiled communicator flood fill matches the public grouping contract") {
+    Circuit circuit;
+    for (Coordinate y = -3; y < 6; ++y) for (Coordinate x = -4; x < 8; ++x)
+        circuit.set({x, y}, ((x * x + y * y) % 3 == 0) ? Element::screen : Element::file_input);
+    const auto expected = communicator_groups(circuit);
+    CompiledCircuit topology(circuit); CHECK(expected.size() == topology.groups().size());
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        CHECK(expected[i].id == topology.groups()[i].endpoint.id);
+        CHECK(expected[i].element == topology.groups()[i].endpoint.element);
+        CHECK(expected[i].cells == topology.groups()[i].endpoint.cells);
+    }
+}

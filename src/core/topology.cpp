@@ -30,19 +30,27 @@ CompiledCircuit::CompiledCircuit(const Circuit& circuit) {
         }
         row = next;
     }
-    for (auto group : communicator_groups(circuit)) {
-        TopologyGroup compiled{std::move(group), {}, {}};
-        compiled.members.reserve(compiled.endpoint.cells.size());
-        for (const auto point : compiled.endpoint.cells) {
-            const auto member = index(point); compiled.members.push_back(member);
-            for (const auto adjacent : nodes_[member].adjacent) {
-                if (adjacent != no_node && nodes_[adjacent].cell.element == Element::signal) compiled.inputs.push_back(adjacent);
+    std::vector<bool> visited(nodes_.size());
+    for (std::size_t seed = 0; seed < nodes_.size(); ++seed) {
+        if (!is_communicator(nodes_[seed].cell.element) || visited[seed]) continue;
+        TopologyGroup group{{nodes_[seed].cell.position, nodes_[seed].cell.element, {}}, {seed}, {}};
+        visited[seed] = true;
+        for (std::size_t head = 0; head < group.members.size(); ++head) {
+            for (const auto next : nodes_[group.members[head]].adjacent) {
+                if (next == no_node) continue;
+                if (nodes_[next].cell.element == Element::signal) group.inputs.push_back(next);
+                if (nodes_[next].cell.element == group.endpoint.element && !visited[next]) {
+                    visited[next] = true; group.members.push_back(next);
+                }
             }
         }
-        std::sort(compiled.inputs.begin(), compiled.inputs.end());
-        compiled.inputs.erase(std::unique(compiled.inputs.begin(), compiled.inputs.end()), compiled.inputs.end());
-        groups_.push_back(std::move(compiled));
+        std::sort(group.members.begin(), group.members.end());
+        for (const auto member : group.members) group.endpoint.cells.push_back(nodes_[member].cell.position);
+        std::sort(group.inputs.begin(), group.inputs.end());
+        group.inputs.erase(std::unique(group.inputs.begin(), group.inputs.end()), group.inputs.end());
+        groups_.push_back(std::move(group));
     }
+
 }
 std::size_t CompiledCircuit::index(Point point) const {
     const auto found = std::lower_bound(nodes_.begin(), nodes_.end(), point,
