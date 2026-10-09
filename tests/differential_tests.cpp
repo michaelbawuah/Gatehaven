@@ -59,3 +59,16 @@ TEST("settled optimization wakes on edits and never skips communicator exchanges
     for (unsigned i = 0; i < 10; ++i) simulation.step(circuit, [&](const auto&, bool) { ++exchanges; return exchanges % 2 != 0; });
     CHECK(exchanges == 10); CHECK(!simulation.powered({2, 0}));
 }
+
+TEST("indexed adjacency matches reference at both coordinate extremes") {
+    for (const auto edge : {std::numeric_limits<Coordinate>::min(), std::numeric_limits<Coordinate>::max() - 3}) {
+        Circuit circuit;
+        circuit.set({edge, edge}, Element::source);
+        circuit.set({static_cast<Coordinate>(edge + 1), edge}, Element::crossing);
+        circuit.set({static_cast<Coordinate>(edge + 2), edge}, Element::wire);
+        circuit.set({static_cast<Coordinate>(edge + 2), static_cast<Coordinate>(edge + 1)}, Element::signal);
+        circuit.set({static_cast<Coordinate>(edge + 3), static_cast<Coordinate>(edge + 1)}, Element::nor_gate);
+        Simulation fast; reference::ReferenceSimulation slow;
+        for (unsigned i = 0; i < 12; ++i) { fast.step(circuit); slow.step(circuit); CHECK(fast.snapshot() == slow.snapshot()); }
+    }
+}
