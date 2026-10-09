@@ -50,6 +50,7 @@ struct StampCell {
     std::int64_t x;
     std::int64_t y;
     Element element;
+    std::uint8_t state{};
     bool operator==(const StampCell&) const = default;
 };
 struct Stamp {
@@ -69,7 +70,7 @@ struct Stamp {
 template<class Visitor> void visit_stamp(const Stamp& stamp, Point origin, Bounds visible, Visitor&& visitor) {
     for (const auto& cell : stamp.cells) {
         const auto point = translated(origin, cell.x, cell.y);
-        if (point && visible.contains(*point)) visitor(Cell{*point, cell.element});
+        if (point && visible.contains(*point)) visitor(Cell{*point, cell.element, cell.state});
     }
 }
 

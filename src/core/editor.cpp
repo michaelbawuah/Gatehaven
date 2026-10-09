@@ -133,7 +133,7 @@ Stamp capture(const Circuit& circuit, Bounds region) {
                 static_cast<std::int64_t>(region.max.y) - region.min.y + 1, {}};
     circuit.visit(region, [&](const Cell& cell) {
         stamp.cells.push_back({static_cast<std::int64_t>(cell.position.x) - region.min.x,
-                               static_cast<std::int64_t>(cell.position.y) - region.min.y, cell.element});
+                               static_cast<std::int64_t>(cell.position.y) - region.min.y, cell.element, cell.state});
     });
     return stamp;
 }
@@ -166,11 +166,11 @@ std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point or
     std::set<Point> seen;
     for (const auto& cell : stamp.cells) {
         if (cell.x < 0 || cell.y < 0 || cell.x >= stamp.width || cell.y >= stamp.height || cell.element == Element::empty ||
-            static_cast<std::size_t>(cell.element) >= element_names.size()) return std::unexpected("Invalid stamp cell");
+            static_cast<std::size_t>(cell.element) >= element_names.size() || cell.state > 3) return std::unexpected("Invalid stamp cell");
         const auto point = translated(origin, cell.x, cell.y);
         if (!point) return std::unexpected("Pasted circuit would exceed coordinate limits");
         if (!seen.insert(*point).second) return std::unexpected("Duplicate stamp coordinate");
-        edits.push_back({*point, cell.element});
+        edits.push_back({*point, cell.element, cell.state});
     }
     return edits;
 }
@@ -187,7 +187,7 @@ std::expected<SelectionEdit, std::string> move_region(const Circuit& circuit, Bo
     // Clear the complete source before placing the destination. History keeps
     // the last edit at an overlapping coordinate and restores overwritten cells.
     for (const auto& cell : cells) result.edits.push_back({cell.position, Element::empty});
-    for (const auto& cell : cells) result.edits.push_back({*translated(cell.position, dx, dy), cell.element});
+    for (const auto& cell : cells) result.edits.push_back({*translated(cell.position, dx, dy), cell.element, cell.state});
     return result;
 }
 

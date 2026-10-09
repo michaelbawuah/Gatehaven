@@ -252,3 +252,15 @@ TEST("state-only edits are undoable and restore overwritten levels") {
     CHECK(!history.apply(circuit, invalid));
     CHECK(circuit.saved_state({0, 0}) == 1);
 }
+
+TEST("stamps preserve levels across rotation and overlapping moves") {
+    Circuit circuit; circuit.set({-2, 4}, Element::positive_relay, 3);
+    auto stamp = capture(circuit, {{-2, 4}, {0, 5}});
+    stamp.rotate_clockwise(); stamp.flip_horizontal(); stamp.flip_vertical();
+    CHECK(stamp.cells.front().state == 3);
+    const auto edits = paste(stamp, {8, 9}); CHECK(edits && edits->front().state == 3);
+    const auto moved = move_region(circuit, {{-2, 4}, {0, 5}}, 1, 0);
+    History history; CHECK(moved && history.apply(circuit, moved->edits).value());
+    CHECK(circuit.saved_state({-1, 4}) == 3);
+    CHECK(history.undo(circuit) && circuit.saved_state({-2, 4}) == 3);
+}
