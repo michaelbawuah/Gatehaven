@@ -20,11 +20,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     const std::string_view command = argc >= 2 ? argv[1] : "";
-    if ((command != "check" && command != "run" && command != "stats") || argc < 3 || argc > 4 ||
+    if ((command != "check" && command != "run" && command != "stats" && command != "trace") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
         std::cerr << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
                      "  gatehaven-cli stats FILE.ghv\n"
+                     "  gatehaven-cli trace FILE.ghv [STEPS]\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli --version\n";
         return 2;
@@ -44,6 +45,18 @@ int main(int argc, char** argv) {
         return 1;
     }
     if (command == "stats") { write_statistics(std::cout, statistics(*circuit)); return 0; }
+    if (command == "trace") {
+        Simulation simulation;
+        std::cout << "tick,x,y,element,ports,sending\n";
+        for (std::uint64_t i = 0; i < steps; ++i) {
+            simulation.step(*circuit);
+            for (const auto& [point, power] : simulation.snapshot()) {
+                std::cout << simulation.ticks() << ',' << point.x << ',' << point.y << ',' << name(power.element)
+                          << ',' << static_cast<unsigned>(power.ports) << ',' << simulation.sent(point) << '\n';
+            }
+        }
+        return 0;
+    }
     std::cout << "Valid document: " << circuit->size() << " cells\n";
     if (command == "check") return 0;
     Simulation simulation;
