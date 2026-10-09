@@ -7,22 +7,37 @@ operating-system file dialogs.
 
 ## Verified locally
 
-- 32 core test cases pass in debug and release builds. Parameterized cases
+- 39 core/platform test cases pass in the local debug build. Parameterized cases
   exercise all four gates with zero through four inputs and every active-input
   count, relay behavior, delayed rising/falling edges, crossing isolation,
   deterministic insertion order, and coordinate boundaries.
 - Document tests cover malformed input, duplicate cells, coordinate overflow,
   resource limits, comments, CRLF, round trips, save replacement, and failed saves.
 - Editor tests cover stroke transactions, undo/redo branching, memory limits,
-  rotations, flips, sparse capture, and paste overflow.
+  rotations, flips, sparse capture, paste overflow, and overlapping selection moves.
+- Clipboard codec checks cover full coordinate extents, preserved empty borders,
+  every truncated prefix and single-byte bit flip of a sample message, and
+  structurally invalid messages with otherwise correct checksums.
+- The cross-process clipboard test checks concurrent writers, numbered slots,
+  default-slot caching, late joiners, live survivors after a peer is killed,
+  normal last-member cleanup, restart after a crash, and damaged payload recovery.
 - The desktop smoke test injects SDL keyboard and mouse events, then verifies
-  play/pause, stepping, drawing, undo/redo, reset, and a rendered frame.
+  play/pause, stepping, drawing, undo/redo, reset, custom speed validation,
+  clipboard menus, shared copy/paste, stable placement previews, failure-safe cut,
+  selection movement, five button bindings, touch-tagged pointer events,
+  eyedropper sampling, rebound panning, and a rendered frame. New/Open requests
+  are checked for document preservation, and a real child executable runs the
+  headless smoke workflow independently.
 - A starter-circuit screenshot was rendered from the application and visually
   inspected. Small-font rasterization and connection drawing were corrected.
 - AddressSanitizer and UndefinedBehaviorSanitizer checks run separately from the
   normal build. Local leak detection is unavailable because this environment
   blocks LeakSanitizer's `/proc` task inspection; the GitHub job keeps leak
   detection enabled so that check can run on a normal runner.
+
+The milestone extends desktop CI to all three target operating systems. The
+current run's result must be checked on GitHub; adding a workflow is not evidence
+that it passed. Simulated touch events do not substitute for touchscreen testing.
 
 ## Initial performance measurement
 

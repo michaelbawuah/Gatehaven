@@ -5,6 +5,7 @@
 - `include/gatehaven` and `src/core`: circuits, simulation, documents, and editing.
   The core has no windowing, graphics, networking, or operating-system dependency.
 - `src/app`: native SDL3 presentation and input handling.
+- `src/platform`: process identity and OS-backed clipboard session locks.
 - `tests`: executable checks of circuit rules and document/editor behavior.
 - `bench`: repeatable workloads with explicit circuit sizes and step counts.
 - `samples`: circuits authored for Gatehaven.
@@ -32,6 +33,17 @@ need an explicit ownership model and measured benefit before being introduced.
 Native documents contain circuit structure, not machine-dependent pointers or
 running simulation state. Loading must either produce a complete validated
 document or leave the current circuit unchanged.
+
+New/Open start the resolved executable using SDL's argument-array process API;
+paths never pass through a command shell. Clipboard session members keep a shared
+OS file lock for their lifetime. A separate transaction lock serializes joins,
+leaves, and payload replacement. The first member clears data left by an earlier
+crash; the last normal member clears the session. See [the protocol](shared-clipboards.md).
+
+UI copy/paste reads and writes a bounded stamp format. Cut removes cells only
+after a successful write. Paste takes a local snapshot so transforms and incoming
+copies from other windows cannot change an in-progress placement. Selection moves
+clear the source and place the destination within one undo transaction.
 
 ## Dependency policy
 

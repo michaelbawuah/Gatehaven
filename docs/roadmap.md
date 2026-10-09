@@ -28,11 +28,12 @@ verification. Release readiness depends on the acceptance criteria.
 ## Current prototype
 
 The sparse core, gate/relay simulation, native documents, transactional editor,
-ten in-process clipboards, and SDL3 desktop canvas are implemented. The desktop
-has file dialogs, region selection, transforms, basic timing controls, and a
-small original bitmap font.
+ten shared session clipboards, and SDL3 desktop canvas are implemented. New/Open
+launch independent processes. The desktop has file dialogs, region selection,
+rotation/flips, keyboard movement, a clipboard chooser, a custom speed dialog,
+five mouse-button bindings plus a separate touch binding, and an eyedropper.
 
-The clipboards are not shared between processes yet. New/Open currently replace
-the document in one window. Communicators, legacy import, advanced selection,
-custom mouse bindings, full touch interaction, installers, signing, and native
-hardware acceptance are still outstanding. Performance parity is not established.
+Next: connected and additive/subtractive selection, polyline drawing, beginner
+hints, and persistent input preferences. Communicators, legacy import, full
+multitouch navigation, installers, signing, and native hardware acceptance are
+still outstanding. Performance parity is not established.
