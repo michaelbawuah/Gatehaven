@@ -1075,9 +1075,25 @@ private:
     void fresh() { launch(std::nullopt); }
 
     bool save(const std::filesystem::path& path) {
+        if (path == path_ && !path_.empty()) {
+            const auto current = fingerprint_file(path);
+            if (!current) { status_ = current.error(); return false; }
+            if (*current != disk_version_) {
+                const SDL_MessageBoxButtonData choices[]{
+                    {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Cancel"},
+                    {0, 1, "Replace changed file"}};
+                const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window_, "File changed outside Gatehaven",
+                    "This file changed since you opened or saved it. Replace it with this circuit? Cancel and use Save As to keep both versions.", 2, choices, nullptr};
+                int choice = 0;
+                if (!SDL_ShowMessageBox(&data, &choice) || choice != 1) { status_ = "SAVE CANCELED - CTRL SHIFT S KEEPS BOTH VERSIONS"; return false; }
+            }
+        }
         const auto result = save_document(path, circuit);
         if (!result) { status_ = result.error().message; return false; }
-        path_ = path; history.mark_saved(); clear_checkpoint(); status_ = "CIRCUIT SAVED";
+        path_ = path;
+        const auto inspected = fingerprint_file(path);
+        disk_version_ = inspected ? *inspected : std::nullopt;
+        history.mark_saved(); clear_checkpoint(); status_ = "CIRCUIT SAVED";
         return true;
     }
 
