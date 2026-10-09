@@ -549,6 +549,9 @@ private:
         case SDLK_E: eyedropper_ = true; break;
         case SDLK_B: beginner_ = !beginner_; status_ = beginner_ ? "BEGINNER HINTS ON" : "BEGINNER HINTS OFF"; break;
         case SDLK_F2: cancel_gesture(); help_ = !help_; break;
+        case SDLK_F1:
+            if (!SDL_OpenURL("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md")) status_ = SDL_GetError();
+            break;
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_D:
         case SDLK_DELETE:
