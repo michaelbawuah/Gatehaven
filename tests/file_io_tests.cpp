@@ -1,6 +1,8 @@
 #include "test.hpp"
 #include "gatehaven/file_io.hpp"
 #include <chrono>
+#include <thread>
+#include <atomic>
 using namespace gatehaven;
 TEST("bounded file reads and replacement preserve complete binary payloads") {
     const auto root = std::filesystem::temp_directory_path() / ("gatehaven-io-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
@@ -14,4 +16,19 @@ TEST("bounded file reads and replacement preserve complete binary payloads") {
     CHECK(!replace_file(root / "missing" / "file", "bad"));
     CHECK(read_bounded_file(path, 10).value() == "second");
     CHECK(!replace_file(root, "cannot replace directory"));
+}
+
+TEST("concurrent replacements always leave one complete file and no temporary debris") {
+    const auto root = std::filesystem::temp_directory_path() / ("gatehaven-atomic-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::filesystem::create_directories(root);
+    struct Cleanup { std::filesystem::path p; ~Cleanup() { std::error_code error; std::filesystem::remove_all(p, error); } } cleanup{root};
+    const auto path = root / "shared.bin";
+    const std::string a(8192, 'a'), b(4096, 'b'); std::atomic<bool> success{true};
+    auto writer = [&](const std::string& bytes) { for (unsigned i = 0; i < 12; ++i) if (!replace_file(path, bytes)) success = false; };
+    std::thread first(writer, std::cref(a)), second(writer, std::cref(b)); first.join(); second.join();
+    CHECK(success); const auto bytes = read_bounded_file(path, 8192); CHECK(bytes && (*bytes == a || *bytes == b));
+    CHECK(std::distance(std::filesystem::directory_iterator(root), std::filesystem::directory_iterator{}) == 1);
+    CHECK(!replace_file(root, "reject"));
+    CHECK(std::distance(std::filesystem::directory_iterator(root), std::filesystem::directory_iterator{}) == 1);
+    CHECK(replace_file(path, "")); CHECK(read_bounded_file(path, 0).value().empty());
 }
