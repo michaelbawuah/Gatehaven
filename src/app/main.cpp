@@ -84,15 +84,16 @@ std::array<Button, 10> buttons(bool running, unsigned speed) {
              {{1094, 22, 156, 40}, "NEW CIRCUIT"}}};
 }
 
-struct DialogResult { bool save{}; bool canceled{}; std::string path; std::string error; };
+struct DialogResult { bool save{}; bool canceled{}; std::string path; std::string error; std::optional<Point> endpoint; };
 struct Mailbox { std::mutex mutex; std::optional<DialogResult> result; };
-struct DialogRequest { std::shared_ptr<Mailbox> mailbox; bool save; std::string location; };
+struct DialogRequest { std::shared_ptr<Mailbox> mailbox; bool save; std::string location; std::optional<Point> endpoint; };
 
 void SDLCALL dialog_callback(void* userdata, const char* const* paths, int) {
     // Ownership crosses the C API once; the callback reclaims it even on cancel.
     std::unique_ptr<DialogRequest> request(static_cast<DialogRequest*>(userdata));
     DialogResult result;
     result.save = request->save;
+    result.endpoint = request->endpoint;
     if (!paths) result.error = SDL_GetError();
     else if (!paths[0]) result.canceled = true;
     else result.path = paths[0];
@@ -177,7 +178,14 @@ public:
             else if (result->canceled) status_ = "CANCELED";
             else {
                 auto path = utf8_path(result->path);
-                if (result->save) {
+                if (result->endpoint) {
+                    const auto expected_type = result->save ? Element::file_output : Element::file_input;
+                    if (circuit.at(*result->endpoint) != expected_type) status_ = "FILE PORT WAS REMOVED";
+                    else {
+                        const auto chosen = result->save ? endpoints_.choose_output(*result->endpoint, path) : endpoints_.choose_input(*result->endpoint, path);
+                        status_ = chosen ? "COMMUNICATOR FILE CONNECTED" : chosen.error();
+                    }
+                } else if (result->save) {
                     if (!path.has_extension()) path += ".ghv";
                     if (save(path) && close_after_save_) quit = true;
                 } else launch_open(path);
@@ -499,7 +507,8 @@ private:
         if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
         if (tools_[*button].kind == ToolKind::interactor) {
             if (circuit.at(*hover_) == Element::screen) { interaction_button_ = *button; endpoints_.hold_screen(*hover_); }
-            else status_ = "CHOOSE A SCREEN TO INTERACT";
+            else if (is_communicator(circuit.at(*hover_))) communicator_dialog(*hover_);
+            else status_ = "CHOOSE A COMMUNICATOR TO INTERACT";
             return;
         }
         const auto modifiers = SDL_GetModState();
@@ -616,7 +625,14 @@ private:
 
     void tick() {
         endpoints_.prune(circuit);
-        simulation.step(circuit, [&](const CommunicatorGroup& group, bool sending) { return endpoints_.exchange(group, sending); });
+        simulation.step(circuit, [&](const CommunicatorGroup& group, bool sending) {
+            const bool received = endpoints_.exchange(group, sending);
+            for (const auto point : group.cells) {
+                const auto error = endpoints_.error(point);
+                if (!error.empty()) status_ = "FILE PORT: " + error;
+            }
+            return received;
+        });
     }
     void reset_simulation() { simulation.reset(); endpoints_.reset_protocols(); accumulator_ = 0; }
 
@@ -797,10 +813,23 @@ private:
         dialog_pending_ = true;
         static const SDL_DialogFileFilter filter{"Gatehaven circuit", "ghv"};
         const auto utf8 = path_.empty() ? std::u8string(u8"circuit.ghv") : path_.u8string();
-        auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, saving, {utf8.begin(), utf8.end()}});
+        auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, saving, {utf8.begin(), utf8.end()}, std::nullopt});
         const auto location = request->location.c_str();
         if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, &filter, 1, location);
         else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, &filter, 1, nullptr, false);
+    }
+
+    void communicator_dialog(Point point) {
+        if (dialog_pending_) return;
+        cancel_gesture(); running = false; dialog_pending_ = true;
+        const bool output = circuit.at(point) == Element::file_output;
+        for (const auto& group : communicator_groups(circuit)) {
+            if (std::find(group.cells.begin(), group.cells.end(), point) != group.cells.end()) { point = group.id; break; }
+        }
+        auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, output, "output.bin", point});
+        const auto location = request->location.c_str();
+        if (output) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, nullptr, 0, location);
+        else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, nullptr, 0, nullptr, false);
     }
 
     void draw_bindings(SDL_Renderer* r, float y, InputTool tool) const {
