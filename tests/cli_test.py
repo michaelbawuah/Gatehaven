@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 exe = sys.argv[1]
 
 def run(*args, code=0):
-    result = subprocess.run([exe, *map(str, args)], text=True, capture_output=True, timeout=15)
+    result = subprocess.run([exe, *map(str, args)], text=True, encoding="utf-8", capture_output=True, timeout=15)
     assert result.returncode == code, (args, result.stdout, result.stderr)
     return result.stdout
 
