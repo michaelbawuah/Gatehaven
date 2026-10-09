@@ -7,7 +7,7 @@ class StampPreview {
 public:
     void reset(const Stamp& stamp) {
         rows_.clear();
-        for (const auto& cell : stamp.cells) rows_[cell.y][cell.x] = cell.element;
+        for (const auto& cell : stamp.cells) rows_[cell.y][cell.x] = cell;
     }
     template<class Visitor> void visit(Point origin, Bounds clip, Visitor&& visitor) const {
         const auto left = static_cast<std::int64_t>(clip.min.x) - origin.x;
@@ -17,11 +17,11 @@ public:
         for (auto row = rows_.lower_bound(top); row != rows_.end() && row->first <= bottom; ++row) {
             for (auto cell = row->second.lower_bound(left); cell != row->second.end() && cell->first <= right; ++cell) {
                 const auto point = translated(origin, cell->first, row->first);
-                if (point) visitor(Cell{*point, cell->second});
+                if (point) visitor(Cell{*point, cell->second.element, cell->second.state});
             }
         }
     }
 private:
-    std::map<std::int64_t, std::map<std::int64_t, Element>> rows_;
+    std::map<std::int64_t, std::map<std::int64_t, StampCell>> rows_;
 };
 }

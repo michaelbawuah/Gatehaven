@@ -264,3 +264,11 @@ TEST("stamps preserve levels across rotation and overlapping moves") {
     CHECK(circuit.saved_state({-1, 4}) == 3);
     CHECK(history.undo(circuit) && circuit.saved_state({-2, 4}) == 3);
 }
+
+TEST("indexed placement previews expose the same levels as committed stamps") {
+    const Stamp stamp{2, 2, {{0, 0, Element::nor_gate, 3}, {1, 1, Element::wire, 2}}};
+    StampPreview preview; preview.reset(stamp);
+    std::vector<Cell> visible;
+    preview.visit({3, 4}, {{3, 4}, {4, 5}}, [&](Cell cell) { visible.push_back(cell); });
+    CHECK(visible == paste(stamp, {3, 4}).value());
+}
