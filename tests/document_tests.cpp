@@ -70,3 +70,9 @@ TEST("saving replaces existing documents and removes temporary files") {
     CHECK(!save_document(dir / "missing" / "circuit.ghv", c));
     CHECK(!load_document(dir / "missing.ghv"));
 }
+
+TEST("line limits count the mandatory document header") {
+    std::istringstream zero("GATEHAVEN 1\n"); CHECK(!read_document(zero, {.max_lines = 0}));
+    std::istringstream one("GATEHAVEN 1\n"); CHECK(read_document(one, {.max_lines = 1}));
+    std::istringstream two("GATEHAVEN 1\n# comment\n"); CHECK(!read_document(two, {.max_lines = 1}));
+}

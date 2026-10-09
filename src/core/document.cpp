@@ -50,6 +50,7 @@ struct RemoveTemporary {
 } // namespace
 
 std::expected<Circuit, DocumentError> read_document(std::istream& input, DocumentLimits limits) {
+    if (limits.max_lines == 0) return std::unexpected(DocumentError{1, "Document header exceeds line limit"});
     Circuit circuit;
     std::string line;
     auto result = read_line(input, line, 1, limits.max_line_bytes);
