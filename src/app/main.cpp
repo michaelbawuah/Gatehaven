@@ -166,6 +166,7 @@ public:
         if (state == "help") help_ = true;
         else if (state == "examples") examples_menu_ = true;
         else if (state == "keyboard") keyboard_focus_ = 2;
+        else if (state == "canvas") { keyboard_cursor_ = Point{0, 0}; hover_ = keyboard_cursor_; view.center_on(*keyboard_cursor_); status_ = "KEYBOARD CANVAS - ARROWS: NAVIGATE, F8: INSPECT, F10: STEP, ESC: EXIT"; }
         else if (state == "recovery") {
             recovery_menu_ = true;
             const auto date = std::chrono::sys_days{std::chrono::year{2026}/10/9};
@@ -228,6 +229,7 @@ public:
         if (!after || *after != *before) { status_ = "DOCUMENT CHANGED WHILE OPENING - TRY AGAIN"; return false; }
         circuit = std::move(*loaded);
         path_ = path; disk_version_ = *after;
+        keyboard_cursor_.reset();
         history.clear();
         simulation.initialize(circuit);
         endpoints_.clear();
@@ -297,7 +299,7 @@ public:
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
             cancel_gesture(); keyboard_focus_.reset(); accumulator_ = 0; checkpoint();
         }
-        if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) hover_.reset();
+        if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE && !keyboard_cursor_) hover_.reset();
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
@@ -308,7 +310,8 @@ public:
         if (e.type == SDL_EVENT_DROP_FILE && e.drop.data) {
             launch_open(utf8_path(e.drop.data)); return;
         }
-        if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
+        if (e.type == SDL_EVENT_KEY_DOWN && (!e.key.repeat || (keyboard_cursor_ &&
+            (e.key.key == SDLK_LEFT || e.key.key == SDLK_RIGHT || e.key.key == SDLK_UP || e.key.key == SDLK_DOWN)))) key(e.key);
         if (help_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) help_ = false;
             return;
@@ -355,7 +358,7 @@ public:
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
             if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
-            hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
+            if (!keyboard_cursor_) hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
             if (polyline_ && hover_) polyline_preview(*hover_);
             if (interaction_button_) {
@@ -363,7 +366,7 @@ public:
                 if (hover_ && circuit.at(*hover_) == Element::screen) endpoints_.hold_screen(*hover_);
             }
         }
-        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) { keyboard_focus_.reset(); mouse_down(e.button); }
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) { keyboard_focus_.reset(); keyboard_cursor_.reset(); mouse_down(e.button); }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == interaction_button_) {
             interaction_button_.reset(); endpoints_.release_screens();
         }
@@ -513,6 +516,7 @@ private:
     InputTool drag_tool_;
     bool eyedropper_{};
     std::optional<std::size_t> keyboard_focus_;
+    std::optional<Point> keyboard_cursor_;
     TouchGesture touches_;
     TapSequence taps_;
     Uint8 touch_clicks_{1};
@@ -832,7 +836,16 @@ private:
             return;
         }
         if (e.key == SDLK_ESCAPE) {
-            cancel_gesture(); selection_.clear(); placing_ = false; help_ = false; return;
+            cancel_gesture(); keyboard_cursor_.reset(); selection_.clear(); placing_ = false; help_ = false; return;
+        }
+        if (keyboard_cursor_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
+            const std::int64_t distance = control ? 4 : 1;
+            const auto dx = e.key == SDLK_LEFT ? -distance : e.key == SDLK_RIGHT ? distance : 0;
+            const auto dy = e.key == SDLK_UP ? -distance : e.key == SDLK_DOWN ? distance : 0;
+            const auto next = translated(*keyboard_cursor_, dx, dy);
+            if (next) { keyboard_cursor_ = next; hover_ = next; view.center_on(*next); }
+            else status_ = "CANVAS COORDINATE LIMIT REACHED";
+            return;
         }
         if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
             const std::int64_t distance = control ? 4 : 1;
@@ -876,7 +889,17 @@ private:
         }
         switch (e.key) {
         case SDLK_SPACE: running = !running; accumulator_ = 0; break;
-        case SDLK_RIGHT: running = false; tick(); break;
+        case SDLK_RIGHT:
+        case SDLK_F10: running = false; tick(); break;
+        case SDLK_F9:
+            cancel_gesture(); keyboard_focus_.reset();
+            if (keyboard_cursor_) { keyboard_cursor_.reset(); status_ = "POINTER NAVIGATION"; }
+            else {
+                keyboard_cursor_ = hover_.value_or(view.cell(760, 430).value_or(Point{}));
+                hover_ = keyboard_cursor_; selection_.clear(); view.center_on(*keyboard_cursor_);
+                status_ = "KEYBOARD CANVAS - ARROWS: NAVIGATE, F8: INSPECT, F10: STEP, ESC: EXIT";
+            }
+            break;
         case SDLK_R: reset_simulation(); break;
         case SDLK_Q: cancel_gesture(); tools_[0] = {ToolKind::selector}; placing_ = false; break;
         case SDLK_E: cancel_gesture(); eyedropper_ = true; break;
@@ -1706,6 +1729,14 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit == before_inspection && app.simulation.ticks() == inspection_tick, "Inspection changed the circuit");
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_ESCAPE);
     require(app.circuit == moving, "Stateful movement did not undo structure and stored levels");
+    const auto navigation_tick = app.simulation.ticks();
+    key(SDLK_F9); key(SDLK_RIGHT); key(SDLK_DOWN, SDL_KMOD_CTRL); key(SDLK_F8);
+    require(inspections.back().starts_with("Cell (4, 4)"), "Keyboard navigation chose the wrong coordinates");
+    SDL_Event repeated{}; repeated.type = SDL_EVENT_KEY_DOWN; repeated.key.key = SDLK_DOWN; repeated.key.repeat = true;
+    require(SDL_PushEvent(&repeated), "Could not repeat keyboard navigation"); dispatch(app, renderer); key(SDLK_F8);
+    require(inspections.back().starts_with("Cell (4, 5)") && app.circuit == moving && app.simulation.ticks() == navigation_tick,
+            "Keyboard navigation repeated an edit or advanced the simulation");
+    key(SDLK_ESCAPE);
     require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
     require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
