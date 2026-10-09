@@ -95,6 +95,7 @@ if(GATEHAVEN_BUILD_APP)
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-recovery.bmp recovery
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-keyboard.bmp keyboard
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-canvas.bmp canvas
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-contrast.bmp contrast
         DEPENDS gatehaven VERBATIM)
     if(APPLE)
         set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE

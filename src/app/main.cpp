@@ -1,4 +1,5 @@
 #include "font.hpp"
+#include "colors.hpp"
 #include "instances.hpp"
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
@@ -43,13 +44,6 @@
 
 namespace {
 using namespace gatehaven;
-constexpr SDL_Color ink{31, 45, 64, 255};
-constexpr SDL_Color muted{87, 105, 122, 255};
-constexpr SDL_Color teal{0, 133, 111, 255};
-constexpr SDL_Color orange{220, 98, 40, 255};
-constexpr SDL_Color paper{246, 248, 248, 255};
-constexpr SDL_Color white{255, 255, 255, 255};
-constexpr SDL_Color border{217, 225, 229, 255};
 constexpr std::array palette{Element::wire, Element::crossing, Element::source,
     Element::signal, Element::and_gate, Element::or_gate, Element::nand_gate,
     Element::nor_gate, Element::positive_relay, Element::negative_relay,
@@ -168,7 +162,8 @@ public:
     }
 
     bool prepare_snapshot(std::string_view state) {
-        if (state == "help") help_ = true;
+        if (state == "contrast") high_contrast_ = true;
+        else if (state == "help") help_ = true;
         else if (state == "examples") examples_menu_ = true;
         else if (state == "keyboard") keyboard_focus_ = 2;
         else if (state == "canvas") { keyboard_cursor_ = Point{0, 0}; hover_ = keyboard_cursor_; view.center_on(*keyboard_cursor_); status_ = "KEYBOARD CANVAS - ARROWS: NAVIGATE, F8: INSPECT, F10: STEP, ESC: EXIT"; }
@@ -191,7 +186,7 @@ public:
         const auto bytes = read_bounded_file(path, 4096);
         const auto settings = bytes ? decode_preferences(*bytes) : std::expected<Preferences, std::string>(std::unexpected(bytes.error()));
         if (!settings) { status_ = "SETTINGS IGNORED: " + settings.error(); return; }
-        tools_ = settings->bindings; speed_ = settings->speed; beginner_ = settings->beginner;
+        tools_ = settings->bindings; speed_ = settings->speed; beginner_ = settings->beginner; high_contrast_ = settings->high_contrast;
     }
 
     void enable_recovery(const std::filesystem::path& directory) {
@@ -218,7 +213,7 @@ public:
 
     void save_settings() const {
         if (preferences_path_.empty()) return;
-        const auto saved = replace_file(preferences_path_, encode_preferences({tools_, speed_, beginner_}));
+        const auto saved = replace_file(preferences_path_, encode_preferences({tools_, speed_, beginner_, high_contrast_}));
         if (!saved) std::cerr << "Gatehaven preferences: " << saved.error() << '\n';
     }
 
@@ -401,7 +396,7 @@ public:
 
     std::size_t render(SDL_Renderer* r) const {
         std::size_t visible_cells = 0;
-        SDL_SetRenderDrawColor(r, paper.r, paper.g, paper.b, 255);
+        SDL_SetRenderDrawColor(r, theme().paper.r, theme().paper.g, theme().paper.b, 255);
         SDL_RenderClear(r);
         const SDL_Rect clip{240, 96, 1040, 668};
         SDL_SetRenderClipRect(r, &clip);
@@ -439,35 +434,35 @@ public:
         if (hover_) {
             const auto [x, y] = view.screen(*hover_);
             rectangle(r, static_cast<float>(x), static_cast<float>(y), static_cast<float>(view.scale),
-                      static_cast<float>(view.scale), orange, true);
+                      static_cast<float>(view.scale), theme().orange, true);
         }
         SDL_SetRenderClipRect(r, nullptr);
-        rectangle(r, 0, 0, 1280, 96, white);
-        rectangle(r, 0, 96, 240, 668, white);
-        line(r, 0, 95, 1280, 95, border);
-        line(r, 239, 96, 239, 764, border);
-        ui::text(r, 22, 24, "GATEHAVEN", ink, 3);
-        ui::text(r, 24, 57, "BUILD. CONNECT. DISCOVER.", muted, 1.25F);
+        rectangle(r, 0, 0, 1280, 96, theme().white);
+        rectangle(r, 0, 96, 240, 668, theme().white);
+        line(r, 0, 95, 1280, 95, theme().border);
+        line(r, 239, 96, 239, 764, theme().border);
+        ui::text(r, 22, 24, "GATEHAVEN", theme().ink, 3);
+        ui::text(r, 24, 57, "BUILD. CONNECT. DISCOVER.", theme().muted, 1.25F);
         const auto toolbar = buttons(running, speed_);
         for (std::size_t i = 0; i < toolbar.size(); ++i) {
             const auto& button = toolbar[i];
             rectangle(r, static_cast<float>(button.rect.x), static_cast<float>(button.rect.y),
                       static_cast<float>(button.rect.width), static_cast<float>(button.rect.height),
-                      i == 0 ? teal : paper);
+                      i == 0 ? theme().teal : theme().paper);
             const auto text_width = static_cast<float>(button.label.size()) * 9;
             ui::text(r, static_cast<float>(button.rect.x + button.rect.width / 2) - text_width / 2,
-                     37, button.label, i == 0 ? white : ink, 1.5F);
+                     37, button.label, i == 0 ? theme().white : theme().ink, 1.5F);
         }
-        ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    ARROWS: MOVE SELECTION    HOLD E: EYEDROPPER    SCROLL: ZOOM", muted, 1.25F);
-        ui::text(r, 22, 121, "COMPONENTS", muted, 1.5F);
+        ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    ARROWS: MOVE SELECTION    HOLD E: EYEDROPPER    SCROLL: ZOOM", theme().muted, 1.25F);
+        ui::text(r, 22, 121, "COMPONENTS", theme().muted, 1.5F);
         for (std::size_t i = 0; i < palette.size(); ++i) {
             const float y = 146 + static_cast<float>(i) * 28;
             const InputTool tool{ToolKind::pencil, palette[i]};
             const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : white);
-            if (selected) rectangle(r, 12, y, 3, 26, teal);
-            if (i < 10) ui::text(r, 26, y + 8, std::to_string((i + 1) % 10), muted, 1.5F);
-            ui::text(r, 52, y + 7, labels[i], selected ? teal : ink, 1.75F);
+            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : theme().white);
+            if (selected) rectangle(r, 12, y, 3, 26, theme().teal);
+            if (i < 10) ui::text(r, 26, y + 8, std::to_string((i + 1) % 10), theme().muted, 1.5F);
+            ui::text(r, 52, y + 7, labels[i], selected ? theme().teal : theme().ink, 1.75F);
             draw_bindings(r, y + 6, tool);
         }
         constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
@@ -476,20 +471,20 @@ public:
             const float y = 522 + static_cast<float>(i) * 28;
             const InputTool tool{kinds[i]};
             const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : paper);
-            ui::text(r, 26, y + 8, tool_labels[i], selected ? teal : ink, 1.5F);
+            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : theme().paper);
+            ui::text(r, 26, y + 8, tool_labels[i], selected ? theme().teal : theme().ink, 1.5F);
             draw_bindings(r, y + 6, tool);
         }
-        ui::text(r, 22, 645, "CLICK A TOOL TO BIND", ink, 1.25F);
+        ui::text(r, 22, 645, "CLICK A TOOL TO BIND", theme().ink, 1.25F);
         for (std::size_t i = 0; i < binding_names.size(); ++i) {
             ui::text(r, 22 + static_cast<float>(i % 3) * 68, 667 + static_cast<float>(i / 3) * 15,
-                     binding_names[i], binding_colors[i], 1);
+                     binding_names[i], high_contrast_ ? theme().ink : binding_colors[i], 1);
         }
-        ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
-        ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
-        ui::text(r, 22, 748, "B: HINTS  F3: EXAMPLES", muted, 1.0F);
-        rectangle(r, 0, 764, 1280, 36, ink);
-        ui::text(r, 20, 771, status_.substr(0, 73), white, 1.25F);
+        ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), theme().ink, 1.25F);
+        ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", theme().muted, 1.0F);
+        ui::text(r, 22, 748, "F11: CONTRAST  F12: DETAILS", theme().muted, 1.0F);
+        rectangle(r, 0, 764, 1280, 36, theme().ink);
+        ui::text(r, 20, 771, status_.substr(0, 73), theme().white, 1.25F);
         if (hover_) {
             const auto info = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
                 ", " + std::to_string(hover_->y) + "]  " + (is_communicator(circuit.at(*hover_))
@@ -502,12 +497,12 @@ public:
             ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
-                 std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
+                 std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), theme().white, 1.25F);
         if (beginner_ && !recovery_menu_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
         if (keyboard_focus_) {
             const auto box = focus_rect(*keyboard_focus_);
             rectangle(r, static_cast<float>(box.x - 2), static_cast<float>(box.y - 2),
-                static_cast<float>(box.width + 4), static_cast<float>(box.height + 4), orange, true);
+                static_cast<float>(box.width + 4), static_cast<float>(box.height + 4), theme().orange, true);
         }
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
@@ -515,8 +510,8 @@ public:
         if (clipboard_menu_) render_clipboard_menu(r);
         if (speed_edit_) render_speed_dialog(r);
         if (dialog_pending_) {
-            rectangle(r, 414, 334, 548, 92, ink);
-            ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", white, 2);
+            rectangle(r, 414, 334, 548, 92, theme().ink);
+            ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", theme().white, 2);
         }
         return visible_cells;
     }
@@ -541,6 +536,8 @@ private:
     std::size_t recovery_index_{};
     std::size_t example_index_{};
     bool beginner_{};
+    bool high_contrast_{};
+    const ui::ColorScheme& theme() const { return high_contrast_ ? ui::high_contrast_colors : ui::standard_colors; }
     bool dialog_pending_{};
     bool close_after_save_{};
     std::optional<Point> hover_;
@@ -914,6 +911,10 @@ private:
         case SDLK_SPACE: running = !running; tick_schedule_.reset(); break;
         case SDLK_RIGHT:
         case SDLK_F10: running = false; tick(); break;
+        case SDLK_F11:
+            high_contrast_ = !high_contrast_;
+            status_ = high_contrast_ ? "HIGH CONTRAST ON" : "STANDARD COLORS";
+            break;
         case SDLK_F9:
             cancel_gesture(); keyboard_focus_.reset();
             if (keyboard_cursor_) { keyboard_cursor_.reset(); status_ = "POINTER NAVIGATION"; }
@@ -1067,40 +1068,40 @@ private:
 
     static ViewRect recovery_button(std::size_t row) { return {390, 270 + static_cast<double>(row) * 54, 500, 42}; }
     void render_recovery(SDL_Renderer* r) const {
-        rectangle(r, 350, 180, 580, 460, ink);
-        ui::text(r, 390, 212, "RECOVER UNSAVED CIRCUITS", white, 2);
+        rectangle(r, 350, 180, 580, 460, theme().ink);
+        ui::text(r, 390, 212, "RECOVER UNSAVED CIRCUITS", theme().white, 2);
         if (recovery_delete_) {
-            ui::text(r, 390, 306, "DELETE THIS SNAPSHOT PERMANENTLY?", white, 1.5F);
-            ui::text(r, 390, 346, "YOUR SAVED CIRCUIT IS NOT AFFECTED.", white, 1.5F);
-            ui::text(r, 390, 402, "ENTER: DELETE     ESC: KEEP", white, 1.5F);
+            ui::text(r, 390, 306, "DELETE THIS SNAPSHOT PERMANENTLY?", theme().white, 1.5F);
+            ui::text(r, 390, 346, "YOUR SAVED CIRCUIT IS NOT AFFECTED.", theme().white, 1.5F);
+            ui::text(r, 390, 402, "ENTER: DELETE     ESC: KEEP", theme().white, 1.5F);
             return;
         }
-        if (recovery_entries_.empty()) ui::text(r, 390, 294, "NO ABANDONED SNAPSHOTS", white, 1.5F);
+        if (recovery_entries_.empty()) ui::text(r, 390, 294, "NO ABANDONED SNAPSHOTS", theme().white, 1.5F);
         const auto start = (recovery_index_ / 5) * 5;
         for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
             const auto box = recovery_button(i - start);
-            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), i == recovery_index_ ? teal : muted);
+            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), i == recovery_index_ ? theme().teal : theme().muted);
             const auto label = recovery_date(recovery_entries_[i].modified) + "  " + std::to_string((recovery_entries_[i].bytes + 1023) / 1024) + " KB";
-            ui::text(r, 406, static_cast<float>(box.y + 14), label, white, 1.5F);
+            ui::text(r, 406, static_cast<float>(box.y + 14), label, theme().white, 1.5F);
         }
         if (!recovery_entries_.empty()) ui::text(r, 390, 544,
-            std::to_string(recovery_index_ + 1) + " OF " + std::to_string(recovery_entries_.size()) + " SNAPSHOTS", white, 1.25F);
-        ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", white, 1.25F);
-        ui::text(r, 390, 592, "DEL: DELETE   ESC: KEEP FOR LATER", white, 1.25F);
+            std::to_string(recovery_index_ + 1) + " OF " + std::to_string(recovery_entries_.size()) + " SNAPSHOTS", theme().white, 1.25F);
+        ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", theme().white, 1.25F);
+        ui::text(r, 390, 592, "DEL: DELETE   ESC: KEEP FOR LATER", theme().white, 1.25F);
     }
 
     void render_speed_dialog(SDL_Renderer* r) const {
-        rectangle(r, 410, 234, 470, 306, ink);
-        ui::text(r, 452, 272, "SIMULATION SPEED", white, 2.5F);
-        ui::text(r, 452, 314, "TICKS PER SECOND: 1 TO 1000", white, 1.5F);
-        rectangle(r, 484, 350, 320, 58, speed_replace_ ? teal : white);
-        ui::text(r, 508, 366, speed_edit_->empty() ? "_" : *speed_edit_, speed_replace_ ? white : ink, 3);
+        rectangle(r, 410, 234, 470, 306, theme().ink);
+        ui::text(r, 452, 272, "SIMULATION SPEED", theme().white, 2.5F);
+        ui::text(r, 452, 314, "TICKS PER SECOND: 1 TO 1000", theme().white, 1.5F);
+        rectangle(r, 484, 350, 320, 58, speed_replace_ ? theme().teal : theme().white);
+        ui::text(r, 508, 366, speed_edit_->empty() ? "_" : *speed_edit_, speed_replace_ ? theme().white : theme().ink, 3);
         if (speed_error_) ui::text(r, 452, 427, "ENTER A WHOLE NUMBER FROM 1 TO 1000", {255, 182, 148, 255}, 1.25F);
-        else ui::text(r, 452, 427, "ENTER: APPLY    ESC: CANCEL", white, 1.5F);
-        rectangle(r, 484, 460, 148, 40, muted);
-        rectangle(r, 656, 460, 148, 40, teal);
-        ui::text(r, 520, 473, "CANCEL", white, 2);
-        ui::text(r, 696, 473, "APPLY", white, 2);
+        else ui::text(r, 452, 427, "ENTER: APPLY    ESC: CANCEL", theme().white, 1.5F);
+        rectangle(r, 484, 460, 148, 40, theme().muted);
+        rectangle(r, 656, 460, 148, 40, theme().teal);
+        ui::text(r, 520, 473, "CANCEL", theme().white, 2);
+        ui::text(r, 696, 473, "APPLY", theme().white, 2);
     }
 
     void copy(bool cut) {
@@ -1132,17 +1133,17 @@ private:
     }
 
     void render_clipboard_menu(SDL_Renderer* r) const {
-        rectangle(r, 340, 234, 600, 288, ink);
+        rectangle(r, 340, 234, 600, 288, theme().ink);
         const std::string action = *clipboard_menu_ == 'v' ? "PASTE FROM" : *clipboard_menu_ == 'x' ? "CUT TO" : "COPY TO";
-        ui::text(r, 376, 266, action + " SHARED CLIPBOARD", white, 2);
+        ui::text(r, 376, 266, action + " SHARED CLIPBOARD", theme().white, 2);
         ui::text(r, 376, 300, "0 FOLLOWS THE LAST CLIPBOARD USED", {170, 208, 196, 255}, 1.5F);
         for (unsigned slot = 0; slot < 10; ++slot) {
             const auto box = clipboard_button(slot);
             rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), 96, 54,
-                      slot == clipboard_ ? teal : muted);
-            ui::text(r, static_cast<float>(box.x + 39), static_cast<float>(box.y + 15), std::to_string(slot), white, 3);
+                      slot == clipboard_ ? theme().teal : theme().muted);
+            ui::text(r, static_cast<float>(box.x + 39), static_cast<float>(box.y + 15), std::to_string(slot), theme().white, 3);
         }
-        ui::text(r, 376, 480, "PRESS 0-9 OR CLICK A SLOT. ESC: CANCEL", white, 1.5F);
+        ui::text(r, 376, 480, "PRESS 0-9 OR CLICK A SLOT. ESC: CANCEL", theme().white, 1.5F);
     }
 
     void begin_paste() {
@@ -1278,9 +1279,9 @@ private:
         const float x = static_cast<float>(wx), y = static_cast<float>(wy);
         const float s = static_cast<float>(view.scale);
         const float center = s / 2;
-        const float stroke = std::max(2.0F, s * 0.13F);
+        const float stroke = std::max(2.0F, s * (high_contrast_ && ports != 0 ? 0.22F : 0.13F));
         const auto powered = ports != 0;
-        const auto color = preview ? orange : powered ? teal : SDL_Color{99, 117, 128, 255};
+        const auto color = preview ? theme().orange : powered ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
         if (cell.element == Element::empty) {
             rectangle(r, x + 1, y + 1, s - 2, s - 2, {240, 186, 174, 255}); return;
         }
@@ -1290,39 +1291,39 @@ private:
             const bool bright = !preview && simulation.sent(cell.position);
             rectangle(r, x + 3, y + 3, std::max(1.0F, s - 6), std::max(1.0F, s - 6),
                       bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{57, 64, 84, 255});
-            if (s >= 18) ui::text(r, x + s / 2 - 3, y + s / 2 - 3.5F, "S", bright ? ink : white, 1);
-            if (preview) rectangle(r, x, y, s, s, orange, true);
+            if (s >= 18) ui::text(r, x + s / 2 - 3, y + s / 2 - 3.5F, "S", bright ? theme().ink : theme().white, 1);
+            if (preview) rectangle(r, x, y, s, s, theme().orange, true);
             return;
         }
         if (cell.element == Element::wire || cell.element == Element::crossing || cell.element == Element::signal) {
-            const auto horizontal = (ports & 10) != 0 ? teal : SDL_Color{99, 117, 128, 255};
-            const auto vertical = (ports & 5) != 0 ? teal : SDL_Color{99, 117, 128, 255};
+            const auto horizontal = (ports & 10) != 0 ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
+            const auto vertical = (ports & 5) != 0 ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
             const auto connected = [&](Direction direction) {
                 const auto next = neighbor(cell.position, direction);
                 return preview || (next && circuit.at(*next) != Element::empty);
             };
             const bool east = connected(Direction::east), west = connected(Direction::west);
             const bool north = connected(Direction::north), south = connected(Direction::south);
-            if (west) rectangle(r, x, y + center - stroke / 2, center + stroke / 2, stroke, preview ? orange : horizontal);
+            if (west) rectangle(r, x, y + center - stroke / 2, center + stroke / 2, stroke, preview ? theme().orange : horizontal);
             if (east) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
-                                center + stroke / 2, stroke, preview ? orange : horizontal);
+                                center + stroke / 2, stroke, preview ? theme().orange : horizontal);
             if (cell.element == Element::crossing && (north || south)) {
-                rectangle(r, x + center - stroke, y, stroke * 2, s, paper);
+                rectangle(r, x + center - stroke, y, stroke * 2, s, theme().paper);
             }
-            if (north) rectangle(r, x + center - stroke / 2, y, stroke, center + stroke / 2, preview ? orange : vertical);
+            if (north) rectangle(r, x + center - stroke / 2, y, stroke, center + stroke / 2, preview ? theme().orange : vertical);
             if (south) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
-                                 stroke, center + stroke / 2, preview ? orange : vertical);
+                                 stroke, center + stroke / 2, preview ? theme().orange : vertical);
             if (!north && !south && !east && !west) {
                 rectangle(r, x + center - stroke, y + center - stroke, stroke * 2, stroke * 2, color);
             }
             if (cell.element == Element::signal) {
                 rectangle(r, x + s * 0.3F, y + s * 0.3F, s * 0.4F, s * 0.4F,
-                          powered ? orange : SDL_Color{161, 110, 66, 255});
+                          powered ? theme().orange : SDL_Color{161, 110, 66, 255});
             }
         } else {
             const float padding = std::min(3.0F, s / 8);
             rectangle(r, x + padding, y + padding, s - 2 * padding, s - 2 * padding,
-                      cell.element == Element::source ? orange : powered ? teal : SDL_Color{91, 89, 130, 255});
+                      cell.element == Element::source ? theme().orange : powered ? theme().teal : SDL_Color{91, 89, 130, 255});
             const auto label = cell.element == Element::file_input ? std::string_view("IN") :
                                cell.element == Element::file_output ? std::string_view("OUT") :
                                cell.element == Element::source ? std::string_view("+") :
@@ -1331,7 +1332,7 @@ private:
             if (s >= 18) {
                 const float font = std::min(1.5F, (s - 8) / (static_cast<float>(label.size()) * 6));
                 ui::text(r, x + center - static_cast<float>(label.size()) * 3 * font,
-                         y + center - 3.5F * font, label, white, font);
+                         y + center - 3.5F * font, label, theme().white, font);
             }
         }
         if (preview) rectangle(r, x, y, s, s, color, true);
@@ -1346,15 +1347,15 @@ private:
     }
 
     void render_examples(SDL_Renderer* r) const {
-        rectangle(r, 374, 162, 612, 478, ink);
-        ui::text(r, 406, 194, "EXPLORE A CIRCUIT", white, 2.5F);
+        rectangle(r, 374, 162, 612, 478, theme().ink);
+        ui::text(r, 406, 194, "EXPLORE A CIRCUIT", theme().white, 2.5F);
         ui::text(r, 406, 226, "OPENS IN A NEW WINDOW", {170, 208, 196, 255}, 1.5F);
         for (std::size_t i = 0; i < example_names.size(); ++i) {
             const auto box = example_button(i);
-            rectangle(r, 406, static_cast<float>(box.y), 548, 42, i == example_index_ ? teal : muted);
-            ui::text(r, 428, static_cast<float>(box.y + 13), std::to_string(i + 1) + "  " + std::string(example_names[i]), white, 2);
+            rectangle(r, 406, static_cast<float>(box.y), 548, 42, i == example_index_ ? theme().teal : theme().muted);
+            ui::text(r, 428, static_cast<float>(box.y + 13), std::to_string(i + 1) + "  " + std::string(example_names[i]), theme().white, 2);
         }
-        ui::text(r, 406, 602, "1-6 OR ARROWS + ENTER. ESC: CLOSE", white, 1.5F);
+        ui::text(r, 406, 602, "1-6 OR ARROWS + ENTER. ESC: CLOSE", theme().white, 1.5F);
     }
 
     void render_hint(SDL_Renderer* r) const {
@@ -1381,14 +1382,14 @@ private:
             first = "FILE PORTS TRANSFER SERIAL BITS, ONE PER TICK.";
             second = "I: CHOOSE A FILE. F1: PROTOCOL GUIDE IN THE MANUAL.";
         }
-        rectangle(r, 254, 690, 674, 60, white);
-        ui::text(r, 268, 703, first, teal, 1.25F);
-        ui::text(r, 268, 727, second, muted, 1.25F);
+        rectangle(r, 254, 690, 674, 60, theme().white);
+        ui::text(r, 268, 703, first, theme().teal, 1.25F);
+        ui::text(r, 268, 727, second, theme().muted, 1.25F);
     }
 
     void render_help(SDL_Renderer* r) const {
-        rectangle(r, 338, 132, 846, 608, ink);
-        ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
+        rectangle(r, 338, 132, 846, 608, theme().ink);
+        ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", theme().white, 2.5F);
         constexpr std::array<std::string_view, 22> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
             "F5/F6/F7: SCREEN / FILE IN / FILE OUT",
@@ -1409,11 +1410,11 @@ private:
             "F1: MANUAL   F3: EXAMPLES   F4: RECOVERY",
             "TAB: FOCUS CONTROLS. ENTER: ACTIVATE",
             "F9: KEYBOARD CANVAS. ARROWS: NAVIGATE",
-            "ENTER: USE TOOL. F8: INSPECT CELL",
+            "ENTER: USE TOOL. F8: INSPECT FOCUS/CELL",
             "TWO FINGERS: PAN AND PINCH TO ZOOM",
-            "F2 OR ESC: CLOSE    B: BEGINNER HINTS"};
+            "F11: CONTRAST  F12: DETAILS  ESC: CLOSE"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            ui::text(r, 378, 208 + static_cast<float>(i) * 23, lines[i], white, 1.75F);
+            ui::text(r, 378, 208 + static_cast<float>(i) * 23, lines[i], theme().white, 1.75F);
         }
     }
 };
