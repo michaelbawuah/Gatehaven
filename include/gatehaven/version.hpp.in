@@ -8,5 +8,5 @@ namespace gatehaven {
 inline constexpr char compiler_id[] = "@CMAKE_CXX_COMPILER_ID@";
 inline constexpr char compiler_version[] = "@CMAKE_CXX_COMPILER_VERSION@";
 inline constexpr char target_system[] = "@CMAKE_SYSTEM_NAME@";
-inline constexpr char target_processor[] = "@CMAKE_SYSTEM_PROCESSOR@";
+inline constexpr char target_processor[] = "@GATEHAVEN_TARGET_ARCH@";
 }
