@@ -238,3 +238,14 @@ TEST("document snapshots store current conductivity and keep reset states") {
     circuit.set({2, 0}, Element::or_gate, 3);
     CHECK(engine.document_snapshot(circuit).saved_state({2, 0}) == 3);
 }
+
+TEST("refresh after editing propagates instantly and preserves the tick counter") {
+    Circuit circuit; circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::wire);
+    Simulation engine; engine.initialize(circuit); engine.step(circuit);
+    circuit.set({2, 0}, Element::wire); engine.refresh(circuit);
+    CHECK(engine.powered({2, 0}) && engine.ticks() == 1);
+    circuit.set({0, 0}, Element::empty); const std::array changed{Point{0, 0}};
+    engine.invalidate(changed); engine.refresh(circuit);
+    CHECK(!engine.powered({1, 0}) && engine.ticks() == 1);
+    CHECK(engine.document_snapshot(circuit).saved_state({2, 0}) == 0);
+}

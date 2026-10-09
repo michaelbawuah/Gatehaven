@@ -89,6 +89,18 @@ void Simulation::initialize(const Circuit& circuit, bool reset_levels) {
     propagate(); snapshot_dirty_ = true;
 }
 
+void Simulation::refresh(const Circuit& circuit) {
+    const auto ticks = ticks_;
+    const auto metrics = metrics_;
+    initialize(document_snapshot(circuit));
+    topology_revision_ = circuit.revision();
+    ticks_ = ticks;
+    metrics_.topology_builds += metrics.topology_builds;
+    metrics_.propagations += metrics.propagations;
+    metrics_.frontier_visits += metrics.frontier_visits;
+    metrics_.settled_ticks += metrics.settled_ticks;
+}
+
 bool Simulation::conductive(Point point) const {
     const auto index = topology_.index(point);
     if (index == no_node || index >= materials_.size()) return false;
@@ -100,7 +112,7 @@ Circuit Simulation::document_snapshot(const Circuit& circuit) const {
     Circuit snapshot = circuit;
     for (const auto& cell : circuit.cells()) {
         const auto index = topology_.index(cell.position);
-        if (index == no_node || index >= valid_.size() || !valid_[index] || topology_.nodes()[index].cell != cell) continue;
+        if (index == no_node || index >= valid_.size() || !valid_[index] || topology_.nodes()[index].cell.element != cell.element) continue;
         const bool relay = cell.element == Element::positive_relay || cell.element == Element::negative_relay;
         const bool high = relay ? conductive(cell.position) : cell.element != Element::source && powered(cell.position);
         snapshot.set(cell.position, cell.element, static_cast<std::uint8_t>((cell.state & 1U) | (high ? 2U : 0U)));

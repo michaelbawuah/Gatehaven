@@ -29,6 +29,7 @@ public:
     using Exchange = std::function<bool(const CommunicatorGroup&, bool)>;
     // Establish tick-zero power from saved levels, or reset levels when requested.
     void initialize(const Circuit& circuit, bool reset_levels = false);
+    void refresh(const Circuit& circuit);
     void step(const Circuit& circuit, const Exchange& exchange = {});
     [[nodiscard]] bool conductive(Point point) const;
     [[nodiscard]] Circuit document_snapshot(const Circuit& circuit) const;
