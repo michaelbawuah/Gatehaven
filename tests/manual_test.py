@@ -28,3 +28,8 @@ with tempfile.TemporaryDirectory() as directory:
             if link.endswith(".html") and ":" not in link:
                 assert (output / link).is_file(), (path.name, link)
 print("Offline manual escaping, local links and deterministic output passed")
+
+table = manual.render("| Port | Bits |\n| --- | --- |\n| Input | `1 00` |\n", "Protocol")
+assert table.count("<table>") == 1 and table.count("</table>") == 1
+assert table.count("<th>") == 2 and table.count("<td>") == 2
+assert "<code>1 00</code>" in table
