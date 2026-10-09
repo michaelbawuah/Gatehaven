@@ -27,16 +27,22 @@ std::expected<Circuit, DocumentError> read_legacy_document(std::istream& input, 
         return std::unexpected(failure("Invalid legacy dimensions"));
     if (area > limits.max_legacy_area) return std::unexpected(failure("Legacy rectangle exceeds area limit"));
     Circuit circuit;
-    for (std::uint64_t index = 0; index < area; ++index) {
-        char raw{};
-        if (!input.get(raw)) return std::unexpected(failure(input.eof() ? "Truncated legacy cell data" : "Could not read legacy cell data"));
-        const auto byte = static_cast<unsigned char>(raw);
-        const auto kind = static_cast<std::size_t>(byte >> 2);
-        if (kind >= legacy_elements.size()) return std::unexpected(failure("Unknown legacy element at byte " + std::to_string(16 + index)));
-        if (kind == 0) continue;
-        if (circuit.size() >= limits.max_cells) return std::unexpected(failure("Legacy document exceeds occupied-cell limit"));
-        circuit.set({static_cast<Coordinate>(index % width), static_cast<Coordinate>(index / width)},
-                    legacy_elements[kind], static_cast<std::uint8_t>(byte & 3));
+    std::array<char, 65536> buffer{};
+    for (std::uint64_t offset = 0; offset < area;) {
+        const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(buffer.size(), area - offset));
+        if (!input.read(buffer.data(), static_cast<std::streamsize>(count)))
+            return std::unexpected(failure(input.eof() ? "Truncated legacy cell data" : "Could not read legacy cell data"));
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto byte = static_cast<unsigned char>(buffer[i]);
+            const auto kind = static_cast<std::size_t>(byte >> 2);
+            const auto index = offset + i;
+            if (kind >= legacy_elements.size()) return std::unexpected(failure("Unknown legacy element at byte " + std::to_string(16 + index)));
+            if (kind == 0) continue;
+            if (circuit.size() >= limits.max_cells) return std::unexpected(failure("Legacy document exceeds occupied-cell limit"));
+            circuit.set({static_cast<Coordinate>(index % width), static_cast<Coordinate>(index / width)},
+                        legacy_elements[kind], static_cast<std::uint8_t>(byte & 3));
+        }
+        offset += count;
     }
     // The reference reader ignores trailing bytes. Keep that behavior for imports;
     // canonical exports contain exactly one header and its rectangular payload.
@@ -65,15 +71,33 @@ std::expected<void, DocumentError> write_legacy_document(std::ostream& output, c
     output.write("CCPG", 4);
     for (const auto value : {0U, layout->width, layout->height}) for (unsigned byte = 0; byte < 4; ++byte)
         output.put(static_cast<char>((value >> (byte * 8)) & 255));
-    for (std::uint32_t y = 0; y < layout->height; ++y) {
-        for (std::uint32_t x = 0; x < layout->width; ++x) {
-            const auto point = *translated(layout->bounds.min, x, y);
-            const auto element = circuit.at(point);
-            const auto id = static_cast<unsigned>(std::find(legacy_elements.begin(), legacy_elements.end(), element) - legacy_elements.begin());
-            output.put(static_cast<char>((id << 2) | circuit.saved_state(point)));
+    std::array<char, 65536> buffer{};
+    std::size_t used = 0;
+    std::uint64_t cursor = 0;
+    const auto flush = [&] {
+        output.write(buffer.data(), static_cast<std::streamsize>(used));
+        used = 0; buffer.fill(0);
+    };
+    const auto zeros = [&](std::uint64_t count) {
+        while (count && output) {
+            const auto chunk = static_cast<std::size_t>(std::min<std::uint64_t>(buffer.size() - used, count));
+            used += chunk; count -= chunk;
+            if (used == buffer.size()) flush();
         }
-        if (!output) return std::unexpected(failure("Could not write legacy cell data"));
-    }
+    };
+    if (!circuit.empty()) circuit.visit(layout->bounds, [&](const Cell& cell) {
+        if (!output) return;
+        const auto x = static_cast<std::uint64_t>(static_cast<std::int64_t>(cell.position.x) - layout->bounds.min.x);
+        const auto y = static_cast<std::uint64_t>(static_cast<std::int64_t>(cell.position.y) - layout->bounds.min.y);
+        const auto position = y * layout->width + x;
+        zeros(position - cursor);
+        const auto id = static_cast<unsigned>(std::find(legacy_elements.begin(), legacy_elements.end(), cell.element) - legacy_elements.begin());
+        buffer[used++] = static_cast<char>((id << 2) | cell.state);
+        if (used == buffer.size()) flush();
+        cursor = position + 1;
+    });
+    zeros(layout->area() - cursor);
+    if (used) flush();
     if (!output) return std::unexpected(failure("Could not write legacy document"));
     return {};
 }

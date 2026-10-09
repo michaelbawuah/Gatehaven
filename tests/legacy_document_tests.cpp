@@ -59,3 +59,14 @@ TEST("legacy serialization round trips every occupied type and state") {
     std::ostringstream output; CHECK(write_legacy_document(output, circuit));
     std::istringstream input(output.str()); CHECK(read_legacy_document(input).value() == circuit);
 }
+
+TEST("legacy block IO retains sparse holes and states across chunk boundaries") {
+    Circuit circuit;
+    for (Coordinate x : {0, 65535, 65536, 131071, 131074}) circuit.set({x, 0}, Element::nor_gate, 3);
+    std::ostringstream output; CHECK(write_legacy_document(output, circuit));
+    CHECK(output.str().size() == 16 + 131075);
+    std::istringstream input(output.str()); CHECK(read_legacy_document(input).value() == circuit);
+    auto bytes = output.str(); bytes[16 + 65536] = static_cast<char>(255);
+    std::istringstream bad(bytes); const auto result = read_legacy_document(bad);
+    CHECK(!result && result.error().message.find("65552") != std::string::npos);
+}
