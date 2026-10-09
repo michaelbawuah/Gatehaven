@@ -27,6 +27,10 @@ reference engine differs on direct Source-to-Signal adjacency; a dedicated
 comparison records that difference. Add a wire between them when adapting such
 a circuit. See [reference validation](reference-validation.md).
 
-Headless measurements exclude rendering and attached file streams. Real-device
-input/display/dialog checks, active external protocol acceptance, screen-reader
-review, clean-machine installation, and release signing remain open.
+The follow-up adds live-file and changing-screen comparison, cached endpoint
+routing, batched text rendering, viewport measurements, X11/Wayland virtual-display
+checks, and a fix for the eight-ticks-per-frame ceiling at high simulation rates.
+Protocol edge differences are explicit in the comparison report.
+
+Real-device input/display/dialog checks, review of known compatibility differences,
+screen-reader review, clean-machine installation, and release signing remain open.

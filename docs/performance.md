@@ -115,3 +115,48 @@ Shared-host timings can vary, so CI uploads measurements without a wall-clock
 pass/fail threshold. Local `--require-no-regression` can enforce the measured
 scenario. Rendering, continuously changing external inputs, attached streams,
 and physical UI latency remain necessary before claiming overall parity.
+
+## Active-input and desktop measurements, 9 October 2026
+
+The active comparison injects the same deterministic screen holds into both
+engines, verifies their final states, and alternates seven fresh-process runs of
+10,000 ticks for every sample. GCC 13.3.0 Release builds on the same Linux x86-64
+host produced these medians in milliseconds:
+
+| Sample | Reference compile | Gatehaven compile | Reference ticks | Gatehaven ticks |
+| --- | ---: | ---: | ---: | ---: |
+| clock | 0.047141 | 0.010786 | 1.530380 | 0.421544 |
+| clock_minimal | 0.020601 | 0.006259 | 1.453540 | 0.292740 |
+| double dabble with inputs | 20.012700 | 5.660480 | 392.603000 | 368.299000 |
+| duplicator | 0.127732 | 0.031277 | 1.468970 | 0.260011 |
+| propagate | 0.198168 | 0.078358 | 3.750940 | 1.595390 |
+| readfile_multi | 3.894570 | 1.324350 | 30.770200 | 25.382700 |
+
+All six medians improved in this workload. File ports in these engine timings
+are disconnected. See [raw runs](../bench/reference-active-results-2026-10-09.json)
+for input hashes, correctness, host, toolchain and candidate source tree.
+
+The separate [live endpoint measurement](../bench/endpoint-results-2026-10-09.json)
+uses two 10,000-cell file groups and transfers 512 bytes in each direction,
+checking every byte and acknowledgement. Five alternating runs measured median
+routing-plus-stream time of **0.575154 ms cached** and **444.718 ms uncached**.
+This large synthetic group isolates the cost of repeated membership scans; it
+is not a general disk speedup or an external-engine comparison.
+
+The actual desktop renderer now reports static, pan and zoom frame timings and
+visible-cell counts. The culling test adds 20,000 off-screen cells and verifies
+that rendered cell counts stay unchanged. The local 100,000-extra-cell Debug
+experiment measured roughly 13–15% lower median frame time after batching text
+rectangles. Its before/after help BMP files are byte-identical. This is a software
+renderer experiment, not physical input-to-photon latency. CI records fresh
+Release measurements on all six native targets.
+
+```sh
+python bench/compare_reference.py build/reference-adapter build/release/gatehaven_screen_peer /path/to/samples --screens
+python bench/measure_endpoints.py build/release/gatehaven-io-bench
+SDL_VIDEODRIVER=dummy build/app/gatehaven --benchmark-render 100000 60
+```
+
+[Raw render frames](../bench/rendering-results-2026-10-09.json) retain the
+source trees, frame distributions, build type and identical-image hashes. Native
+GPU rendering, high-DPI displays and physical interaction still need acceptance.

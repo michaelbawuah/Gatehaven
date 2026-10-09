@@ -8,11 +8,11 @@ manual checks below. A final release requires evidence for each supported target
 | --- | --- | --- |
 | Core semantics | Parameterized rules, traversal differential tests, external observations | Resolve any newly discovered brief/reference conflicts explicitly |
 | Files | Versioned native/clipboard codecs, six exact legacy round trips, bounded malformed-input checks | Additional user circuits and long save/reopen sessions |
-| External behavior | All six reference samples; 100 seeded circuits; known Source/Signal difference asserted | Attached input/output streams and user-driven screen interactions |
-| Performance | Repeated same-host compilation and headless tick timings | Rendering, continuously changing circuits, active file I/O and interactive latency |
+| External behavior | 860 dormant/active-screen observations; live byte streams, EOF/reload/order; explicit differences | Additional user circuits, physical interactions, acceptance of listed differences |
+| Performance | Repeated dormant/active input timings, verified live I/O, software render/culling measurements | Native GPU rendering, physical input latency and slow-storage behavior |
 | Native builds | Core and SDL jobs for Linux x64/ARM64, macOS Intel/ARM64, Windows x64/ARM64 | Exact candidate run must pass; confirm release compiler/OS choices |
 | Packaging | Archives, DEB, DMG, Windows x64 NSIS, Linux AppImage, hashes and relocation checks | Install/open/upgrade/uninstall on clean machines |
-| Displays | Dummy-driver rendering and coordinate conversion at multiple sizes | Real HiDPI/per-monitor moves, resize, minimize, X11 and Wayland |
+| Displays | Dummy rendering/coordinate conversion; X11 and Wayland virtual-display CI checks | Confirm candidate display jobs; physical HiDPI/per-monitor moves, resize and minimize |
 | Input | Mouse buttons, synthetic multitouch, keyboard cursor and native text inspection | Physical touch, keyboard layouts, screen readers, contrast/zoom review |
 | Native dialogs | Callback cancellation/error/lifetime tests; selection rules | Actual dialogs, Unicode paths, cancel, shutdown while pending on each OS |
 | Signing | Preview artifacts are deliberately marked unsigned | Configure release identities; sign/verify Windows and sign/notarize/staple macOS |

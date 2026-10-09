@@ -51,8 +51,10 @@ comparisons, AppImage previews, keyboard canvas construction, and native cell
 inspection. The matching corpus is explicit; the Source/Signal specification
 difference is documented and tested separately.
 
-Next: attached-stream and interactive external comparisons, rendering/active-I/O
-performance, screen-reader review, physical display/touch/dialog acceptance,
+Next: screen-reader review, physical display/touch/dialog acceptance,
 clean-machine installation, and release signatures. See the [acceptance matrix](release-checklist.md).
-All six headless sample medians improved in the local measured scenario; complete
-product performance parity still requires the remaining workloads.
+Active-screen comparisons, live input/output protocol comparisons, endpoint
+routing benchmarks, software rendering measurements, and virtual X11/Wayland
+checks are implemented. All six dormant and active-screen sample medians improved
+in the recorded local scenarios. Complete product performance parity still
+requires native GPU and physical interaction measurements.

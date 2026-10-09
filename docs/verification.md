@@ -85,8 +85,8 @@ communicator workloads, including run-to-run ranges and remaining profiling work
 - ThreadSanitizer for any future shared state or simulation workers.
 - Native file associations, signing, and clean-machine installation. Automated
   package tests validate contents and execution on the build host only.
-- Active external protocol compatibility, rendering/active-I/O performance, and
-  comprehensive acceptance against the remaining product brief.
+- Native GPU/physical latency and comprehensive acceptance against the remaining
+  product brief; active protocol and software-render results are recorded below.
 
 ## 0.3 candidate verification
 
@@ -158,3 +158,31 @@ and measurements for the published commit. Check the exact Actions run before
 using its packages. [Release acceptance](release-checklist.md) separates the
 remaining hardware, native dialog, attached-stream, accessibility, clean-machine,
 and signing work from automated evidence.
+
+## Active-I/O and rendering follow-up, 9 October 2026
+
+The local follow-up passes **159/159 core/platform cases**, **11/11 desktop
+suites**, **11/11 Release suites**, and **8/8 ASan/UBSan suites**. A clean desktop
+rebuild was used after a stale local executable lost its execute permission.
+No application change was needed for that workspace artifact.
+
+- 430 dormant observations and another 430 with deterministic changing Screen
+  inputs pass. The Source/Signal rule difference remains separately asserted.
+- Both live-file peers transfer all 256 byte values, acknowledge flushed output,
+  block reads at EOF, and resume queued requests in order after file reload.
+- Three protocol edge differences are observed and asserted, with their reasons
+  in [reference validation](reference-validation.md#observed-protocol-differences).
+- Active-screen compile/tick medians improve on all six samples in the recorded
+  seven-run, 10,000-tick comparison. Routing measurements verify every live byte.
+- Culling checks retain equal visible-cell counts after adding off-screen cells.
+  Text batching gives byte-identical help-screen output and improved local frame
+  timing. Timing records distinguish Debug/software measurements from CI builds.
+- Tick scheduling supports 1,000 requested steps/second at ordinary frame rates,
+  bounds catch-up, and yields between steps after a six-millisecond work budget.
+- CI now exercises X11 and Wayland through virtual display servers, records
+  Release rendering measurements, and uploads active compatibility evidence.
+  Those jobs must pass on the exact published head before being treated as proof.
+
+Virtual displays do not certify physical devices, native dialogs, screen readers,
+GPU performance or signed clean-machine installation. Those remain in the
+[release acceptance matrix](release-checklist.md).
