@@ -17,7 +17,8 @@ public:
     Circuit(Circuit&& other) noexcept;
     Circuit& operator=(Circuit&& other) noexcept;
     [[nodiscard]] Element at(Point point) const;
-    bool set(Point point, Element element);
+    bool set(Point point, Element element, std::uint8_t state = 0);
+    [[nodiscard]] std::uint8_t saved_state(Point point) const;
     [[nodiscard]] std::size_t size() const noexcept { return size_; }
     [[nodiscard]] bool empty() const noexcept { return size_ == 0; }
     [[nodiscard]] std::uint64_t revision() const noexcept { return revision_; }
@@ -33,7 +34,7 @@ public:
         if (bounds.min.x > bounds.max.x || bounds.min.y > bounds.max.y) return;
         for (auto row = rows_.lower_bound(bounds.min.y); row != rows_.end() && row->first <= bounds.max.y; ++row) {
             for (auto cell = row->second.lower_bound(bounds.min.x); cell != row->second.end() && cell->first <= bounds.max.x; ++cell) {
-                visitor(Cell{{cell->first, row->first}, cell->second});
+                visitor(Cell{{cell->first, row->first}, cell->second.element, cell->second.state});
             }
         }
     }
@@ -42,7 +43,8 @@ public:
 
 private:
     // Two ordered indexes permit viewport queries without scanning distant columns.
-    std::map<Coordinate, std::map<Coordinate, Element>> rows_;
+    struct Value { Element element; std::uint8_t state{}; bool operator==(const Value&) const = default; };
+    std::map<Coordinate, std::map<Coordinate, Value>> rows_;
     std::size_t size_{};
     std::array<std::size_t, element_names.size()> counts_{};
     std::uint64_t revision_{};

@@ -28,15 +28,24 @@ Element Circuit::at(Point point) const {
     const auto row = rows_.find(point.y);
     if (row == rows_.end()) return Element::empty;
     const auto cell = row->second.find(point.x);
-    return cell == row->second.end() ? Element::empty : cell->second;
+    return cell == row->second.end() ? Element::empty : cell->second.element;
 }
 
-bool Circuit::set(Point point, Element element) {
+std::uint8_t Circuit::saved_state(Point point) const {
+    const auto row = rows_.find(point.y);
+    if (row == rows_.end()) return 0;
+    const auto cell = row->second.find(point.x);
+    return cell == row->second.end() ? std::uint8_t{0} : cell->second.state;
+}
+
+bool Circuit::set(Point point, Element element, std::uint8_t state) {
+    if (state > 3 || (element == Element::empty && state != 0))
+        throw std::invalid_argument("Invalid circuit state");
     if (static_cast<std::size_t>(element) >= element_names.size()) {
         throw std::invalid_argument("Invalid circuit element");
     }
     const auto before = at(point);
-    if (before == element) return false;
+    if (before == element && saved_state(point) == state) return false;
     if (element == Element::empty) {
         const auto row = rows_.find(point.y);
         row->second.erase(point.x);
@@ -45,7 +54,7 @@ bool Circuit::set(Point point, Element element) {
     } else {
         auto& row = rows_[point.y];
         if (!row.contains(point.x)) ++size_;
-        row.insert_or_assign(point.x, element);
+        row.insert_or_assign(point.x, Value{element, state});
     }
     if (before != Element::empty) --counts_[static_cast<std::size_t>(before)];
     if (element != Element::empty) ++counts_[static_cast<std::size_t>(element)];
@@ -65,7 +74,7 @@ std::vector<Cell> Circuit::cells() const {
     std::vector<Cell> result;
     result.reserve(size_);
     for (const auto& [y, row] : rows_) {
-        for (const auto& [x, element] : row) result.push_back({{x, y}, element});
+        for (const auto& [x, value] : row) result.push_back({{x, y}, value.element, value.state});
     }
     return result;
 }

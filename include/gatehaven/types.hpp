@@ -85,6 +85,8 @@ inline constexpr std::array<std::string_view, 14> element_names{
 struct Cell {
     Point position;
     Element element;
+    // Bit 1: saved level; bit 0: reset level. Relays store conductivity.
+    std::uint8_t state{};
     bool operator==(const Cell&) const = default;
 };
 

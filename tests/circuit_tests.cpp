@@ -99,3 +99,20 @@ TEST("cached bounds contract after deleting outer cells and copying or moving a 
     moved.clear(); CHECK(!moved.bounds()); moved.set({4, 3}, Element::wire);
     CHECK(moved.bounds()->min == Point{4, 3});
 }
+
+TEST("saved cell levels participate in circuit identity and revisions") {
+    Circuit circuit;
+    CHECK(circuit.set({3, 4}, Element::or_gate, 3));
+    CHECK(circuit.saved_state({3, 4}) == 3);
+    const auto before = circuit.revision();
+    CHECK(!circuit.set({3, 4}, Element::or_gate, 3));
+    CHECK(circuit.set({3, 4}, Element::or_gate, 1));
+    CHECK(before != circuit.revision());
+    CHECK(circuit.cells().front().state == 1);
+    CHECK(circuit.cells_in({{0, 0}, {9, 9}}).front().state == 1);
+    const auto copied = circuit;
+    CHECK(copied == circuit);
+    circuit.set({3, 4}, Element::wire);
+    CHECK(circuit.saved_state({3, 4}) == 0 && copied != circuit);
+    CHECK(circuit.size() == 1 && circuit.count(Element::wire) == 1);
+}

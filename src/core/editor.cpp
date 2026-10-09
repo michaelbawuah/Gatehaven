@@ -63,7 +63,8 @@ std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<cons
     command.reserve(std::min(final.size(), max_changes_));
     for (std::size_t i = 0; i < final.size(); ++i) {
         if (i + 1 < final.size() && final[i].position == final[i + 1].position) continue;
-        const auto& [point, element] = final[i];
+        const auto& [point, element, state] = final[i];
+        static_cast<void>(state);
         const auto before = circuit.at(point);
         if (before != element) command.push_back({point, before, element});
         if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
