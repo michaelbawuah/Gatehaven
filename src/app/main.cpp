@@ -7,6 +7,8 @@
 #include "gatehaven/simulation.hpp"
 #include "gatehaven/selection.hpp"
 #include "gatehaven/polyline.hpp"
+#include "gatehaven/preferences.hpp"
+#include "gatehaven/file_io.hpp"
 #include "gatehaven/viewport.hpp"
 
 #include <SDL3/SDL.h>
@@ -39,12 +41,6 @@ constexpr std::array palette{Element::wire, Element::crossing, Element::source,
 constexpr std::array<std::string_view, 10> labels{"WIRE", "CROSSING", "SOURCE", "SIGNAL",
     "AND", "OR", "NAND", "NOR", "+ RELAY", "- RELAY"};
 
-enum class ToolKind { pencil, eraser, panner, selector };
-struct InputTool {
-    ToolKind kind{ToolKind::pencil};
-    Element element{Element::wire};
-    bool operator==(const InputTool&) const = default;
-};
 constexpr std::array<SDL_Color, 6> binding_colors{{{205, 63, 64, 255}, {53, 103, 205, 255},
     {36, 139, 74, 255}, {0, 150, 180, 255}, {179, 62, 169, 255}, {190, 153, 0, 255}}};
 constexpr std::array<std::string_view, 6> binding_names{"LEFT", "RIGHT", "MIDDLE", "X1", "X2", "TOUCH"};
@@ -125,6 +121,22 @@ public:
     }
 
     void launch_open(const std::filesystem::path& path) { launch(path); }
+
+    void load_settings(const std::filesystem::path& path) {
+        preferences_path_ = path;
+        std::error_code error;
+        if (!std::filesystem::exists(path, error)) return;
+        const auto bytes = read_bounded_file(path, 4096);
+        const auto settings = bytes ? decode_preferences(*bytes) : std::expected<Preferences, std::string>(std::unexpected(bytes.error()));
+        if (!settings) { status_ = "SETTINGS IGNORED: " + settings.error(); return; }
+        tools_ = settings->bindings; speed_ = settings->speed; beginner_ = settings->beginner;
+    }
+
+    void save_settings() const {
+        if (preferences_path_.empty()) return;
+        const auto saved = replace_file(preferences_path_, encode_preferences({tools_, speed_, beginner_}));
+        if (!saved) std::cerr << "Gatehaven preferences: " << saved.error() << '\n';
+    }
 
     bool open(const std::filesystem::path& path) {
         auto loaded = load_document(path);
@@ -373,6 +385,7 @@ private:
     unsigned clipboard_{};
     std::optional<char> clipboard_menu_;
     std::filesystem::path path_;
+    std::filesystem::path preferences_path_;
     std::string title_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
@@ -471,6 +484,7 @@ private:
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
         if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; return; }
+        if (tools_[*button].kind == ToolKind::interactor) { status_ = "CHOOSE A COMMUNICATOR TO INTERACT"; return; }
         const auto modifiers = SDL_GetModState();
         selection_mode_ = (modifiers & SDL_KMOD_ALT) != 0 ? SelectionMode::subtract :
             (modifiers & SDL_KMOD_SHIFT) != 0 ? SelectionMode::add : SelectionMode::replace;
@@ -1111,6 +1125,7 @@ int main(int argc, char** argv) {
             launched.push_back(std::move(document)); return {};
         };
         App app(window.get(), **clipboard, std::move(launcher));
+        if (!testing && !snapshot) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched);
             if (!child_test) {
@@ -1141,6 +1156,7 @@ int main(int argc, char** argv) {
             SDL_RenderPresent(renderer.get());
             SDL_Delay(8);
         }
+        app.save_settings();
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "Gatehaven: " << e.what() << '\n';
