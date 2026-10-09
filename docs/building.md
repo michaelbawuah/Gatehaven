@@ -12,9 +12,9 @@ cmake --build --preset core
 ctest --preset core
 ```
 
-The core has no SDL dependency. Test builds require Python 3, which drives the
-cross-process clipboard tests. Set `GATEHAVEN_BUILD_TESTS=OFF` for a build without
-that test dependency. CMake applies high warning levels and treats
+The core has no SDL dependency. Python 3 builds the offline manuals and drives
+integration tests. `GATEHAVEN_BUILD_TESTS=OFF` skips test targets; Python remains
+required for generated guides. CMake applies high warning levels and treats
 project warnings as errors. C++ extensions are disabled.
 
 ## Desktop with vcpkg
@@ -91,7 +91,8 @@ bundles. Set `SDL_VIDEODRIVER=dummy` for headless use. `gatehaven --new` opens a
 empty circuit; a document path opens that file in the newly started instance.
 
 Use `clang-format` with the repository configuration and `clang-tidy` with
-`build/core/compile_commands.json`. Static-analysis CI is a remaining release gate.
+`build/core/compile_commands.json`. Targeted Clang 18 static analysis runs in CI for storage, topology, component
+compilation, simulation, legacy decoding, and statistics.
 
 ## Packaging
 
@@ -103,13 +104,14 @@ development builds; signing and clean-machine release verification remain open.
 ## Architecture and recovery checks
 
 The CI matrix includes Linux x86-64 and ARM64, macOS Apple Silicon and Intel,
-and Windows x64 for both core and desktop builds. A configured target is not a
+and Windows x64/ARM64 for both core and desktop builds. A configured target is not a
 passing target: inspect the Actions run for the revision you intend to use.
-Windows ARM64, signing, and physical device acceptance remain outside this matrix.
+Signing, native dialog interaction, and physical-device acceptance require
+separate checks outside the dummy-driver matrix.
 
 Core tests include native process-kill recovery checks in addition to clipboard
 concurrency. Benchmark builds add six workload checks. Installed-product tests
-exercise nine distinct interface states, Unicode document paths through the CLI,
+exercise ten distinct interface states, Unicode document paths through the CLI,
 and the actual desktop executable from a directory containing spaces.
 
 Run `gatehaven --help` or `gatehaven-cli --help` without opening a graphical
@@ -121,3 +123,17 @@ CI also uses the native `windows-11-arm` runner. Both SDL and Gatehaven configur
 with `-A ARM64` to avoid accidentally producing x64 binaries. The ARM64 job runs
 the same core, process, desktop, and installed-product checks and publishes an
 ARM64 ZIP. The NSIS installer preview currently targets Windows x64 only.
+
+## External compatibility checks
+
+The production targets never link the reference engine. An isolated CI job builds
+a test-only adapter from the pinned external checkout and publishes round-trip,
+behavior, and headless timing reports. See [the reproducible commands](reference-validation.md).
+Linux desktop packages use Ubuntu 24.04 as a fixed glibc 2.39 baseline; AppImage
+assembly rejects a dependency requiring newer GLIBC symbols.
+
+Clean checkout builds record the source revision in `--build-info` and package
+metadata. CMake watches ordinary and detached Git references for revision changes;
+source archives without Git metadata report `unknown`. This field identifies a
+checkout, not a proof that an uncommitted working tree is clean. Release builds
+must use an unmodified checkout and their exact Actions run.

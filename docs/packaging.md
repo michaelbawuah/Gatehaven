@@ -33,7 +33,7 @@ Keep dependency notices with any redistributed binaries.
 stages the same contents without an archive. Linux installs include desktop/MIME
 metadata and a vector icon; update the desktop and MIME caches using your
 distribution's normal installation process. The executable must be on `PATH`
-for the desktop launcher. macOS bundles declare the `.ghv` document type.
+for the desktop launcher. macOS bundles declare `.ghv` and import the `.ccsb` document type.
 
 These builds are development previews. Signing, notarization, final installer acceptance, clean-machine checks, and physical desktop acceptance
 remain release work. No step in this build disables operating-system protections.
@@ -62,7 +62,7 @@ broader Linux distribution coverage remain release gates.
 
 The unsigned NSIS preview installs the app, compiler runtime, lessons, notices,
 and offline guides. It requires administrator approval and adds Start Menu
-shortcuts plus a `.ghv` Open With choice. It preserves the current default file
+shortcuts plus `.ghv` and `.ccsb` Open With choices. It preserves the current default file
 handler and does not change PATH. Uninstall removes only its own association;
 saved circuits, preferences, shared sessions, and recovery data are retained.
 
@@ -94,3 +94,8 @@ and CLI paths. Distribution/device acceptance is tracked separately.
 Both `.ghv` and `.ccsb` are advertised on Linux/macOS and registered as Open With
 choices by the Windows installer. Installers preserve the user's existing default
 application. AppImage desktop integration depends on the user's desktop tooling.
+
+The AppImage JSON sidecar includes the exact artifact hash, pinned assembly tools,
+required GLIBC symbol floor, and the build information read from both packaged
+executables. These metadata are checked before publication. They establish
+artifact identity, not a signature or clean-machine support claim.
