@@ -151,3 +151,11 @@ TEST("moving a selection validates empty borders and extreme offsets before edit
     CHECK(moved && moved->edits.empty() && moved->region.min == Point{-4, 4});
     CHECK(c.size() == 1);
 }
+TEST("paste validates empty borders and malformed stamp cells before returning edits") {
+    const auto hi = std::numeric_limits<Coordinate>::max();
+    CHECK(!paste({2, 1, {{0, 0, Element::source}}}, {hi, 0}));
+    CHECK(!paste({1, 1, {{-1, 0, Element::wire}}}, {0, 0}));
+    CHECK(!paste({1, 1, {{0, 0, Element::empty}}}, {0, 0}));
+    CHECK(!paste({0, 1, {}}, {0, 0}));
+    CHECK(paste({}, {0, 0})->empty());
+}

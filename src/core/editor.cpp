@@ -125,9 +125,16 @@ void Stamp::flip_vertical() {
 }
 
 std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point origin) {
+    constexpr std::int64_t extent = 4294967296LL;
+    if (stamp.width < 0 || stamp.height < 0 || stamp.width > extent || stamp.height > extent ||
+        stamp.cells.size() > 1'000'000 || ((stamp.width == 0 || stamp.height == 0) &&
+        (stamp.width != 0 || stamp.height != 0 || !stamp.cells.empty()))) return std::unexpected("Invalid stamp dimensions");
+    if (stamp.width != 0 && !translated(origin, stamp.width - 1, stamp.height - 1)) return std::unexpected("Pasted selection border exceeds coordinate limits");
     std::vector<Cell> edits;
     edits.reserve(stamp.cells.size());
     for (const auto& cell : stamp.cells) {
+        if (cell.x < 0 || cell.y < 0 || cell.x >= stamp.width || cell.y >= stamp.height || cell.element == Element::empty ||
+            static_cast<std::size_t>(cell.element) >= element_names.size()) return std::unexpected("Invalid stamp cell");
         const auto point = translated(origin, cell.x, cell.y);
         if (!point) return std::unexpected("Pasted circuit would exceed coordinate limits");
         edits.push_back({*point, cell.element});
