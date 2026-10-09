@@ -21,3 +21,13 @@ TEST("empty rectangle borders are retained without allocating empty cells") {
     CHECK(selected.bounds()->max == region.max);
     CHECK(!Selection::rectangle(c, {{2, 0}, {1, 0}}));
 }
+TEST("logical selection respects crossing channels and signal input boundaries") {
+    Circuit c;
+    c.set({-1, 0}, Element::wire); c.set({0, 0}, Element::crossing);
+    c.set({1, 0}, Element::signal); c.set({2, 0}, Element::and_gate);
+    c.set({0, 1}, Element::wire);
+    const auto logical = connected_selection(c, {-1, 0}, false);
+    CHECK(logical.size() == 3 && !logical.contains({0, 1}) && !logical.contains({2, 0}));
+    CHECK(connected_selection(c, {-1, 0}, true).size() == 5);
+    CHECK(!connected_selection(c, {5, 5}, true));
+}

@@ -11,6 +11,37 @@ Selection Selection::rectangle(const Circuit& circuit, Bounds region) {
     for (const auto& cell : circuit.cells_in(region)) result.points_.insert(cell.position);
     return result;
 }
+
+Selection connected_selection(const Circuit& circuit, Point seed, bool physical) {
+    if (circuit.at(seed) == Element::empty) return {};
+    std::map<Point, std::uint8_t> visited{{seed, 15}};
+    std::vector<std::pair<Point, std::uint8_t>> queue{{seed, 15}};
+    const auto wire = [](Element e) { return e == Element::wire || e == Element::crossing || e == Element::signal; };
+    for (std::size_t head = 0; head < queue.size(); ++head) {
+        const auto [point, ports] = queue[head];
+        const auto from = circuit.at(point);
+        for (const auto direction : directions) {
+            const auto bit = static_cast<std::uint8_t>(1U << std::to_underlying(direction));
+            if (!physical && (ports & bit) == 0) continue;
+            const auto next = neighbor(point, direction);
+            if (!next) continue;
+            const auto to = circuit.at(*next);
+            if (to == Element::empty) continue;
+            if (!physical && ((from == Element::signal && !wire(to)) || (to == Element::signal && !wire(from)))) continue;
+            const auto channel = !physical && to == Element::crossing
+                ? static_cast<std::uint8_t>((direction == Direction::north || direction == Direction::south) ? 5 : 10)
+                : std::uint8_t{15};
+            auto& seen = visited[*next];
+            const auto added = static_cast<std::uint8_t>(channel & static_cast<std::uint8_t>(~seen));
+            if (!added) continue;
+            seen = static_cast<std::uint8_t>(seen | added);
+            queue.emplace_back(*next, added);
+        }
+    }
+    std::set<Point> points;
+    for (const auto& [point, ports] : visited) { static_cast<void>(ports); points.insert(point); }
+    return Selection::points(std::move(points));
+}
 Selection Selection::points(std::set<Point> points) {
     Selection result;
     result.points_ = std::move(points);
