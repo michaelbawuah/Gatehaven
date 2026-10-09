@@ -106,6 +106,12 @@ if(GATEHAVEN_BUILD_TESTS)
     add_test(NAME gatehaven_shared_clipboard COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/clipboard_process_test.py $<TARGET_FILE:gatehaven_clipboard_peer>)
     set_tests_properties(gatehaven_shared_clipboard PROPERTIES TIMEOUT 60)
+    if(GATEHAVEN_BUILD_PACKAGES)
+        add_test(NAME gatehaven_install COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/install_test.py ${CMAKE_COMMAND}
+            ${CMAKE_CURRENT_BINARY_DIR} "$<CONFIG>" ${GATEHAVEN_BUILD_APP})
+        set_tests_properties(gatehaven_install PROPERTIES TIMEOUT 90)
+    endif()
     if(GATEHAVEN_BUILD_APP)
         add_test(NAME gatehaven_desktop COMMAND gatehaven --self-test)
         set_tests_properties(gatehaven_desktop PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy" TIMEOUT 45)
