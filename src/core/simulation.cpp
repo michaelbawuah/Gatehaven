@@ -9,7 +9,7 @@ void Simulation::rebuild(const Circuit& circuit) {
     topology_revision_ = circuit.revision();
     power_.assign(nets_.vertex_count(), 0); previous_.clear();
     enabled_.assign(nets_.vertex_count(), 1);
-    std::fill(enabled_.begin() + static_cast<std::ptrdiff_t>(nets_.fixed_count()), enabled_.end(), 0);
+    std::fill(enabled_.begin() + static_cast<std::ptrdiff_t>(nets_.fixed_count()), enabled_.end(), std::uint8_t{0});
     valid_.assign(topology_.nodes().size(), false);
     sent_.assign(topology_.groups().size(), false); received_.assign(sent_.size(), false);
     frontier_.clear(); frontier_.reserve(nets_.vertex_count());
