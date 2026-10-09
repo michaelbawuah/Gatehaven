@@ -3,6 +3,8 @@
 
 namespace gatehaven {
 std::expected<void, std::string> FileEndpoints::choose_input(Point anchor, const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(path, error)) return std::unexpected("Choose a regular input file");
     std::ifstream input(path, std::ios::binary);
     if (!input) return std::unexpected("Could not open the chosen input file");
     auto& binding = bindings_[anchor];
@@ -12,6 +14,11 @@ std::expected<void, std::string> FileEndpoints::choose_input(Point anchor, const
     return {};
 }
 std::expected<void, std::string> FileEndpoints::choose_output(Point anchor, const std::filesystem::path& path) {
+    std::error_code error;
+    const auto status = std::filesystem::status(path, error);
+    if ((error && error != std::errc::no_such_file_or_directory) ||
+        (!error && std::filesystem::exists(status) && !std::filesystem::is_regular_file(status)))
+        return std::unexpected("Choose a regular output file");
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     if (!output) return std::unexpected("Could not open the chosen output file");
     auto& binding = bindings_[anchor];

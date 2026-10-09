@@ -14,6 +14,9 @@ TEST("file endpoints read chosen files write flushed bytes and drop deleted bind
     const CommunicatorGroup output{{2, 0}, Element::file_output, {{2, 0}}};
     CHECK(endpoints.choose_input(input.id, root / "in"));
     CHECK(endpoints.choose_output(output.id, root / "out"));
+    CHECK(!endpoints.choose_input(input.id, root));
+    CHECK(!endpoints.choose_output(output.id, root));
+    CHECK(endpoints.bound_files() == 2); // Failed choices retain the existing streams.
     for (auto bit : serial_reply(0)) CHECK(!endpoints.exchange(input, bit != 0));
     std::vector<std::uint8_t> reply;
     for (unsigned i = 0; i < 11; ++i) reply.push_back(endpoints.exchange(input, false) ? 1 : 0);
