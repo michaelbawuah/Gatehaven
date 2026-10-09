@@ -43,3 +43,38 @@ std::expected<Circuit, DocumentError> read_legacy_document(std::istream& input, 
     return circuit;
 }
 }
+
+namespace gatehaven {
+std::expected<LegacyLayout, DocumentError> legacy_layout(const Circuit& circuit, DocumentLimits limits) {
+    const auto bounds = circuit.bounds();
+    if (!bounds) return LegacyLayout{};
+    const auto width = static_cast<std::uint64_t>(static_cast<std::int64_t>(bounds->max.x) - bounds->min.x + 1);
+    const auto height = static_cast<std::uint64_t>(static_cast<std::int64_t>(bounds->max.y) - bounds->min.y + 1);
+    constexpr auto maximum = static_cast<std::uint64_t>(std::numeric_limits<Coordinate>::max());
+    // Division avoids overflow even across the full signed coordinate range.
+    if (width > maximum || height > maximum || width > maximum / height)
+        return std::unexpected(failure("Circuit rectangle cannot be represented in legacy format"));
+    if (width * height > limits.max_legacy_area)
+        return std::unexpected(failure("Legacy export exceeds area limit; use a native .ghv document"));
+    if (circuit.size() > limits.max_cells) return std::unexpected(failure("Legacy export exceeds occupied-cell limit"));
+    return LegacyLayout{*bounds, static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height)};
+}
+std::expected<void, DocumentError> write_legacy_document(std::ostream& output, const Circuit& circuit, DocumentLimits limits) {
+    const auto layout = legacy_layout(circuit, limits);
+    if (!layout) return std::unexpected(layout.error());
+    output.write("CCPG", 4);
+    for (const auto value : {0U, layout->width, layout->height}) for (unsigned byte = 0; byte < 4; ++byte)
+        output.put(static_cast<char>((value >> (byte * 8)) & 255));
+    for (std::uint32_t y = 0; y < layout->height; ++y) {
+        for (std::uint32_t x = 0; x < layout->width; ++x) {
+            const auto point = *translated(layout->bounds.min, x, y);
+            const auto element = circuit.at(point);
+            const auto id = static_cast<unsigned>(std::find(legacy_elements.begin(), legacy_elements.end(), element) - legacy_elements.begin());
+            output.put(static_cast<char>((id << 2) | circuit.saved_state(point)));
+        }
+        if (!output) return std::unexpected(failure("Could not write legacy cell data"));
+    }
+    if (!output) return std::unexpected(failure("Could not write legacy document"));
+    return {};
+}
+}

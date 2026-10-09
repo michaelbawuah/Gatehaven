@@ -40,3 +40,22 @@ TEST("legacy dimensions version unknown elements and resource budgets are checke
     std::istringstream cells(fixture(2, 1, "\x04\x04")); CHECK(!read_legacy_document(cells, {.max_cells = 1}));
     std::istringstream empty(fixture(0, 0)); CHECK(read_legacy_document(empty)->empty());
 }
+
+TEST("legacy export uses reference identifiers and translates signed coordinates") {
+    Circuit circuit; circuit.set({-2, 7}, Element::source); circuit.set({0, 8}, Element::signal, 3);
+    std::ostringstream output; CHECK(write_legacy_document(output, circuit));
+    CHECK(output.str() == fixture(3, 2, std::string("\x10\0\0\0\0\x0f", 6)));
+    std::istringstream input(output.str()); const auto loaded = read_legacy_document(input);
+    CHECK(loaded && loaded->at({0, 0}) == Element::source && loaded->saved_state({2, 1}) == 3);
+    Circuit huge; huge.set({std::numeric_limits<Coordinate>::min(), 0}, Element::wire);
+    huge.set({std::numeric_limits<Coordinate>::max(), 0}, Element::wire);
+    std::ostringstream rejected; CHECK(!write_legacy_document(rejected, huge)); CHECK(rejected.str().empty());
+    Circuit empty; std::ostringstream zero; CHECK(write_legacy_document(zero, empty)); CHECK(zero.str() == fixture(0, 0));
+}
+TEST("legacy serialization round trips every occupied type and state") {
+    Circuit circuit;
+    for (unsigned type = 1; type < 14; ++type) for (unsigned state = 0; state < 4; ++state)
+        circuit.set({static_cast<Coordinate>(type - 1), static_cast<Coordinate>(state)}, legacy_elements[type], static_cast<std::uint8_t>(state));
+    std::ostringstream output; CHECK(write_legacy_document(output, circuit));
+    std::istringstream input(output.str()); CHECK(read_legacy_document(input).value() == circuit);
+}
