@@ -179,11 +179,11 @@ public:
             if (!dialog_pending_ && discard_changes()) quit = true;
             return;
         }
-        if (dialog_pending_) return;
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST) {
-            drag_.reset(); pan_button_.reset(); preview_.clear(); accumulator_ = 0; eyedropper_ = false;
+            cancel_gesture(); accumulator_ = 0;
         }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
+        if (dialog_pending_) return;
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
         if (speed_edit_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
@@ -357,6 +357,13 @@ private:
     bool speed_error_{};
     double accumulator_{};
 
+    void cancel_gesture() {
+        drag_.reset();
+        pan_button_.reset();
+        preview_.clear();
+        eyedropper_ = false;
+    }
+
     bool apply(std::span<const Cell> edits) {
         const auto result = history.apply(circuit, edits);
         if (!result) { status_ = result.error(); return false; }
@@ -447,7 +454,7 @@ private:
             return;
         }
         if (e.key == SDLK_ESCAPE) {
-            drag_.reset(); pan_button_.reset(); preview_.clear(); selection_.reset(); placing_ = false; help_ = false; return;
+            cancel_gesture(); selection_.reset(); placing_ = false; help_ = false; return;
         }
         if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
             const std::int64_t distance = control ? 4 : 1;
@@ -484,7 +491,7 @@ private:
         case SDLK_R: simulation.reset(); accumulator_ = 0; break;
         case SDLK_Q: tools_[0] = {ToolKind::selector}; placing_ = false; break;
         case SDLK_E: eyedropper_ = true; break;
-        case SDLK_B: help_ = !help_; break;
+        case SDLK_B: cancel_gesture(); help_ = !help_; break;
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_DELETE:
         case SDLK_BACKSPACE: erase_selection(); break;
@@ -508,7 +515,7 @@ private:
         speed_replace_ = true;
         speed_error_ = false;
         accumulator_ = 0;
-        drag_.reset(); preview_.clear();
+        cancel_gesture();
     }
 
     void speed_key(SDL_Keycode code) {
@@ -566,7 +573,7 @@ private:
 
     void clipboard_action(char action, bool choose) {
         if (action != 'v' && !selection_) { status_ = "SELECT A REGION FIRST"; return; }
-        drag_.reset(); preview_.clear(); placing_ = false;
+        cancel_gesture(); placing_ = false;
         if (choose) { clipboard_menu_ = action; return; }
         clipboard_ = 0;
         if (action == 'v') begin_paste(); else copy(action == 'x');
@@ -666,6 +673,7 @@ private:
 
     void file_dialog(bool saving) {
         if (dialog_pending_) return;
+        cancel_gesture();
         running = false;
         dialog_pending_ = true;
         static const SDL_DialogFileFilter filter{"Gatehaven circuit", "ghv"};
@@ -916,6 +924,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto after_pan = app.view.center_x;
     require(SDL_PushEvent(&motion), "Could not push released pan event"); dispatch(app, renderer);
     require(app.view.center_x == after_pan, "Pan continued after its button was released");
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}, SDL_BUTTON_RIGHT);
+    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3}, SDL_BUTTON_RIGHT); // Release consumed by the modal dialog.
+    key(SDLK_ESCAPE);
+    require(SDL_PushEvent(&motion), "Could not push post-dialog motion"); dispatch(app, renderer);
+    require(app.view.center_x == after_pan, "Opening a dialog left a pan gesture active");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
