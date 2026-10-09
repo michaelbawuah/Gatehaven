@@ -1,5 +1,5 @@
 {
-  "schema": 1,
+  "schema": 2,
   "seed": 20261009,
   "observations": [
     {
@@ -247,7 +247,7 @@
       "ticks": 0,
       "cells": 53,
       "mismatches": 0,
-      "reference_state_sha256": "4e8c6a9216bcd464ae4b25329770ebb4083ab35e9cd94c7d321a1cc6f32467cd",
+      "reference_state_sha256": "40f8feb9ca6d1eaf83a6de309df7585544939942701470856deadc0cae2e020b",
       "first_mismatches": []
     },
     {
@@ -255,7 +255,7 @@
       "ticks": 1,
       "cells": 53,
       "mismatches": 0,
-      "reference_state_sha256": "c5905d686cdc09d57fecaa24643ed4a7280117f1e94b205ef26f156602e30002",
+      "reference_state_sha256": "9d89e0f823214ec48f7a5667477f8040e9bd5cecc7beedc4897b712e554aacf0",
       "first_mismatches": []
     },
     {
@@ -263,7 +263,7 @@
       "ticks": 2,
       "cells": 53,
       "mismatches": 0,
-      "reference_state_sha256": "c5905d686cdc09d57fecaa24643ed4a7280117f1e94b205ef26f156602e30002",
+      "reference_state_sha256": "9d89e0f823214ec48f7a5667477f8040e9bd5cecc7beedc4897b712e554aacf0",
       "first_mismatches": []
     },
     {
@@ -271,7 +271,7 @@
       "ticks": 7,
       "cells": 53,
       "mismatches": 0,
-      "reference_state_sha256": "c5905d686cdc09d57fecaa24643ed4a7280117f1e94b205ef26f156602e30002",
+      "reference_state_sha256": "9d89e0f823214ec48f7a5667477f8040e9bd5cecc7beedc4897b712e554aacf0",
       "first_mismatches": []
     },
     {
@@ -279,7 +279,7 @@
       "ticks": 0,
       "cells": 50,
       "mismatches": 0,
-      "reference_state_sha256": "2c31cd7560a6e6b55c3f50643dc194fcc4db0385397b2fbd4c35e50b529a1f25",
+      "reference_state_sha256": "1c1cf8239ad0fc2415c52a053837277e3c7bddde1e4075c7f2ca9fdbecb3512e",
       "first_mismatches": []
     },
     {
@@ -287,7 +287,7 @@
       "ticks": 1,
       "cells": 50,
       "mismatches": 0,
-      "reference_state_sha256": "b5dc0f8396413feac81bc6c3826a8fe32df2debf1fee19fe129e5c97b1950611",
+      "reference_state_sha256": "01165f1e69226138bded35ca9f5850090c492644033517e6210dc6cdfa94c6ee",
       "first_mismatches": []
     },
     {
@@ -295,7 +295,7 @@
       "ticks": 2,
       "cells": 50,
       "mismatches": 0,
-      "reference_state_sha256": "b5dc0f8396413feac81bc6c3826a8fe32df2debf1fee19fe129e5c97b1950611",
+      "reference_state_sha256": "01165f1e69226138bded35ca9f5850090c492644033517e6210dc6cdfa94c6ee",
       "first_mismatches": []
     },
     {
@@ -303,7 +303,7 @@
       "ticks": 7,
       "cells": 50,
       "mismatches": 0,
-      "reference_state_sha256": "b5dc0f8396413feac81bc6c3826a8fe32df2debf1fee19fe129e5c97b1950611",
+      "reference_state_sha256": "01165f1e69226138bded35ca9f5850090c492644033517e6210dc6cdfa94c6ee",
       "first_mismatches": []
     },
     {
@@ -343,7 +343,7 @@
       "ticks": 0,
       "cells": 99,
       "mismatches": 0,
-      "reference_state_sha256": "2b89d3e26e16a3de9fb502c9114e5f0832c5b183e1e3ceb2bd7a723b49cb3c70",
+      "reference_state_sha256": "8b82008374ce19d24f9df9d0795942a3c4ae756e5d6b0f3e84b854df2585567a",
       "first_mismatches": []
     },
     {
@@ -351,7 +351,7 @@
       "ticks": 1,
       "cells": 99,
       "mismatches": 0,
-      "reference_state_sha256": "0c44a15bf14b13dc499081b3ea9971f2cdb2cc586b0d3c6eb841a0e7582d7de2",
+      "reference_state_sha256": "b67a38fe83207954e8debdad2329f1aeba9a30d35516685162839b11c9dfd127",
       "first_mismatches": []
     },
     {
@@ -359,7 +359,7 @@
       "ticks": 2,
       "cells": 99,
       "mismatches": 0,
-      "reference_state_sha256": "0c44a15bf14b13dc499081b3ea9971f2cdb2cc586b0d3c6eb841a0e7582d7de2",
+      "reference_state_sha256": "b67a38fe83207954e8debdad2329f1aeba9a30d35516685162839b11c9dfd127",
       "first_mismatches": []
     },
     {
@@ -367,7 +367,7 @@
       "ticks": 7,
       "cells": 99,
       "mismatches": 0,
-      "reference_state_sha256": "0c44a15bf14b13dc499081b3ea9971f2cdb2cc586b0d3c6eb841a0e7582d7de2",
+      "reference_state_sha256": "b67a38fe83207954e8debdad2329f1aeba9a30d35516685162839b11c9dfd127",
       "first_mismatches": []
     },
     {
@@ -375,7 +375,7 @@
       "ticks": 0,
       "cells": 76,
       "mismatches": 0,
-      "reference_state_sha256": "dff29ebbd02ee981dcfdb3636ff9453a2d470444ce9e1677165b6a74b3869408",
+      "reference_state_sha256": "0309034f8da42ab6e6412f4b7764883da9c07dda024657a35d16a3fa5c03091f",
       "first_mismatches": []
     },
     {
@@ -383,7 +383,7 @@
       "ticks": 1,
       "cells": 76,
       "mismatches": 0,
-      "reference_state_sha256": "4b6564b1d7855105c4d4889e921c09100cadecf11acaec9a5eb013604ea75482",
+      "reference_state_sha256": "3fac7b816aa8418d3c93bca0c4e42482273c96a5e83d3aece0e7f1e1e32b6fad",
       "first_mismatches": []
     },
     {
@@ -391,7 +391,7 @@
       "ticks": 2,
       "cells": 76,
       "mismatches": 0,
-      "reference_state_sha256": "4b6564b1d7855105c4d4889e921c09100cadecf11acaec9a5eb013604ea75482",
+      "reference_state_sha256": "3fac7b816aa8418d3c93bca0c4e42482273c96a5e83d3aece0e7f1e1e32b6fad",
       "first_mismatches": []
     },
     {
@@ -399,7 +399,7 @@
       "ticks": 7,
       "cells": 76,
       "mismatches": 0,
-      "reference_state_sha256": "4b6564b1d7855105c4d4889e921c09100cadecf11acaec9a5eb013604ea75482",
+      "reference_state_sha256": "3fac7b816aa8418d3c93bca0c4e42482273c96a5e83d3aece0e7f1e1e32b6fad",
       "first_mismatches": []
     },
     {
@@ -599,7 +599,7 @@
       "ticks": 0,
       "cells": 131,
       "mismatches": 0,
-      "reference_state_sha256": "4d3bda6bcd54b630f8ca88bd3186d27bff00469760b4c1db9760a073589f8d12",
+      "reference_state_sha256": "24451713de15eb5c827e22bad7259aece584404de1d0e2f5ba57395272de61ab",
       "first_mismatches": []
     },
     {
@@ -607,7 +607,7 @@
       "ticks": 1,
       "cells": 131,
       "mismatches": 0,
-      "reference_state_sha256": "1d8a0fa531e872ccab8eabf3a731cc1f84bfc2bb991c6a1b22a2a57ea3a8d47b",
+      "reference_state_sha256": "d0a4a72457935a5d0c59c51decf5a2a6416d247b5ec0df8060f5e010b969bb00",
       "first_mismatches": []
     },
     {
@@ -615,7 +615,7 @@
       "ticks": 2,
       "cells": 131,
       "mismatches": 0,
-      "reference_state_sha256": "1d8a0fa531e872ccab8eabf3a731cc1f84bfc2bb991c6a1b22a2a57ea3a8d47b",
+      "reference_state_sha256": "d0a4a72457935a5d0c59c51decf5a2a6416d247b5ec0df8060f5e010b969bb00",
       "first_mismatches": []
     },
     {
@@ -623,7 +623,7 @@
       "ticks": 7,
       "cells": 131,
       "mismatches": 0,
-      "reference_state_sha256": "1d8a0fa531e872ccab8eabf3a731cc1f84bfc2bb991c6a1b22a2a57ea3a8d47b",
+      "reference_state_sha256": "d0a4a72457935a5d0c59c51decf5a2a6416d247b5ec0df8060f5e010b969bb00",
       "first_mismatches": []
     },
     {
@@ -663,7 +663,7 @@
       "ticks": 0,
       "cells": 39,
       "mismatches": 0,
-      "reference_state_sha256": "f4681f3494efa64ae510ac9e4ed755a2a4c550bc9501d8e528883bef99ced966",
+      "reference_state_sha256": "c89fd4f38ede9649d94de2013153d7db3f8757a4ef229ae66b02c507d8c63c51",
       "first_mismatches": []
     },
     {
@@ -671,7 +671,7 @@
       "ticks": 1,
       "cells": 39,
       "mismatches": 0,
-      "reference_state_sha256": "407c7287f4718803781a47304672d4b7192b270039589f5354a78ee89b5ccaee",
+      "reference_state_sha256": "576bac67f68f4b0c1cf6460da3b07098edcb994b9bdbf3d8c8fe9b3df1adbe5b",
       "first_mismatches": []
     },
     {
@@ -679,7 +679,7 @@
       "ticks": 2,
       "cells": 39,
       "mismatches": 0,
-      "reference_state_sha256": "407c7287f4718803781a47304672d4b7192b270039589f5354a78ee89b5ccaee",
+      "reference_state_sha256": "576bac67f68f4b0c1cf6460da3b07098edcb994b9bdbf3d8c8fe9b3df1adbe5b",
       "first_mismatches": []
     },
     {
@@ -687,7 +687,7 @@
       "ticks": 7,
       "cells": 39,
       "mismatches": 0,
-      "reference_state_sha256": "407c7287f4718803781a47304672d4b7192b270039589f5354a78ee89b5ccaee",
+      "reference_state_sha256": "576bac67f68f4b0c1cf6460da3b07098edcb994b9bdbf3d8c8fe9b3df1adbe5b",
       "first_mismatches": []
     },
     {
@@ -695,7 +695,7 @@
       "ticks": 0,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "fd3ee7cdcdde028de43d6732fba103bae7a2267832f55881e860e35cea4a1044",
+      "reference_state_sha256": "3a92620ad62b8e361e1b5958109387fac0cd898c07bc891212391044db370aed",
       "first_mismatches": []
     },
     {
@@ -703,7 +703,7 @@
       "ticks": 1,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "fd3ee7cdcdde028de43d6732fba103bae7a2267832f55881e860e35cea4a1044",
+      "reference_state_sha256": "3a92620ad62b8e361e1b5958109387fac0cd898c07bc891212391044db370aed",
       "first_mismatches": []
     },
     {
@@ -711,7 +711,7 @@
       "ticks": 2,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "fd3ee7cdcdde028de43d6732fba103bae7a2267832f55881e860e35cea4a1044",
+      "reference_state_sha256": "3a92620ad62b8e361e1b5958109387fac0cd898c07bc891212391044db370aed",
       "first_mismatches": []
     },
     {
@@ -719,7 +719,7 @@
       "ticks": 7,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "fd3ee7cdcdde028de43d6732fba103bae7a2267832f55881e860e35cea4a1044",
+      "reference_state_sha256": "3a92620ad62b8e361e1b5958109387fac0cd898c07bc891212391044db370aed",
       "first_mismatches": []
     },
     {
@@ -727,7 +727,7 @@
       "ticks": 0,
       "cells": 152,
       "mismatches": 0,
-      "reference_state_sha256": "00fb6991d149a2052dc4a68ad312cd51ca79f78a754c8097a4142cb8ba1cb22c",
+      "reference_state_sha256": "f7aac7e4601ef63ca15987cd220fb6f7f476116431f070861c6a78f97cd3f205",
       "first_mismatches": []
     },
     {
@@ -735,7 +735,7 @@
       "ticks": 1,
       "cells": 152,
       "mismatches": 0,
-      "reference_state_sha256": "4a0acf4d135110cb5b7e03918bbe1c6e13ab075aaf08b7617e85a8facf06cf1a",
+      "reference_state_sha256": "53cd9ba3a29b8af849dc445c11edcf79fcf731be5519095a8606c21f00cd87be",
       "first_mismatches": []
     },
     {
@@ -743,7 +743,7 @@
       "ticks": 2,
       "cells": 152,
       "mismatches": 0,
-      "reference_state_sha256": "70fc574df98d5337485202c07da4da489a7c23508bc8a61fe23a1c2ab1aaec15",
+      "reference_state_sha256": "6de040d0cd1a7e190e3ea75022b53efed99ab995958b1d89b4fce83dc29e0779",
       "first_mismatches": []
     },
     {
@@ -751,7 +751,7 @@
       "ticks": 7,
       "cells": 152,
       "mismatches": 0,
-      "reference_state_sha256": "4a0acf4d135110cb5b7e03918bbe1c6e13ab075aaf08b7617e85a8facf06cf1a",
+      "reference_state_sha256": "53cd9ba3a29b8af849dc445c11edcf79fcf731be5519095a8606c21f00cd87be",
       "first_mismatches": []
     },
     {
@@ -791,7 +791,7 @@
       "ticks": 0,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "2b01ed2ad1cbe5a1e2be6f733ae371eacdcae3d85d2fceb74aec62feea0e66ce",
+      "reference_state_sha256": "f6f3e2c5615282cef771e3532d81631af42400f0cdf833294c311fea269c19bf",
       "first_mismatches": []
     },
     {
@@ -799,7 +799,7 @@
       "ticks": 1,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "57b4493cf7ab7620118948a17cbd4ee5ba697ff28c9111bac36743fecadf5308",
+      "reference_state_sha256": "7d6c5f47c546a7bbdabe6861e14e6b9bb15296d77f7299e4f644a738c30f43b5",
       "first_mismatches": []
     },
     {
@@ -807,7 +807,7 @@
       "ticks": 2,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "57b4493cf7ab7620118948a17cbd4ee5ba697ff28c9111bac36743fecadf5308",
+      "reference_state_sha256": "7d6c5f47c546a7bbdabe6861e14e6b9bb15296d77f7299e4f644a738c30f43b5",
       "first_mismatches": []
     },
     {
@@ -815,7 +815,7 @@
       "ticks": 7,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "57b4493cf7ab7620118948a17cbd4ee5ba697ff28c9111bac36743fecadf5308",
+      "reference_state_sha256": "7d6c5f47c546a7bbdabe6861e14e6b9bb15296d77f7299e4f644a738c30f43b5",
       "first_mismatches": []
     },
     {
@@ -855,7 +855,7 @@
       "ticks": 0,
       "cells": 88,
       "mismatches": 0,
-      "reference_state_sha256": "d60502235ef345eda48542a35fc426518bd1c496e4c757593ac0ec5bbe78b77f",
+      "reference_state_sha256": "9e5a7fb9614fb294c05cd2d2dc0e20a1ab0d6fc7084b3294cf5fdd72eac31ccf",
       "first_mismatches": []
     },
     {
@@ -863,7 +863,7 @@
       "ticks": 1,
       "cells": 88,
       "mismatches": 0,
-      "reference_state_sha256": "6d2fd6db1e1620f36e550d7bffee6737d12c35d036414810b7c7b90c390fda56",
+      "reference_state_sha256": "3fa9fb640127fdcd32d0ec1cb2bcc2c09ebb5f5ae395236182d17e33c5a77b6d",
       "first_mismatches": []
     },
     {
@@ -871,7 +871,7 @@
       "ticks": 2,
       "cells": 88,
       "mismatches": 0,
-      "reference_state_sha256": "6d2fd6db1e1620f36e550d7bffee6737d12c35d036414810b7c7b90c390fda56",
+      "reference_state_sha256": "3fa9fb640127fdcd32d0ec1cb2bcc2c09ebb5f5ae395236182d17e33c5a77b6d",
       "first_mismatches": []
     },
     {
@@ -879,7 +879,7 @@
       "ticks": 7,
       "cells": 88,
       "mismatches": 0,
-      "reference_state_sha256": "6d2fd6db1e1620f36e550d7bffee6737d12c35d036414810b7c7b90c390fda56",
+      "reference_state_sha256": "3fa9fb640127fdcd32d0ec1cb2bcc2c09ebb5f5ae395236182d17e33c5a77b6d",
       "first_mismatches": []
     },
     {
@@ -919,7 +919,7 @@
       "ticks": 0,
       "cells": 169,
       "mismatches": 0,
-      "reference_state_sha256": "60b79b2c09090b787011bda2e217493ad800fd71a7abb8c358e772ab51b73e36",
+      "reference_state_sha256": "cebf267458f74150f3efc31c7a45a7eb9399ce70077e0839de9b470a97da79e1",
       "first_mismatches": []
     },
     {
@@ -927,7 +927,7 @@
       "ticks": 1,
       "cells": 169,
       "mismatches": 0,
-      "reference_state_sha256": "f161a137d833b3e5f3184d542a9402eebeffd6ba059567bece00712e2890cb1b",
+      "reference_state_sha256": "89b888d345eef02bc597156eaf8113424aa2d331b1a8352bcbcfa093f355292c",
       "first_mismatches": []
     },
     {
@@ -935,7 +935,7 @@
       "ticks": 2,
       "cells": 169,
       "mismatches": 0,
-      "reference_state_sha256": "f50f097d30f572e1b2f706368f1c8404542e2cc9aa77784c31d8352ea56055e6",
+      "reference_state_sha256": "554172056b541392cb818f2c16043c5e716c5778ddc75489595a3ecba55dd962",
       "first_mismatches": []
     },
     {
@@ -943,7 +943,7 @@
       "ticks": 7,
       "cells": 169,
       "mismatches": 0,
-      "reference_state_sha256": "f50f097d30f572e1b2f706368f1c8404542e2cc9aa77784c31d8352ea56055e6",
+      "reference_state_sha256": "554172056b541392cb818f2c16043c5e716c5778ddc75489595a3ecba55dd962",
       "first_mismatches": []
     },
     {
@@ -951,7 +951,7 @@
       "ticks": 0,
       "cells": 78,
       "mismatches": 0,
-      "reference_state_sha256": "680c5f81fee3c1003e76791841a17a6458252c3627b52b84c130e0ec9e66c2fa",
+      "reference_state_sha256": "daa481a3ef20cdd97690cee7a27d538e447a05ce4cb46742ef864c486bc95c7a",
       "first_mismatches": []
     },
     {
@@ -959,7 +959,7 @@
       "ticks": 1,
       "cells": 78,
       "mismatches": 0,
-      "reference_state_sha256": "bb4850a581afcd33b323f1dfd78156a6a192bb0cb702a843f5ede9a5f877a804",
+      "reference_state_sha256": "af81d0453e4afc0821cd921cba6df3b68577686da7ecb2cdc26c6c9a70d9429e",
       "first_mismatches": []
     },
     {
@@ -967,7 +967,7 @@
       "ticks": 2,
       "cells": 78,
       "mismatches": 0,
-      "reference_state_sha256": "bb4850a581afcd33b323f1dfd78156a6a192bb0cb702a843f5ede9a5f877a804",
+      "reference_state_sha256": "af81d0453e4afc0821cd921cba6df3b68577686da7ecb2cdc26c6c9a70d9429e",
       "first_mismatches": []
     },
     {
@@ -975,7 +975,7 @@
       "ticks": 7,
       "cells": 78,
       "mismatches": 0,
-      "reference_state_sha256": "bb4850a581afcd33b323f1dfd78156a6a192bb0cb702a843f5ede9a5f877a804",
+      "reference_state_sha256": "af81d0453e4afc0821cd921cba6df3b68577686da7ecb2cdc26c6c9a70d9429e",
       "first_mismatches": []
     },
     {
@@ -1047,7 +1047,7 @@
       "ticks": 0,
       "cells": 27,
       "mismatches": 0,
-      "reference_state_sha256": "8b2347217a973283e949bca1d0c64f7a5f231cd8c86b1f2025ee7b736dd70346",
+      "reference_state_sha256": "eadcc70bde532c4e336d1b3533fa5d34b4912b62e28e9f7feeb5d907a77d33c5",
       "first_mismatches": []
     },
     {
@@ -1055,7 +1055,7 @@
       "ticks": 1,
       "cells": 27,
       "mismatches": 0,
-      "reference_state_sha256": "b4f23ab5e6ef1b4d27e6b4a0fbfe13d36723e2b3335351cad782611b4caa2d3c",
+      "reference_state_sha256": "b94e5b8eb98610a780e6fe7e8a6db57563edd61de5431bc916616dd0029e0db3",
       "first_mismatches": []
     },
     {
@@ -1063,7 +1063,7 @@
       "ticks": 2,
       "cells": 27,
       "mismatches": 0,
-      "reference_state_sha256": "b4f23ab5e6ef1b4d27e6b4a0fbfe13d36723e2b3335351cad782611b4caa2d3c",
+      "reference_state_sha256": "b94e5b8eb98610a780e6fe7e8a6db57563edd61de5431bc916616dd0029e0db3",
       "first_mismatches": []
     },
     {
@@ -1071,7 +1071,7 @@
       "ticks": 7,
       "cells": 27,
       "mismatches": 0,
-      "reference_state_sha256": "b4f23ab5e6ef1b4d27e6b4a0fbfe13d36723e2b3335351cad782611b4caa2d3c",
+      "reference_state_sha256": "b94e5b8eb98610a780e6fe7e8a6db57563edd61de5431bc916616dd0029e0db3",
       "first_mismatches": []
     },
     {
@@ -1111,7 +1111,7 @@
       "ticks": 0,
       "cells": 95,
       "mismatches": 0,
-      "reference_state_sha256": "af13a04b541903560726a97f5ffca03d4fd92c4e64cb89b192bc797b0d70ae35",
+      "reference_state_sha256": "3cc2d57f3660ed0643a38b6db0df8c6f54409975850548ee5577eae6630518e5",
       "first_mismatches": []
     },
     {
@@ -1119,7 +1119,7 @@
       "ticks": 1,
       "cells": 95,
       "mismatches": 0,
-      "reference_state_sha256": "537b7063c5c854442dfc73c1a59153d57b103ff93ef541cea8ed5201c972095d",
+      "reference_state_sha256": "26e363b62c1287bdeb531785f1edb5ee104dad995da0a6ea185d01c74271b6b2",
       "first_mismatches": []
     },
     {
@@ -1127,7 +1127,7 @@
       "ticks": 2,
       "cells": 95,
       "mismatches": 0,
-      "reference_state_sha256": "537b7063c5c854442dfc73c1a59153d57b103ff93ef541cea8ed5201c972095d",
+      "reference_state_sha256": "26e363b62c1287bdeb531785f1edb5ee104dad995da0a6ea185d01c74271b6b2",
       "first_mismatches": []
     },
     {
@@ -1135,7 +1135,7 @@
       "ticks": 7,
       "cells": 95,
       "mismatches": 0,
-      "reference_state_sha256": "537b7063c5c854442dfc73c1a59153d57b103ff93ef541cea8ed5201c972095d",
+      "reference_state_sha256": "26e363b62c1287bdeb531785f1edb5ee104dad995da0a6ea185d01c74271b6b2",
       "first_mismatches": []
     },
     {
@@ -1143,7 +1143,7 @@
       "ticks": 0,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "e59a815d97f5263b94eeeb78cd43d0820435109e7b44fe76ce93dce2063176af",
+      "reference_state_sha256": "70eab1ec747458abafa658455d5c8dd595db0d33e4ebcf20bf9105702f61cc04",
       "first_mismatches": []
     },
     {
@@ -1151,7 +1151,7 @@
       "ticks": 1,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "e59a815d97f5263b94eeeb78cd43d0820435109e7b44fe76ce93dce2063176af",
+      "reference_state_sha256": "70eab1ec747458abafa658455d5c8dd595db0d33e4ebcf20bf9105702f61cc04",
       "first_mismatches": []
     },
     {
@@ -1159,7 +1159,7 @@
       "ticks": 2,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "e59a815d97f5263b94eeeb78cd43d0820435109e7b44fe76ce93dce2063176af",
+      "reference_state_sha256": "70eab1ec747458abafa658455d5c8dd595db0d33e4ebcf20bf9105702f61cc04",
       "first_mismatches": []
     },
     {
@@ -1167,7 +1167,7 @@
       "ticks": 7,
       "cells": 8,
       "mismatches": 0,
-      "reference_state_sha256": "e59a815d97f5263b94eeeb78cd43d0820435109e7b44fe76ce93dce2063176af",
+      "reference_state_sha256": "70eab1ec747458abafa658455d5c8dd595db0d33e4ebcf20bf9105702f61cc04",
       "first_mismatches": []
     },
     {
@@ -1303,7 +1303,7 @@
       "ticks": 0,
       "cells": 153,
       "mismatches": 0,
-      "reference_state_sha256": "72b0b7661658a6982734f99f48b5367526661ec25f6f8b4095d8cb041a583a83",
+      "reference_state_sha256": "7fface287ce53659b453822866ad5e8509592c2842dd27ff43b37bbb53e40d47",
       "first_mismatches": []
     },
     {
@@ -1311,7 +1311,7 @@
       "ticks": 1,
       "cells": 153,
       "mismatches": 0,
-      "reference_state_sha256": "a04598162fc58a43d0a1f54575a66d2629e0b0e64a442c7f9bc63b19c31c74a9",
+      "reference_state_sha256": "61f7c77f5e7dd241eb7fa8da7e8c27d499974e78ae23358a586c43407f623520",
       "first_mismatches": []
     },
     {
@@ -1319,7 +1319,7 @@
       "ticks": 2,
       "cells": 153,
       "mismatches": 0,
-      "reference_state_sha256": "a04598162fc58a43d0a1f54575a66d2629e0b0e64a442c7f9bc63b19c31c74a9",
+      "reference_state_sha256": "61f7c77f5e7dd241eb7fa8da7e8c27d499974e78ae23358a586c43407f623520",
       "first_mismatches": []
     },
     {
@@ -1327,7 +1327,7 @@
       "ticks": 7,
       "cells": 153,
       "mismatches": 0,
-      "reference_state_sha256": "a04598162fc58a43d0a1f54575a66d2629e0b0e64a442c7f9bc63b19c31c74a9",
+      "reference_state_sha256": "61f7c77f5e7dd241eb7fa8da7e8c27d499974e78ae23358a586c43407f623520",
       "first_mismatches": []
     },
     {
@@ -1367,7 +1367,7 @@
       "ticks": 0,
       "cells": 156,
       "mismatches": 0,
-      "reference_state_sha256": "fad3e70c3824ec7d768d7d5c441b19ec074c2810d214b6ace8ab3d8071dc0b1b",
+      "reference_state_sha256": "72d9dab69044d6623c0d4c923b39792e46562546eb4a611ff50fb778c97d2ce4",
       "first_mismatches": []
     },
     {
@@ -1375,7 +1375,7 @@
       "ticks": 1,
       "cells": 156,
       "mismatches": 0,
-      "reference_state_sha256": "6a6a97d90ba8e11ab0fb3352221eee0b98a9842ad1513473618106888d8c4898",
+      "reference_state_sha256": "14ef7afd9afab0a692e5b3aa2afe99952623e1bdd7750559f6cf02f42b3181ea",
       "first_mismatches": []
     },
     {
@@ -1383,7 +1383,7 @@
       "ticks": 2,
       "cells": 156,
       "mismatches": 0,
-      "reference_state_sha256": "6a6a97d90ba8e11ab0fb3352221eee0b98a9842ad1513473618106888d8c4898",
+      "reference_state_sha256": "14ef7afd9afab0a692e5b3aa2afe99952623e1bdd7750559f6cf02f42b3181ea",
       "first_mismatches": []
     },
     {
@@ -1391,7 +1391,7 @@
       "ticks": 7,
       "cells": 156,
       "mismatches": 0,
-      "reference_state_sha256": "6a6a97d90ba8e11ab0fb3352221eee0b98a9842ad1513473618106888d8c4898",
+      "reference_state_sha256": "14ef7afd9afab0a692e5b3aa2afe99952623e1bdd7750559f6cf02f42b3181ea",
       "first_mismatches": []
     },
     {
@@ -1463,7 +1463,7 @@
       "ticks": 0,
       "cells": 83,
       "mismatches": 0,
-      "reference_state_sha256": "55242afaf58b1e7c3dfe68e6d87d9d7e9825442adc0089f41db7543de1df33f9",
+      "reference_state_sha256": "facf036ecd2cf5f6d25ae319b9d5641d97e089174eab10328a4bae9e0f227bc9",
       "first_mismatches": []
     },
     {
@@ -1471,7 +1471,7 @@
       "ticks": 1,
       "cells": 83,
       "mismatches": 0,
-      "reference_state_sha256": "02d14039c1de96bc24d331aeeb9bb4a05fafbad0086f787a04b0de67765e72ac",
+      "reference_state_sha256": "588c45fcf6babaf5fdf207542de612cb17d974f1bdb41a16131b19b2438b5b10",
       "first_mismatches": []
     },
     {
@@ -1479,7 +1479,7 @@
       "ticks": 2,
       "cells": 83,
       "mismatches": 0,
-      "reference_state_sha256": "02d14039c1de96bc24d331aeeb9bb4a05fafbad0086f787a04b0de67765e72ac",
+      "reference_state_sha256": "588c45fcf6babaf5fdf207542de612cb17d974f1bdb41a16131b19b2438b5b10",
       "first_mismatches": []
     },
     {
@@ -1487,7 +1487,7 @@
       "ticks": 7,
       "cells": 83,
       "mismatches": 0,
-      "reference_state_sha256": "02d14039c1de96bc24d331aeeb9bb4a05fafbad0086f787a04b0de67765e72ac",
+      "reference_state_sha256": "588c45fcf6babaf5fdf207542de612cb17d974f1bdb41a16131b19b2438b5b10",
       "first_mismatches": []
     },
     {
@@ -1559,7 +1559,7 @@
       "ticks": 0,
       "cells": 92,
       "mismatches": 0,
-      "reference_state_sha256": "76b209d1cd1cab313516666dffd240f452ab3c432ed0a1385a0f5629f4356fc6",
+      "reference_state_sha256": "fed17720a5293bab7bc223a4c6ee18f707913730f5e25ea9ec925c70ba62c6fb",
       "first_mismatches": []
     },
     {
@@ -1567,7 +1567,7 @@
       "ticks": 1,
       "cells": 92,
       "mismatches": 0,
-      "reference_state_sha256": "dd6d8c1367806d2153c108e5767a5daa7643a7b7693bbb5f5ae68eae94e8319c",
+      "reference_state_sha256": "53e1d7215f2fa71545885d482ac671d744a3da3fb5af210125b996bf2cba82ac",
       "first_mismatches": []
     },
     {
@@ -1575,7 +1575,7 @@
       "ticks": 2,
       "cells": 92,
       "mismatches": 0,
-      "reference_state_sha256": "dd6d8c1367806d2153c108e5767a5daa7643a7b7693bbb5f5ae68eae94e8319c",
+      "reference_state_sha256": "53e1d7215f2fa71545885d482ac671d744a3da3fb5af210125b996bf2cba82ac",
       "first_mismatches": []
     },
     {
@@ -1583,7 +1583,7 @@
       "ticks": 7,
       "cells": 92,
       "mismatches": 0,
-      "reference_state_sha256": "dd6d8c1367806d2153c108e5767a5daa7643a7b7693bbb5f5ae68eae94e8319c",
+      "reference_state_sha256": "53e1d7215f2fa71545885d482ac671d744a3da3fb5af210125b996bf2cba82ac",
       "first_mismatches": []
     },
     {
@@ -1591,7 +1591,7 @@
       "ticks": 0,
       "cells": 66,
       "mismatches": 0,
-      "reference_state_sha256": "7aee4c46a5fe94e51635719629beff44e38a380eca8693262f81d1abf0d11f51",
+      "reference_state_sha256": "4372cd26b2f72a9d22625797df4e2dada4924a1aa16c0ca44fb970c050fdd1aa",
       "first_mismatches": []
     },
     {
@@ -1599,7 +1599,7 @@
       "ticks": 1,
       "cells": 66,
       "mismatches": 0,
-      "reference_state_sha256": "faca91e45ec860fc6837d83d41d04599ec244a0c604e8843a979b14604e471f0",
+      "reference_state_sha256": "00083239aeef68880183271177a0690eb89a2368160f2ab0b6c66fdcbccb0d63",
       "first_mismatches": []
     },
     {
@@ -1607,7 +1607,7 @@
       "ticks": 2,
       "cells": 66,
       "mismatches": 0,
-      "reference_state_sha256": "faca91e45ec860fc6837d83d41d04599ec244a0c604e8843a979b14604e471f0",
+      "reference_state_sha256": "00083239aeef68880183271177a0690eb89a2368160f2ab0b6c66fdcbccb0d63",
       "first_mismatches": []
     },
     {
@@ -1615,7 +1615,7 @@
       "ticks": 7,
       "cells": 66,
       "mismatches": 0,
-      "reference_state_sha256": "faca91e45ec860fc6837d83d41d04599ec244a0c604e8843a979b14604e471f0",
+      "reference_state_sha256": "00083239aeef68880183271177a0690eb89a2368160f2ab0b6c66fdcbccb0d63",
       "first_mismatches": []
     },
     {
@@ -1655,7 +1655,7 @@
       "ticks": 0,
       "cells": 145,
       "mismatches": 0,
-      "reference_state_sha256": "1a8231871e9f22a06620c59be6f94920f49b2057540560d038e9641062964287",
+      "reference_state_sha256": "efb4c0566aec91e8466a5cd68f996f04aaa52c1b6a321a9708d84e3ba0f30eba",
       "first_mismatches": []
     },
     {
@@ -1663,7 +1663,7 @@
       "ticks": 1,
       "cells": 145,
       "mismatches": 0,
-      "reference_state_sha256": "43c0ff57cc147584892dddbf3158ce13189a62b760c7ea9e6b689092a16c70fa",
+      "reference_state_sha256": "c2e2819c0880057e461ab38e418511af005a8865ddf36019a4de3d150e4fb5a3",
       "first_mismatches": []
     },
     {
@@ -1671,7 +1671,7 @@
       "ticks": 2,
       "cells": 145,
       "mismatches": 0,
-      "reference_state_sha256": "43c0ff57cc147584892dddbf3158ce13189a62b760c7ea9e6b689092a16c70fa",
+      "reference_state_sha256": "c2e2819c0880057e461ab38e418511af005a8865ddf36019a4de3d150e4fb5a3",
       "first_mismatches": []
     },
     {
@@ -1679,7 +1679,7 @@
       "ticks": 7,
       "cells": 145,
       "mismatches": 0,
-      "reference_state_sha256": "43c0ff57cc147584892dddbf3158ce13189a62b760c7ea9e6b689092a16c70fa",
+      "reference_state_sha256": "c2e2819c0880057e461ab38e418511af005a8865ddf36019a4de3d150e4fb5a3",
       "first_mismatches": []
     },
     {
@@ -1687,7 +1687,7 @@
       "ticks": 0,
       "cells": 115,
       "mismatches": 0,
-      "reference_state_sha256": "de414662b89130dbb4f8ef762c32156f603bc0b85bc851b108ce3a930f3009c8",
+      "reference_state_sha256": "74a74df8a5e58119c3f7b2dd4ebaee89f67dba9fd7752640041599ae92c7f7a9",
       "first_mismatches": []
     },
     {
@@ -1695,7 +1695,7 @@
       "ticks": 1,
       "cells": 115,
       "mismatches": 0,
-      "reference_state_sha256": "78f8a44c6f792d0c8dddc96aa4ecf20eb0e3688dda7784ab8ab76f3a887fe870",
+      "reference_state_sha256": "e8964479ce686f198748300bc86f1d71ac5e63f8ca414c5ba9c91da37b38253f",
       "first_mismatches": []
     },
     {
@@ -1703,7 +1703,7 @@
       "ticks": 2,
       "cells": 115,
       "mismatches": 0,
-      "reference_state_sha256": "78f8a44c6f792d0c8dddc96aa4ecf20eb0e3688dda7784ab8ab76f3a887fe870",
+      "reference_state_sha256": "e8964479ce686f198748300bc86f1d71ac5e63f8ca414c5ba9c91da37b38253f",
       "first_mismatches": []
     },
     {
@@ -1711,7 +1711,7 @@
       "ticks": 7,
       "cells": 115,
       "mismatches": 0,
-      "reference_state_sha256": "78f8a44c6f792d0c8dddc96aa4ecf20eb0e3688dda7784ab8ab76f3a887fe870",
+      "reference_state_sha256": "e8964479ce686f198748300bc86f1d71ac5e63f8ca414c5ba9c91da37b38253f",
       "first_mismatches": []
     },
     {
@@ -1815,7 +1815,7 @@
       "ticks": 0,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "624f5e0eb244159ff4184722275aa391b558757fed3887e2447043789b67234d",
+      "reference_state_sha256": "9b6339bfd0c3f027e760422f0c8e5d5304726c8e6de3bd185cb03e83bebe7402",
       "first_mismatches": []
     },
     {
@@ -1823,7 +1823,7 @@
       "ticks": 1,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "624f5e0eb244159ff4184722275aa391b558757fed3887e2447043789b67234d",
+      "reference_state_sha256": "800796a28589ebb90c4bf6dd717af62be18189ea71a59243b4b579a78067d85d",
       "first_mismatches": []
     },
     {
@@ -1831,7 +1831,7 @@
       "ticks": 2,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "624f5e0eb244159ff4184722275aa391b558757fed3887e2447043789b67234d",
+      "reference_state_sha256": "800796a28589ebb90c4bf6dd717af62be18189ea71a59243b4b579a78067d85d",
       "first_mismatches": []
     },
     {
@@ -1839,7 +1839,7 @@
       "ticks": 7,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "624f5e0eb244159ff4184722275aa391b558757fed3887e2447043789b67234d",
+      "reference_state_sha256": "800796a28589ebb90c4bf6dd717af62be18189ea71a59243b4b579a78067d85d",
       "first_mismatches": []
     },
     {
@@ -1943,7 +1943,7 @@
       "ticks": 0,
       "cells": 38,
       "mismatches": 0,
-      "reference_state_sha256": "780a2fc4c94c70c26448ccaf1e5331db3a58f2c4001a19cb75452e2ab033c29f",
+      "reference_state_sha256": "bf5156e1d13d2db541ca153f3c56e6da097932d1e423d29941f082e2cd31ccc8",
       "first_mismatches": []
     },
     {
@@ -1951,7 +1951,7 @@
       "ticks": 1,
       "cells": 38,
       "mismatches": 0,
-      "reference_state_sha256": "58b22420a1a3d809df780d6a70d01e786df831a95a905220d5c624ff139eb393",
+      "reference_state_sha256": "2404f822be2c854cabb6e647e7bba437aa5ba89c25007d62f5afb5f9808707ca",
       "first_mismatches": []
     },
     {
@@ -1959,7 +1959,7 @@
       "ticks": 2,
       "cells": 38,
       "mismatches": 0,
-      "reference_state_sha256": "58b22420a1a3d809df780d6a70d01e786df831a95a905220d5c624ff139eb393",
+      "reference_state_sha256": "2404f822be2c854cabb6e647e7bba437aa5ba89c25007d62f5afb5f9808707ca",
       "first_mismatches": []
     },
     {
@@ -1967,7 +1967,7 @@
       "ticks": 7,
       "cells": 38,
       "mismatches": 0,
-      "reference_state_sha256": "58b22420a1a3d809df780d6a70d01e786df831a95a905220d5c624ff139eb393",
+      "reference_state_sha256": "2404f822be2c854cabb6e647e7bba437aa5ba89c25007d62f5afb5f9808707ca",
       "first_mismatches": []
     },
     {
@@ -1975,7 +1975,7 @@
       "ticks": 0,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "9c304b2a13f81d603d5be4801a9779102f497049070ee17c804e722c9893800d",
+      "reference_state_sha256": "a98cba94e3c95df661ec816e4a5fbe4670bbb2cee9dd3b013790655c7473c648",
       "first_mismatches": []
     },
     {
@@ -1983,7 +1983,7 @@
       "ticks": 1,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "1336f61bf2e22f3d5d64c47264a1ecdeb9b108840a9d834ac91548f89fddff2a",
+      "reference_state_sha256": "e5121b9832cadae79aa49c3f2b18004053b864252a6396094f3c31022e0d5cd2",
       "first_mismatches": []
     },
     {
@@ -1991,7 +1991,7 @@
       "ticks": 2,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "1336f61bf2e22f3d5d64c47264a1ecdeb9b108840a9d834ac91548f89fddff2a",
+      "reference_state_sha256": "e5121b9832cadae79aa49c3f2b18004053b864252a6396094f3c31022e0d5cd2",
       "first_mismatches": []
     },
     {
@@ -1999,7 +1999,7 @@
       "ticks": 7,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "1336f61bf2e22f3d5d64c47264a1ecdeb9b108840a9d834ac91548f89fddff2a",
+      "reference_state_sha256": "e5121b9832cadae79aa49c3f2b18004053b864252a6396094f3c31022e0d5cd2",
       "first_mismatches": []
     },
     {
@@ -2071,7 +2071,7 @@
       "ticks": 0,
       "cells": 84,
       "mismatches": 0,
-      "reference_state_sha256": "9c5eacb63c609a575e5605b2ed29e0ee86ebff35f15a5b9abbf2dfb081cf20f4",
+      "reference_state_sha256": "adaee637534cac8eec4402902262cf8bb3bede2ce86d93c0f915889d2ba8a13b",
       "first_mismatches": []
     },
     {
@@ -2079,7 +2079,7 @@
       "ticks": 1,
       "cells": 84,
       "mismatches": 0,
-      "reference_state_sha256": "f91f06cc81153b7a3aff317bc3e3fdd6ddbc46a2ce1925f5be6b93f43d6e6f49",
+      "reference_state_sha256": "01634149e1d16d01903db74b8d283829a6ece33c4fae8e7cd370a9fe82ae9c54",
       "first_mismatches": []
     },
     {
@@ -2087,7 +2087,7 @@
       "ticks": 2,
       "cells": 84,
       "mismatches": 0,
-      "reference_state_sha256": "f91f06cc81153b7a3aff317bc3e3fdd6ddbc46a2ce1925f5be6b93f43d6e6f49",
+      "reference_state_sha256": "01634149e1d16d01903db74b8d283829a6ece33c4fae8e7cd370a9fe82ae9c54",
       "first_mismatches": []
     },
     {
@@ -2095,7 +2095,7 @@
       "ticks": 7,
       "cells": 84,
       "mismatches": 0,
-      "reference_state_sha256": "f91f06cc81153b7a3aff317bc3e3fdd6ddbc46a2ce1925f5be6b93f43d6e6f49",
+      "reference_state_sha256": "01634149e1d16d01903db74b8d283829a6ece33c4fae8e7cd370a9fe82ae9c54",
       "first_mismatches": []
     },
     {
@@ -2199,7 +2199,7 @@
       "ticks": 0,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "6d8670e3c8dfaf9a54809966b6fe0e9945509e27dfe27c72a705af03476a3996",
+      "reference_state_sha256": "1e579ad3309682f67bd36d0aa2374acbae211c67b31f3cb7148e73228e657b4b",
       "first_mismatches": []
     },
     {
@@ -2207,7 +2207,7 @@
       "ticks": 1,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "ae815c7c28f20b2704602f141843867c9b8bd14fb821ee8ad04587b50b51fc20",
+      "reference_state_sha256": "fb23544251457796d9a9ec66d2535a36d3b1fc087bf15693054feff2eceb7f8a",
       "first_mismatches": []
     },
     {
@@ -2215,7 +2215,7 @@
       "ticks": 2,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "ae815c7c28f20b2704602f141843867c9b8bd14fb821ee8ad04587b50b51fc20",
+      "reference_state_sha256": "fb23544251457796d9a9ec66d2535a36d3b1fc087bf15693054feff2eceb7f8a",
       "first_mismatches": []
     },
     {
@@ -2223,7 +2223,7 @@
       "ticks": 7,
       "cells": 24,
       "mismatches": 0,
-      "reference_state_sha256": "ae815c7c28f20b2704602f141843867c9b8bd14fb821ee8ad04587b50b51fc20",
+      "reference_state_sha256": "fb23544251457796d9a9ec66d2535a36d3b1fc087bf15693054feff2eceb7f8a",
       "first_mismatches": []
     },
     {
@@ -2327,7 +2327,7 @@
       "ticks": 0,
       "cells": 112,
       "mismatches": 0,
-      "reference_state_sha256": "cc4d7f19cd28b112cf14077c1b28ae1ec6e4d7d8933b0f1d9862d388e26fa5d4",
+      "reference_state_sha256": "b5cc1121a874b97293a450998236048e62dcc521abf2bee83210373931a9296c",
       "first_mismatches": []
     },
     {
@@ -2335,7 +2335,7 @@
       "ticks": 1,
       "cells": 112,
       "mismatches": 0,
-      "reference_state_sha256": "02bfd5ffd4b288779dc00c39822d51657b503ae188e01b6479182cb421a44e6b",
+      "reference_state_sha256": "45d35d1eecb1d70aa79486564d7284d3522d1439ff06e75c0e9796ac5216d7f5",
       "first_mismatches": []
     },
     {
@@ -2343,7 +2343,7 @@
       "ticks": 2,
       "cells": 112,
       "mismatches": 0,
-      "reference_state_sha256": "02bfd5ffd4b288779dc00c39822d51657b503ae188e01b6479182cb421a44e6b",
+      "reference_state_sha256": "45d35d1eecb1d70aa79486564d7284d3522d1439ff06e75c0e9796ac5216d7f5",
       "first_mismatches": []
     },
     {
@@ -2351,7 +2351,7 @@
       "ticks": 7,
       "cells": 112,
       "mismatches": 0,
-      "reference_state_sha256": "02bfd5ffd4b288779dc00c39822d51657b503ae188e01b6479182cb421a44e6b",
+      "reference_state_sha256": "45d35d1eecb1d70aa79486564d7284d3522d1439ff06e75c0e9796ac5216d7f5",
       "first_mismatches": []
     },
     {
@@ -2359,7 +2359,7 @@
       "ticks": 0,
       "cells": 59,
       "mismatches": 0,
-      "reference_state_sha256": "7e7aaa0207e5ced131137ef85a40825fff774314f9d1513bea5824537feaab36",
+      "reference_state_sha256": "ad6ee8d334ff56225636e2506235285ece4c1570fa9ddc245ee23824eff44c13",
       "first_mismatches": []
     },
     {
@@ -2367,7 +2367,7 @@
       "ticks": 1,
       "cells": 59,
       "mismatches": 0,
-      "reference_state_sha256": "3e7cd613c56615f04eda4737f20e8d2c1c10b90db1091121b625bc9e7139d012",
+      "reference_state_sha256": "4b03cf58d3389a57db36755d6846fb18a35787c3410dcee8aa80045f75d72512",
       "first_mismatches": []
     },
     {
@@ -2375,7 +2375,7 @@
       "ticks": 2,
       "cells": 59,
       "mismatches": 0,
-      "reference_state_sha256": "3e7cd613c56615f04eda4737f20e8d2c1c10b90db1091121b625bc9e7139d012",
+      "reference_state_sha256": "4b03cf58d3389a57db36755d6846fb18a35787c3410dcee8aa80045f75d72512",
       "first_mismatches": []
     },
     {
@@ -2383,7 +2383,7 @@
       "ticks": 7,
       "cells": 59,
       "mismatches": 0,
-      "reference_state_sha256": "3e7cd613c56615f04eda4737f20e8d2c1c10b90db1091121b625bc9e7139d012",
+      "reference_state_sha256": "4b03cf58d3389a57db36755d6846fb18a35787c3410dcee8aa80045f75d72512",
       "first_mismatches": []
     },
     {
@@ -2391,7 +2391,7 @@
       "ticks": 0,
       "cells": 60,
       "mismatches": 0,
-      "reference_state_sha256": "185cb8b4a6d6d21f6d7643f95c5a7d35de82f62f1673a2e97f455241ec6224ac",
+      "reference_state_sha256": "989a6f35600cd51b96ab1e9b0106c2fc4e3eeb99f1b69b732e90ad9c37fc2a9a",
       "first_mismatches": []
     },
     {
@@ -2399,7 +2399,7 @@
       "ticks": 1,
       "cells": 60,
       "mismatches": 0,
-      "reference_state_sha256": "992f5b515c4120563e3f642b72ea3c66444500910710f44349202f1b52bd0504",
+      "reference_state_sha256": "8e13fe4722d6bafb21213e07ab4b8d41b4b18f611d94844cf4e2252d1a982b4b",
       "first_mismatches": []
     },
     {
@@ -2407,7 +2407,7 @@
       "ticks": 2,
       "cells": 60,
       "mismatches": 0,
-      "reference_state_sha256": "992f5b515c4120563e3f642b72ea3c66444500910710f44349202f1b52bd0504",
+      "reference_state_sha256": "8e13fe4722d6bafb21213e07ab4b8d41b4b18f611d94844cf4e2252d1a982b4b",
       "first_mismatches": []
     },
     {
@@ -2415,7 +2415,7 @@
       "ticks": 7,
       "cells": 60,
       "mismatches": 0,
-      "reference_state_sha256": "992f5b515c4120563e3f642b72ea3c66444500910710f44349202f1b52bd0504",
+      "reference_state_sha256": "8e13fe4722d6bafb21213e07ab4b8d41b4b18f611d94844cf4e2252d1a982b4b",
       "first_mismatches": []
     },
     {
@@ -2423,7 +2423,7 @@
       "ticks": 0,
       "cells": 191,
       "mismatches": 0,
-      "reference_state_sha256": "addf8f6ce1d755a48d1d199aad825142f331cea2dc81edd03fec91bbb17ec651",
+      "reference_state_sha256": "7829a2135e132931927e6c0447665934cd296f3a70fc6c07fc6fc2f8f8fb5b15",
       "first_mismatches": []
     },
     {
@@ -2431,7 +2431,7 @@
       "ticks": 1,
       "cells": 191,
       "mismatches": 0,
-      "reference_state_sha256": "a125ae1beff324f5b8437857e4ba27561d5164a476b3942f59b9cb4ebce51722",
+      "reference_state_sha256": "b89f84053b42bcac2aaf8fee3d8873433ce1b5cbaeffe859a962ed2c63b17175",
       "first_mismatches": []
     },
     {
@@ -2439,7 +2439,7 @@
       "ticks": 2,
       "cells": 191,
       "mismatches": 0,
-      "reference_state_sha256": "a125ae1beff324f5b8437857e4ba27561d5164a476b3942f59b9cb4ebce51722",
+      "reference_state_sha256": "b89f84053b42bcac2aaf8fee3d8873433ce1b5cbaeffe859a962ed2c63b17175",
       "first_mismatches": []
     },
     {
@@ -2447,7 +2447,7 @@
       "ticks": 7,
       "cells": 191,
       "mismatches": 0,
-      "reference_state_sha256": "a125ae1beff324f5b8437857e4ba27561d5164a476b3942f59b9cb4ebce51722",
+      "reference_state_sha256": "b89f84053b42bcac2aaf8fee3d8873433ce1b5cbaeffe859a962ed2c63b17175",
       "first_mismatches": []
     },
     {
@@ -2487,7 +2487,7 @@
       "ticks": 0,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "816b64edc3833440a33d09b4aacb142dbce6823f482bfb06a6392f00111ae2e3",
+      "reference_state_sha256": "dd98219958b331c074875b0d01fcb510caad7d3583be0eea6cb889c97ddc6d48",
       "first_mismatches": []
     },
     {
@@ -2495,7 +2495,7 @@
       "ticks": 1,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "64c379846073beada1bf139a3f4ad5550e90a4f985d9e421989167587e4012c0",
+      "reference_state_sha256": "51a2f1a9f4bebf26aa585d00182a9e4def77c49a5ee9ff0ae9d2c9e41ae4665c",
       "first_mismatches": []
     },
     {
@@ -2503,7 +2503,7 @@
       "ticks": 2,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "64c379846073beada1bf139a3f4ad5550e90a4f985d9e421989167587e4012c0",
+      "reference_state_sha256": "51a2f1a9f4bebf26aa585d00182a9e4def77c49a5ee9ff0ae9d2c9e41ae4665c",
       "first_mismatches": []
     },
     {
@@ -2511,7 +2511,7 @@
       "ticks": 7,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "64c379846073beada1bf139a3f4ad5550e90a4f985d9e421989167587e4012c0",
+      "reference_state_sha256": "51a2f1a9f4bebf26aa585d00182a9e4def77c49a5ee9ff0ae9d2c9e41ae4665c",
       "first_mismatches": []
     },
     {
@@ -2519,7 +2519,7 @@
       "ticks": 0,
       "cells": 37,
       "mismatches": 0,
-      "reference_state_sha256": "05195cc559b5b075cf702197d2c28ef9cdd1e6758979ebcb5f4c6988f7772acb",
+      "reference_state_sha256": "ca7ed0ee009d6ebcda2e0db7254be223ceace870c55c05d673eb62b999e01292",
       "first_mismatches": []
     },
     {
@@ -2527,7 +2527,7 @@
       "ticks": 1,
       "cells": 37,
       "mismatches": 0,
-      "reference_state_sha256": "c9a4ffdca0241135024f5317688a4f32071a7cd7fcc28026a577672b9ae24ae8",
+      "reference_state_sha256": "e52b8349054183c90653815b528e7edd823320ec16b6d77408aaf982240a2c5c",
       "first_mismatches": []
     },
     {
@@ -2535,7 +2535,7 @@
       "ticks": 2,
       "cells": 37,
       "mismatches": 0,
-      "reference_state_sha256": "c9a4ffdca0241135024f5317688a4f32071a7cd7fcc28026a577672b9ae24ae8",
+      "reference_state_sha256": "e52b8349054183c90653815b528e7edd823320ec16b6d77408aaf982240a2c5c",
       "first_mismatches": []
     },
     {
@@ -2543,7 +2543,7 @@
       "ticks": 7,
       "cells": 37,
       "mismatches": 0,
-      "reference_state_sha256": "c9a4ffdca0241135024f5317688a4f32071a7cd7fcc28026a577672b9ae24ae8",
+      "reference_state_sha256": "e52b8349054183c90653815b528e7edd823320ec16b6d77408aaf982240a2c5c",
       "first_mismatches": []
     },
     {
@@ -2583,7 +2583,7 @@
       "ticks": 0,
       "cells": 89,
       "mismatches": 0,
-      "reference_state_sha256": "6049b3b7e4f5b8dd9d0e18951467f12d5072cff26a28ee80fed8680af2d24810",
+      "reference_state_sha256": "846db7ab7c9a35885e45d27e440a27e7e2143f1bcd95b7db876cde77ecffe3bb",
       "first_mismatches": []
     },
     {
@@ -2591,7 +2591,7 @@
       "ticks": 1,
       "cells": 89,
       "mismatches": 0,
-      "reference_state_sha256": "a01b9b8425fca52de72c330d72464dbd7f33efd6db09d01a4ec86a1a04e3b397",
+      "reference_state_sha256": "fe0fdb1e8c73078b6368384e2c7e2006fabda96c9fec50f48214a8187bcaf4e3",
       "first_mismatches": []
     },
     {
@@ -2599,7 +2599,7 @@
       "ticks": 2,
       "cells": 89,
       "mismatches": 0,
-      "reference_state_sha256": "a01b9b8425fca52de72c330d72464dbd7f33efd6db09d01a4ec86a1a04e3b397",
+      "reference_state_sha256": "fe0fdb1e8c73078b6368384e2c7e2006fabda96c9fec50f48214a8187bcaf4e3",
       "first_mismatches": []
     },
     {
@@ -2607,7 +2607,7 @@
       "ticks": 7,
       "cells": 89,
       "mismatches": 0,
-      "reference_state_sha256": "a01b9b8425fca52de72c330d72464dbd7f33efd6db09d01a4ec86a1a04e3b397",
+      "reference_state_sha256": "fe0fdb1e8c73078b6368384e2c7e2006fabda96c9fec50f48214a8187bcaf4e3",
       "first_mismatches": []
     },
     {
@@ -2615,7 +2615,7 @@
       "ticks": 0,
       "cells": 64,
       "mismatches": 0,
-      "reference_state_sha256": "a6ed7c9d0e2d64519cbb94ab08a1ca129125c99ffcc410c4a5dce65e53a27fdb",
+      "reference_state_sha256": "6aa4789bc6728a0e287e1c8bbb4d034727a164252c93a383ea13f352dea67663",
       "first_mismatches": []
     },
     {
@@ -2623,7 +2623,7 @@
       "ticks": 1,
       "cells": 64,
       "mismatches": 0,
-      "reference_state_sha256": "e88806eef5a985c001c007946f4a7a5d468247f1e20499aa9d0dbd44a89df09f",
+      "reference_state_sha256": "44dff5c04dc9546ff7d962dbce16df55ddea48d75b669f660f3e6bfb39d3a4bd",
       "first_mismatches": []
     },
     {
@@ -2631,7 +2631,7 @@
       "ticks": 2,
       "cells": 64,
       "mismatches": 0,
-      "reference_state_sha256": "e88806eef5a985c001c007946f4a7a5d468247f1e20499aa9d0dbd44a89df09f",
+      "reference_state_sha256": "44dff5c04dc9546ff7d962dbce16df55ddea48d75b669f660f3e6bfb39d3a4bd",
       "first_mismatches": []
     },
     {
@@ -2639,7 +2639,7 @@
       "ticks": 7,
       "cells": 64,
       "mismatches": 0,
-      "reference_state_sha256": "e88806eef5a985c001c007946f4a7a5d468247f1e20499aa9d0dbd44a89df09f",
+      "reference_state_sha256": "44dff5c04dc9546ff7d962dbce16df55ddea48d75b669f660f3e6bfb39d3a4bd",
       "first_mismatches": []
     },
     {
@@ -2647,7 +2647,7 @@
       "ticks": 0,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "84c328fe9e0ae09d0c8391b6217134af1bf6b64914f33469ee78bc1e73457ca4",
+      "reference_state_sha256": "3af1dc913d2efd092e5a6179462dba1455183fc8681bea3ac4a9266816310b33",
       "first_mismatches": []
     },
     {
@@ -2655,7 +2655,7 @@
       "ticks": 1,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "a80e367771c3dc97d19c5ca1609a7d6d29e1e604f9277a7b60ff10eef810c54c",
+      "reference_state_sha256": "b3079985799529c17e28fe264861c6a82075b503b9505ae2c8f8f4f50c55b421",
       "first_mismatches": []
     },
     {
@@ -2663,7 +2663,7 @@
       "ticks": 2,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "a80e367771c3dc97d19c5ca1609a7d6d29e1e604f9277a7b60ff10eef810c54c",
+      "reference_state_sha256": "b3079985799529c17e28fe264861c6a82075b503b9505ae2c8f8f4f50c55b421",
       "first_mismatches": []
     },
     {
@@ -2671,7 +2671,7 @@
       "ticks": 7,
       "cells": 42,
       "mismatches": 0,
-      "reference_state_sha256": "a80e367771c3dc97d19c5ca1609a7d6d29e1e604f9277a7b60ff10eef810c54c",
+      "reference_state_sha256": "b3079985799529c17e28fe264861c6a82075b503b9505ae2c8f8f4f50c55b421",
       "first_mismatches": []
     },
     {
@@ -2679,7 +2679,7 @@
       "ticks": 0,
       "cells": 75,
       "mismatches": 0,
-      "reference_state_sha256": "1593fd03c244c47c0d4bf27c9080a452a343b8ec77e8535d6a345c0cc872e9cf",
+      "reference_state_sha256": "d3677d358123128bbec63ad8376ea6712bafa96c65344dd07d672bc9e1ebc8ab",
       "first_mismatches": []
     },
     {
@@ -2687,7 +2687,7 @@
       "ticks": 1,
       "cells": 75,
       "mismatches": 0,
-      "reference_state_sha256": "63b6682ffbd85f1407eff528ea34edab77b29d49c1ad200f481cd4c9f6374314",
+      "reference_state_sha256": "852bf211bd8815e99e911d9e2d932bbf149b97c36cfc9c5e7f4f38b4e63443f8",
       "first_mismatches": []
     },
     {
@@ -2695,7 +2695,7 @@
       "ticks": 2,
       "cells": 75,
       "mismatches": 0,
-      "reference_state_sha256": "63b6682ffbd85f1407eff528ea34edab77b29d49c1ad200f481cd4c9f6374314",
+      "reference_state_sha256": "852bf211bd8815e99e911d9e2d932bbf149b97c36cfc9c5e7f4f38b4e63443f8",
       "first_mismatches": []
     },
     {
@@ -2703,7 +2703,7 @@
       "ticks": 7,
       "cells": 75,
       "mismatches": 0,
-      "reference_state_sha256": "63b6682ffbd85f1407eff528ea34edab77b29d49c1ad200f481cd4c9f6374314",
+      "reference_state_sha256": "852bf211bd8815e99e911d9e2d932bbf149b97c36cfc9c5e7f4f38b4e63443f8",
       "first_mismatches": []
     },
     {
@@ -2807,7 +2807,7 @@
       "ticks": 0,
       "cells": 109,
       "mismatches": 0,
-      "reference_state_sha256": "2e3380d3bcdca6da4cc629b22af8ba50c4ad20dba141b2e2851ded20a7a7558f",
+      "reference_state_sha256": "7137f71d7e2e60436437d74c8b687c23ed5cca1be6968afe0720c7a19c4af409",
       "first_mismatches": []
     },
     {
@@ -2815,7 +2815,7 @@
       "ticks": 1,
       "cells": 109,
       "mismatches": 0,
-      "reference_state_sha256": "788a8b7ad541b11748ea51a1ecaa716e3bbda4f96acc713d469a7f0af5effbfb",
+      "reference_state_sha256": "d6ea0904457c1098b109e5d7c977d0dc1009aa47a9e66273fa360d31033dfa98",
       "first_mismatches": []
     },
     {
@@ -2823,7 +2823,7 @@
       "ticks": 2,
       "cells": 109,
       "mismatches": 0,
-      "reference_state_sha256": "788a8b7ad541b11748ea51a1ecaa716e3bbda4f96acc713d469a7f0af5effbfb",
+      "reference_state_sha256": "d6ea0904457c1098b109e5d7c977d0dc1009aa47a9e66273fa360d31033dfa98",
       "first_mismatches": []
     },
     {
@@ -2831,7 +2831,7 @@
       "ticks": 7,
       "cells": 109,
       "mismatches": 0,
-      "reference_state_sha256": "788a8b7ad541b11748ea51a1ecaa716e3bbda4f96acc713d469a7f0af5effbfb",
+      "reference_state_sha256": "d6ea0904457c1098b109e5d7c977d0dc1009aa47a9e66273fa360d31033dfa98",
       "first_mismatches": []
     },
     {
@@ -2839,7 +2839,7 @@
       "ticks": 0,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "1ce51761a02a7a6798f0fcd54dffed103dde5dd3e3e9becaeff44dc4ff88c889",
+      "reference_state_sha256": "c1a441ad45b848b6c845e9978fa69695e0c07d6d5e349672bbafe8d76d319571",
       "first_mismatches": []
     },
     {
@@ -2847,7 +2847,7 @@
       "ticks": 1,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "1ce51761a02a7a6798f0fcd54dffed103dde5dd3e3e9becaeff44dc4ff88c889",
+      "reference_state_sha256": "c1a441ad45b848b6c845e9978fa69695e0c07d6d5e349672bbafe8d76d319571",
       "first_mismatches": []
     },
     {
@@ -2855,7 +2855,7 @@
       "ticks": 2,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "1ce51761a02a7a6798f0fcd54dffed103dde5dd3e3e9becaeff44dc4ff88c889",
+      "reference_state_sha256": "c1a441ad45b848b6c845e9978fa69695e0c07d6d5e349672bbafe8d76d319571",
       "first_mismatches": []
     },
     {
@@ -2863,7 +2863,7 @@
       "ticks": 7,
       "cells": 12,
       "mismatches": 0,
-      "reference_state_sha256": "1ce51761a02a7a6798f0fcd54dffed103dde5dd3e3e9becaeff44dc4ff88c889",
+      "reference_state_sha256": "c1a441ad45b848b6c845e9978fa69695e0c07d6d5e349672bbafe8d76d319571",
       "first_mismatches": []
     },
     {
@@ -2935,7 +2935,7 @@
       "ticks": 0,
       "cells": 122,
       "mismatches": 0,
-      "reference_state_sha256": "b7c868cc4ca73481111863029a06e0bec64d61c452372aa74216fbc71108588d",
+      "reference_state_sha256": "52ce1397898197f21a27e14caf2e6e1c2e8131b7bac95003439cfab6153941c5",
       "first_mismatches": []
     },
     {
@@ -2943,7 +2943,7 @@
       "ticks": 1,
       "cells": 122,
       "mismatches": 0,
-      "reference_state_sha256": "776463e0d86692cf2f7b55035710a84e3029fd6d00d7755f93e9014d78978e88",
+      "reference_state_sha256": "7d34ef039f717ae82c29e6579ce0e24caa0037702e625e2c9a17beb14fcf3c2e",
       "first_mismatches": []
     },
     {
@@ -2951,7 +2951,7 @@
       "ticks": 2,
       "cells": 122,
       "mismatches": 0,
-      "reference_state_sha256": "776463e0d86692cf2f7b55035710a84e3029fd6d00d7755f93e9014d78978e88",
+      "reference_state_sha256": "7d34ef039f717ae82c29e6579ce0e24caa0037702e625e2c9a17beb14fcf3c2e",
       "first_mismatches": []
     },
     {
@@ -2959,7 +2959,7 @@
       "ticks": 7,
       "cells": 122,
       "mismatches": 0,
-      "reference_state_sha256": "776463e0d86692cf2f7b55035710a84e3029fd6d00d7755f93e9014d78978e88",
+      "reference_state_sha256": "7d34ef039f717ae82c29e6579ce0e24caa0037702e625e2c9a17beb14fcf3c2e",
       "first_mismatches": []
     },
     {
@@ -2999,7 +2999,7 @@
       "ticks": 0,
       "cells": 67,
       "mismatches": 0,
-      "reference_state_sha256": "fdab8a979156b8ddf621e8b3152452fd0f49219a6c278a9afc8583517ed08afa",
+      "reference_state_sha256": "c06c9d803a1bffb16072b08c0a027aa85d268d3592df082c76f8ac1366869bd3",
       "first_mismatches": []
     },
     {
@@ -3007,7 +3007,7 @@
       "ticks": 1,
       "cells": 67,
       "mismatches": 0,
-      "reference_state_sha256": "b53e64f3a544bd7659fc50f53f92a8922fd8ab8a27d7410679fdb6b884696bb8",
+      "reference_state_sha256": "04863eb6a1417b3020737264f64e0f43624977ad6afbb9e6b5a56097abcc0d9d",
       "first_mismatches": []
     },
     {
@@ -3015,7 +3015,7 @@
       "ticks": 2,
       "cells": 67,
       "mismatches": 0,
-      "reference_state_sha256": "b53e64f3a544bd7659fc50f53f92a8922fd8ab8a27d7410679fdb6b884696bb8",
+      "reference_state_sha256": "04863eb6a1417b3020737264f64e0f43624977ad6afbb9e6b5a56097abcc0d9d",
       "first_mismatches": []
     },
     {
@@ -3023,7 +3023,7 @@
       "ticks": 7,
       "cells": 67,
       "mismatches": 0,
-      "reference_state_sha256": "b53e64f3a544bd7659fc50f53f92a8922fd8ab8a27d7410679fdb6b884696bb8",
+      "reference_state_sha256": "04863eb6a1417b3020737264f64e0f43624977ad6afbb9e6b5a56097abcc0d9d",
       "first_mismatches": []
     },
     {
@@ -3031,7 +3031,7 @@
       "ticks": 0,
       "cells": 146,
       "mismatches": 0,
-      "reference_state_sha256": "3e6d7806ba78f6568f7b681cdc56d15e4d7fc9433ef4601196f5917a0e5de131",
+      "reference_state_sha256": "8e8f2217762a382b2f320085d39a646f0d148d003483c6184ef139f40d560c6a",
       "first_mismatches": []
     },
     {
@@ -3039,7 +3039,7 @@
       "ticks": 1,
       "cells": 146,
       "mismatches": 0,
-      "reference_state_sha256": "387847b6e293dfe2f1769e15e5da84e7965d22183f1e600edb86c5bf02b83d03",
+      "reference_state_sha256": "78231fe0169489b3cca4a2bc2ff98197089a28b551567bca6db4d308828ea1ee",
       "first_mismatches": []
     },
     {
@@ -3047,7 +3047,7 @@
       "ticks": 2,
       "cells": 146,
       "mismatches": 0,
-      "reference_state_sha256": "387847b6e293dfe2f1769e15e5da84e7965d22183f1e600edb86c5bf02b83d03",
+      "reference_state_sha256": "78231fe0169489b3cca4a2bc2ff98197089a28b551567bca6db4d308828ea1ee",
       "first_mismatches": []
     },
     {
@@ -3055,7 +3055,7 @@
       "ticks": 7,
       "cells": 146,
       "mismatches": 0,
-      "reference_state_sha256": "387847b6e293dfe2f1769e15e5da84e7965d22183f1e600edb86c5bf02b83d03",
+      "reference_state_sha256": "78231fe0169489b3cca4a2bc2ff98197089a28b551567bca6db4d308828ea1ee",
       "first_mismatches": []
     },
     {
@@ -3063,7 +3063,7 @@
       "ticks": 0,
       "cells": 18,
       "mismatches": 0,
-      "reference_state_sha256": "9a5eee87defe5f743f4990977acd17f372a259e8caca4c47cf454aa0aa453480",
+      "reference_state_sha256": "9b8a329a2e52a57dd16f28480a8163b67e5a13810c5e8b1c88d8d75427d90c03",
       "first_mismatches": []
     },
     {
@@ -3071,7 +3071,7 @@
       "ticks": 1,
       "cells": 18,
       "mismatches": 0,
-      "reference_state_sha256": "d8110ec0ab4557fd007afff7720d00d759fd66f66a48bce586d0f3af08933650",
+      "reference_state_sha256": "1c5615555bf661d66afd64cbaef7ced714b77d46c6d67eaccaeb3d01255c409a",
       "first_mismatches": []
     },
     {
@@ -3079,7 +3079,7 @@
       "ticks": 2,
       "cells": 18,
       "mismatches": 0,
-      "reference_state_sha256": "d8110ec0ab4557fd007afff7720d00d759fd66f66a48bce586d0f3af08933650",
+      "reference_state_sha256": "1c5615555bf661d66afd64cbaef7ced714b77d46c6d67eaccaeb3d01255c409a",
       "first_mismatches": []
     },
     {
@@ -3087,7 +3087,7 @@
       "ticks": 7,
       "cells": 18,
       "mismatches": 0,
-      "reference_state_sha256": "d8110ec0ab4557fd007afff7720d00d759fd66f66a48bce586d0f3af08933650",
+      "reference_state_sha256": "1c5615555bf661d66afd64cbaef7ced714b77d46c6d67eaccaeb3d01255c409a",
       "first_mismatches": []
     },
     {
@@ -3095,7 +3095,7 @@
       "ticks": 0,
       "cells": 148,
       "mismatches": 0,
-      "reference_state_sha256": "fc387fd193a35ecdcc409f30451a8a0f2c8c4793820f226064557bfda545061e",
+      "reference_state_sha256": "e4d2b8fe93cf4b9cdf59e1b66a7b72b3c75125053d84e6318a10597833d9dd1f",
       "first_mismatches": []
     },
     {
@@ -3103,7 +3103,7 @@
       "ticks": 1,
       "cells": 148,
       "mismatches": 0,
-      "reference_state_sha256": "ca725e3521c3e13ad2a6658e37f2eff4b049fcfebc60310c4439a57cf004614f",
+      "reference_state_sha256": "d8c5e75aeae54ddee5fb33c05625b49fd2075a92509a41bd2877d7ddde692e60",
       "first_mismatches": []
     },
     {
@@ -3111,7 +3111,7 @@
       "ticks": 2,
       "cells": 148,
       "mismatches": 0,
-      "reference_state_sha256": "ca725e3521c3e13ad2a6658e37f2eff4b049fcfebc60310c4439a57cf004614f",
+      "reference_state_sha256": "d8c5e75aeae54ddee5fb33c05625b49fd2075a92509a41bd2877d7ddde692e60",
       "first_mismatches": []
     },
     {
@@ -3119,7 +3119,7 @@
       "ticks": 7,
       "cells": 148,
       "mismatches": 0,
-      "reference_state_sha256": "ca725e3521c3e13ad2a6658e37f2eff4b049fcfebc60310c4439a57cf004614f",
+      "reference_state_sha256": "d8c5e75aeae54ddee5fb33c05625b49fd2075a92509a41bd2877d7ddde692e60",
       "first_mismatches": []
     },
     {
@@ -3191,7 +3191,7 @@
       "ticks": 0,
       "cells": 46,
       "mismatches": 0,
-      "reference_state_sha256": "1a2f247c40c670fe19b88bb5759cba5fe38bf970f8d4ba2a2374b60d476938f2",
+      "reference_state_sha256": "a213b4695a526b253c085444b02384951171888c611660d39e5ce2bbb06546cb",
       "first_mismatches": []
     },
     {
@@ -3199,7 +3199,7 @@
       "ticks": 1,
       "cells": 46,
       "mismatches": 0,
-      "reference_state_sha256": "7719e2143656e06d068e5fcb37b53b3f235034bc21e9f7fea0143e20c37ae5e0",
+      "reference_state_sha256": "5b7875f7f6fa43531496c1cae2c2cbf36bdf100e4042a2cc5a08f4c08694a72c",
       "first_mismatches": []
     },
     {
@@ -3207,7 +3207,7 @@
       "ticks": 2,
       "cells": 46,
       "mismatches": 0,
-      "reference_state_sha256": "7719e2143656e06d068e5fcb37b53b3f235034bc21e9f7fea0143e20c37ae5e0",
+      "reference_state_sha256": "5b7875f7f6fa43531496c1cae2c2cbf36bdf100e4042a2cc5a08f4c08694a72c",
       "first_mismatches": []
     },
     {
@@ -3215,7 +3215,7 @@
       "ticks": 7,
       "cells": 46,
       "mismatches": 0,
-      "reference_state_sha256": "7719e2143656e06d068e5fcb37b53b3f235034bc21e9f7fea0143e20c37ae5e0",
+      "reference_state_sha256": "5b7875f7f6fa43531496c1cae2c2cbf36bdf100e4042a2cc5a08f4c08694a72c",
       "first_mismatches": []
     },
     {
@@ -3223,7 +3223,7 @@
       "ticks": 0,
       "cells": 72,
       "mismatches": 0,
-      "reference_state_sha256": "da0781acdbe169746920328b5ac5492246fe94c734669361f180e97da1011995",
+      "reference_state_sha256": "01e63021873b138da43f04e4e7946da60434a2360b77c783aca4dd127564417d",
       "first_mismatches": []
     },
     {
@@ -3231,7 +3231,7 @@
       "ticks": 1,
       "cells": 72,
       "mismatches": 0,
-      "reference_state_sha256": "d0f075d453ea3fa3f71f6f5a6f1fd5578e6c203917285cbe1ea216be3b77a133",
+      "reference_state_sha256": "f75c9f5d8a593c7251e1e7130b8bf26da731e2f9f3da9cc617ab5f9fbaec5fe5",
       "first_mismatches": []
     },
     {
@@ -3239,7 +3239,7 @@
       "ticks": 2,
       "cells": 72,
       "mismatches": 0,
-      "reference_state_sha256": "d0f075d453ea3fa3f71f6f5a6f1fd5578e6c203917285cbe1ea216be3b77a133",
+      "reference_state_sha256": "f75c9f5d8a593c7251e1e7130b8bf26da731e2f9f3da9cc617ab5f9fbaec5fe5",
       "first_mismatches": []
     },
     {
@@ -3247,7 +3247,7 @@
       "ticks": 7,
       "cells": 72,
       "mismatches": 0,
-      "reference_state_sha256": "d0f075d453ea3fa3f71f6f5a6f1fd5578e6c203917285cbe1ea216be3b77a133",
+      "reference_state_sha256": "f75c9f5d8a593c7251e1e7130b8bf26da731e2f9f3da9cc617ab5f9fbaec5fe5",
       "first_mismatches": []
     },
     {
@@ -3287,7 +3287,7 @@
       "ticks": 0,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "ae77c64ef4afd5db23d4a866554e9f3dd88fd3a119fbe7809d9337386768432b",
+      "reference_state_sha256": "b2c44098eaf736aae80a9f84f81fa4ec868fea88155828b2e0743cbafec6ca2d",
       "first_mismatches": []
     },
     {
@@ -3295,7 +3295,7 @@
       "ticks": 1,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "2ae98b79aed85274f9a0a44471840b816985e1c8748acfdc0b0fe5e7eea66d12",
+      "reference_state_sha256": "8fa254bc35607423177e9bd77e0bff6f8020c4ee2afe2068e812deb80a971728",
       "first_mismatches": []
     },
     {
@@ -3303,7 +3303,7 @@
       "ticks": 2,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "2ae98b79aed85274f9a0a44471840b816985e1c8748acfdc0b0fe5e7eea66d12",
+      "reference_state_sha256": "8fa254bc35607423177e9bd77e0bff6f8020c4ee2afe2068e812deb80a971728",
       "first_mismatches": []
     },
     {
@@ -3311,7 +3311,7 @@
       "ticks": 7,
       "cells": 34,
       "mismatches": 0,
-      "reference_state_sha256": "2ae98b79aed85274f9a0a44471840b816985e1c8748acfdc0b0fe5e7eea66d12",
+      "reference_state_sha256": "8fa254bc35607423177e9bd77e0bff6f8020c4ee2afe2068e812deb80a971728",
       "first_mismatches": []
     },
     {
@@ -3351,7 +3351,7 @@
       "ticks": 0,
       "cells": 68,
       "mismatches": 0,
-      "reference_state_sha256": "c2f7b741482a4c231b1e0ade3f9d53bac41df102231b5e46a0ab4f83c6caaa1b",
+      "reference_state_sha256": "5e58bd2e17396000ab4cdf883028cd3f8890b2f63682946eeec0c7a5a0126739",
       "first_mismatches": []
     },
     {
@@ -3359,7 +3359,7 @@
       "ticks": 1,
       "cells": 68,
       "mismatches": 0,
-      "reference_state_sha256": "cb7068e3623d72053e2dbc416924332f6baa67b811c82c6e5f37187527921642",
+      "reference_state_sha256": "e07166c584e4c07a14ca610ca232ba052862b4f43f30a50be0ae493f52d91879",
       "first_mismatches": []
     },
     {
@@ -3367,7 +3367,7 @@
       "ticks": 2,
       "cells": 68,
       "mismatches": 0,
-      "reference_state_sha256": "cb7068e3623d72053e2dbc416924332f6baa67b811c82c6e5f37187527921642",
+      "reference_state_sha256": "e07166c584e4c07a14ca610ca232ba052862b4f43f30a50be0ae493f52d91879",
       "first_mismatches": []
     },
     {
@@ -3375,7 +3375,7 @@
       "ticks": 7,
       "cells": 68,
       "mismatches": 0,
-      "reference_state_sha256": "cb7068e3623d72053e2dbc416924332f6baa67b811c82c6e5f37187527921642",
+      "reference_state_sha256": "e07166c584e4c07a14ca610ca232ba052862b4f43f30a50be0ae493f52d91879",
       "first_mismatches": []
     },
     {
@@ -3415,7 +3415,7 @@
       "ticks": 0,
       "cells": 82,
       "mismatches": 0,
-      "reference_state_sha256": "552efbe8275058e5b6fec2876c5bd1453e969cd70b204a1899e2eec61ad3e1c4",
+      "reference_state_sha256": "8d2c15cce154bbed966650177fb9a795d121bff00206dbe40de82270e1f009c3",
       "first_mismatches": []
     },
     {
@@ -3423,7 +3423,7 @@
       "ticks": 1,
       "cells": 82,
       "mismatches": 0,
-      "reference_state_sha256": "abc8b1e15484d8a36e93764f5db2638a1b6836cf69928c5a74dc6e91ffb8e255",
+      "reference_state_sha256": "713f48b49de59aeee64f17afd298135e78ec1c33da1e7a0de5afe8a134e9e3ee",
       "first_mismatches": []
     },
     {
@@ -3431,7 +3431,7 @@
       "ticks": 2,
       "cells": 82,
       "mismatches": 0,
-      "reference_state_sha256": "abc8b1e15484d8a36e93764f5db2638a1b6836cf69928c5a74dc6e91ffb8e255",
+      "reference_state_sha256": "713f48b49de59aeee64f17afd298135e78ec1c33da1e7a0de5afe8a134e9e3ee",
       "first_mismatches": []
     },
     {
@@ -3439,16 +3439,46 @@
       "ticks": 7,
       "cells": 82,
       "mismatches": 0,
-      "reference_state_sha256": "abc8b1e15484d8a36e93764f5db2638a1b6836cf69928c5a74dc6e91ffb8e255",
+      "reference_state_sha256": "713f48b49de59aeee64f17afd298135e78ec1c33da1e7a0de5afe8a134e9e3ee",
       "first_mismatches": []
     }
   ],
+  "spec_difference": {
+    "sample": "source-signal-spec-difference.ccsb",
+    "ticks": 0,
+    "cells": 2,
+    "mismatches": 1,
+    "reference_state_sha256": "d308ee20d9106222bab18ce7d1ed500b5fcdc12506073e273ec3f1b6a3b8cafd",
+    "first_mismatches": [
+      {
+        "point": [
+          1,
+          0
+        ],
+        "reference": [
+          "signal",
+          1,
+          0
+        ],
+        "candidate": [
+          "signal",
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "spec_difference_confirmed": true,
   "passed": true,
   "limits": [
+    "Matching seeded fixtures exclude direct Source/Signal adjacency; the difference is asserted separately",
     "No user-driven screen input",
     "No attached file streams",
     "Boolean crossing power only; axis isolation has separate core tests"
   ],
+  "candidate_source_tree": "f753832e5dd3e10066c8e22eeb354ea6ecead9e6",
+  "candidate_toolchain": "Gatehaven 0.5.0-dev\nCompiler: GNU 13.3.0\nTarget: Linux x86_64\nLanguage: C++23\nSource revision: 870ec2f0cef26125dae4b6086e60cdf49a170e62\n",
   "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6",
-  "compiler": "GCC 13.3.0; reference C++17 -O3 -DNDEBUG; Gatehaven C++23 Debug"
+  "recorded_utc": "2026-10-09T20:53:57.596911+00:00",
+  "reference_adapter_sha256": "37c8b09a60799bb652483d94ca6c0af241de26a0c9e20d4c3d82e9036fbf42ce"
 }

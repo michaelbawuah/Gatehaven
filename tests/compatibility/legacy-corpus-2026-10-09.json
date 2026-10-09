@@ -55,5 +55,10 @@
       "native_cells_match": true,
       "byte_exact_roundtrip": true
     }
-  ]
+  ],
+  "candidate_source_tree": "f753832e5dd3e10066c8e22eeb354ea6ecead9e6",
+  "candidate_toolchain": "Gatehaven 0.5.0-dev\nCompiler: GNU 13.3.0\nTarget: Linux x86_64\nLanguage: C++23\nSource revision: 870ec2f0cef26125dae4b6086e60cdf49a170e62\n",
+  "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6",
+  "recorded_utc": "2026-10-09T20:53:57.596911+00:00",
+  "reference_adapter_sha256": "37c8b09a60799bb652483d94ca6c0af241de26a0c9e20d4c3d82e9036fbf42ce"
 }
