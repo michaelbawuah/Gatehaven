@@ -1,0 +1,921 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-09T20:53:57.596911+00:00",
+  "host": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "candidate_toolchain": "Gatehaven 0.5.0-dev\nCompiler: GNU 13.3.0\nTarget: Linux x86_64\nLanguage: C++23\nSource revision: 870ec2f0cef26125dae4b6086e60cdf49a170e62\n",
+  "reference_revision": "19c00d0bd794c3dd558d501939e55f186f58c9e6",
+  "reference_flags": "C++23 -O3 -DNDEBUG -pthread",
+  "ticks": 10000,
+  "samples": [
+    {
+      "sample": "clock.ccsb",
+      "sha256": "8bbb2f6b7236d64135e1cd91729ce577a8f5aa83c6ea7d0e9c1059090de1b3d4",
+      "correctness": {
+        "sample": "clock.ccsb",
+        "ticks": 10000,
+        "cells": 58,
+        "mismatches": 0,
+        "reference_state_sha256": "abb80e6d9371eef5a5a0352a2a100978655626139795b61b58773113358a11f9",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.050656,
+          "candidate": 0.012999
+        },
+        "steps_ms": {
+          "reference": 1.52673,
+          "candidate": 0.470497
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.05344,
+            "steps_ms": 1.52673
+          },
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.654815,
+            "compile_ms": 0.011999,
+            "steps_ms": 0.642816,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.487753,
+            "compile_ms": 0.017256,
+            "steps_ms": 0.470497,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.058538,
+            "steps_ms": 1.59035
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.043795,
+            "steps_ms": 1.47117
+          },
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.474914,
+            "compile_ms": 0.01345,
+            "steps_ms": 0.461464,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.693974,
+            "compile_ms": 0.011217,
+            "steps_ms": 0.682757,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.109174,
+            "steps_ms": 1.5021
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.050656,
+            "steps_ms": 1.59784
+          },
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.473782,
+            "compile_ms": 0.012999,
+            "steps_ms": 0.460783,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.470127,
+            "compile_ms": 0.010546,
+            "steps_ms": 0.459581,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.049665,
+            "steps_ms": 1.54809
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.042414,
+            "steps_ms": 1.4811
+          },
+          "candidate": {
+            "cells": 58,
+            "ticks": 10000,
+            "powered": 32,
+            "total_ms": 0.511289,
+            "compile_ms": 0.018158,
+            "steps_ms": 0.493131,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 70007,
+            "settled_ticks": 0
+          }
+        }
+      ]
+    },
+    {
+      "sample": "clock_minimal.ccsb",
+      "sha256": "542328aced5d6b565f1ae05dcac2ea1b6ce1064b97b0a835b90d16621d0c361a",
+      "correctness": {
+        "sample": "clock_minimal.ccsb",
+        "ticks": 10000,
+        "cells": 16,
+        "mismatches": 0,
+        "reference_state_sha256": "78aa679d448a0817e5c7d324b9cb9e659535dc340f3d4860b8ba0a5f5e637d7f",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.021622,
+          "candidate": 0.007882
+        },
+        "steps_ms": {
+          "reference": 1.35308,
+          "candidate": 0.359882
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.021622,
+            "steps_ms": 1.42873
+          },
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.335675,
+            "compile_ms": 0.010095,
+            "steps_ms": 0.32558,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.415074,
+            "compile_ms": 0.006099,
+            "steps_ms": 0.408975,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.047451,
+            "steps_ms": 1.35308
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.01974,
+            "steps_ms": 1.84938
+          },
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.450678,
+            "compile_ms": 0.007872,
+            "steps_ms": 0.442806,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.367764,
+            "compile_ms": 0.007882,
+            "steps_ms": 0.359882,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.183646,
+            "steps_ms": 1.40009
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.01993,
+            "steps_ms": 1.31669
+          },
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.419731,
+            "compile_ms": 0.008753,
+            "steps_ms": 0.410978,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          }
+        },
+        {
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.3327,
+            "compile_ms": 0.007611,
+            "steps_ms": 0.325089,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          },
+          "reference": {
+            "compile_ms": 0.024997,
+            "steps_ms": 1.33295
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.018958,
+            "steps_ms": 1.34091
+          },
+          "candidate": {
+            "cells": 16,
+            "ticks": 10000,
+            "powered": 10,
+            "total_ms": 0.353462,
+            "compile_ms": 0.010326,
+            "steps_ms": 0.343136,
+            "topology_builds": 1,
+            "propagations": 10001,
+            "frontier_visits": 40004,
+            "settled_ticks": 0
+          }
+        }
+      ]
+    },
+    {
+      "sample": "double dabble with inputs.ccsb",
+      "sha256": "5bd3d7afedf6c9a1a3299c8bae81d83bfcc61c75ff67b97726882207852521cf",
+      "correctness": {
+        "sample": "double dabble with inputs.ccsb",
+        "ticks": 10000,
+        "cells": 64938,
+        "mismatches": 0,
+        "reference_state_sha256": "376b436aa57bf3845366574d3512ec2d72ede7326cf39b8e06d7408f45621062",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 19.371,
+          "candidate": 5.68634
+        },
+        "steps_ms": {
+          "reference": 274.61,
+          "candidate": 0.103516
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 18.5727,
+            "steps_ms": 294.494
+          },
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 5.21034,
+            "compile_ms": 5.10731,
+            "steps_ms": 0.103025,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 7.94801,
+            "compile_ms": 7.83086,
+            "steps_ms": 0.117157,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 19.3925,
+            "steps_ms": 274.61
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 18.7643,
+            "steps_ms": 271.255
+          },
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 5.94781,
+            "compile_ms": 5.79548,
+            "steps_ms": 0.152329,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 5.68065,
+            "compile_ms": 5.57753,
+            "steps_ms": 0.103125,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 19.3431,
+            "steps_ms": 273.602
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 19.7746,
+            "steps_ms": 280.315
+          },
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 5.43462,
+            "compile_ms": 5.33089,
+            "steps_ms": 0.103737,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 6.08481,
+            "compile_ms": 5.9813,
+            "steps_ms": 0.103516,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 19.3993,
+            "steps_ms": 270.383
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 19.371,
+            "steps_ms": 302.295
+          },
+          "candidate": {
+            "cells": 64938,
+            "ticks": 10000,
+            "powered": 23856,
+            "total_ms": 5.78972,
+            "compile_ms": 5.68634,
+            "steps_ms": 0.103375,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 6376,
+            "settled_ticks": 9999
+          }
+        }
+      ]
+    },
+    {
+      "sample": "duplicator.ccsb",
+      "sha256": "cbe7ba06d4395dbe858bffd74b8ec91d67843e4c7379595f1fc3837c17241938",
+      "correctness": {
+        "sample": "duplicator.ccsb",
+        "ticks": 10000,
+        "cells": 237,
+        "mismatches": 0,
+        "reference_state_sha256": "61e9a80988e847f4ecef9a78c9f8bf12de3023393ab72c033db9443c97cf30ac",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.131908,
+          "candidate": 0.032859
+        },
+        "steps_ms": {
+          "reference": 1.40942,
+          "candidate": 0.076325
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.130606,
+            "steps_ms": 1.40942
+          },
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.111157,
+            "compile_ms": 0.034752,
+            "steps_ms": 0.076405,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.108974,
+            "compile_ms": 0.032779,
+            "steps_ms": 0.076195,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.132739,
+            "steps_ms": 1.37624
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.149926,
+            "steps_ms": 1.57414
+          },
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.109184,
+            "compile_ms": 0.032859,
+            "steps_ms": 0.076325,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.108903,
+            "compile_ms": 0.032719,
+            "steps_ms": 0.076184,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.127241,
+            "steps_ms": 1.50189
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.131908,
+            "steps_ms": 1.35248
+          },
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.17337,
+            "compile_ms": 0.049424,
+            "steps_ms": 0.123946,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.105388,
+            "compile_ms": 0.029193,
+            "steps_ms": 0.076195,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.222535,
+            "steps_ms": 1.37585
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.129255,
+            "steps_ms": 1.63248
+          },
+          "candidate": {
+            "cells": 237,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.127621,
+            "compile_ms": 0.051177,
+            "steps_ms": 0.076444,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        }
+      ]
+    },
+    {
+      "sample": "propagate.ccsb",
+      "sha256": "6254d709358aeadbbb910c71dd9946a00953ff0f4716109ebfde0689625764d4",
+      "correctness": {
+        "sample": "propagate.ccsb",
+        "ticks": 10000,
+        "cells": 668,
+        "mismatches": 0,
+        "reference_state_sha256": "d031b3858d6469025059a00388c90744c21f0d35d2e8af09cec8abdbbf01b966",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 0.201553,
+          "candidate": 0.076896
+        },
+        "steps_ms": {
+          "reference": 2.00607,
+          "candidate": 0.076294
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 0.201543,
+            "steps_ms": 2.10901
+          },
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.15316,
+            "compile_ms": 0.076896,
+            "steps_ms": 0.076264,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.168965,
+            "compile_ms": 0.075173,
+            "steps_ms": 0.093792,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.205258,
+            "steps_ms": 1.96582
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.19976,
+            "steps_ms": 1.9737
+          },
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.154833,
+            "compile_ms": 0.078549,
+            "steps_ms": 0.076284,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.151237,
+            "compile_ms": 0.074953,
+            "steps_ms": 0.076284,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.236666,
+            "steps_ms": 1.90061
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.201553,
+            "steps_ms": 2.00607
+          },
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.457037,
+            "compile_ms": 0.147121,
+            "steps_ms": 0.309916,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        },
+        {
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.15286,
+            "compile_ms": 0.076566,
+            "steps_ms": 0.076294,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          },
+          "reference": {
+            "compile_ms": 0.245349,
+            "steps_ms": 2.05099
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 0.196776,
+            "steps_ms": 2.13755
+          },
+          "candidate": {
+            "cells": 668,
+            "ticks": 10000,
+            "powered": 0,
+            "total_ms": 0.185809,
+            "compile_ms": 0.077476,
+            "steps_ms": 0.108333,
+            "topology_builds": 1,
+            "propagations": 2,
+            "frontier_visits": 0,
+            "settled_ticks": 9999
+          }
+        }
+      ]
+    },
+    {
+      "sample": "readfile_multi.ccsb",
+      "sha256": "1aa5d6a3fe8d739a90f024143c3a35961eda61243074ab088320bdcf253c5e99",
+      "correctness": {
+        "sample": "readfile_multi.ccsb",
+        "ticks": 10000,
+        "cells": 15582,
+        "mismatches": 0,
+        "reference_state_sha256": "1b2501c29fc08445c18aee922b77f36b52c971ac88af561fe0039a43b92a2923",
+        "first_mismatches": []
+      },
+      "medians": {
+        "compile_ms": {
+          "reference": 4.19182,
+          "candidate": 1.32535
+        },
+        "steps_ms": {
+          "reference": 16.8304,
+          "candidate": 0.081582
+        }
+      },
+      "runs": [
+        {
+          "reference": {
+            "compile_ms": 3.80067,
+            "steps_ms": 16.6353
+          },
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.65306,
+            "compile_ms": 1.57134,
+            "steps_ms": 0.081713,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          }
+        },
+        {
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.34101,
+            "compile_ms": 1.25987,
+            "steps_ms": 0.081142,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          },
+          "reference": {
+            "compile_ms": 4.20189,
+            "steps_ms": 17.5999
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 4.48564,
+            "steps_ms": 19.6103
+          },
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.40562,
+            "compile_ms": 1.30114,
+            "steps_ms": 0.104487,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          }
+        },
+        {
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.39986,
+            "compile_ms": 1.31879,
+            "steps_ms": 0.081062,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          },
+          "reference": {
+            "compile_ms": 3.85143,
+            "steps_ms": 16.8304
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 4.39133,
+            "steps_ms": 16.5664
+          },
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.41122,
+            "compile_ms": 1.32768,
+            "steps_ms": 0.083546,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          }
+        },
+        {
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.40638,
+            "compile_ms": 1.32535,
+            "steps_ms": 0.081032,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          },
+          "reference": {
+            "compile_ms": 4.19182,
+            "steps_ms": 19.3392
+          }
+        },
+        {
+          "reference": {
+            "compile_ms": 3.77312,
+            "steps_ms": 16.3175
+          },
+          "candidate": {
+            "cells": 15582,
+            "ticks": 10000,
+            "powered": 106,
+            "total_ms": 1.51574,
+            "compile_ms": 1.43416,
+            "steps_ms": 0.081582,
+            "topology_builds": 1,
+            "propagations": 3,
+            "frontier_visits": 36,
+            "settled_ticks": 9998
+          }
+        }
+      ]
+    }
+  ],
+  "median_regressions": [],
+  "limits": [
+    "Shared host; timing noise is possible",
+    "Headless simulation only",
+    "No attached file streams or rendering"
+  ],
+  "candidate_source_tree": "f753832e5dd3e10066c8e22eeb354ea6ecead9e6",
+  "reference_adapter_sha256": "37c8b09a60799bb652483d94ca6c0af241de26a0c9e20d4c3d82e9036fbf42ce",
+  "reference_compiler": "GNU g++ 13.3.0"
+}

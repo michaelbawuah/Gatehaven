@@ -1,5 +1,8 @@
 # Simulation measurements
 
+The first tables below are historical pre-0.5 measurements. The component-engine
+and external comparison sections describe the 0.5 candidate.
+
 Measured on 9 October 2026 with GCC 13.3.0, CMake 4.4.4, Linux x86-64, and
 Release optimization on a shared host without CPU pinning. Each workload uses
 10,000 occupied cells, one startup tick, and thirty timed ticks. Values below
@@ -83,3 +86,32 @@ vertices. Tick work visits controls and energized component/relay edges; full
 per-cell state is expanded only when rendering or exporting observations.
 `frontier_visits` therefore counts energized graph vertices in this version,
 not individual grid cells. Historical counts use the earlier unit.
+
+## 0.5 external headless comparison
+
+Seven fresh processes per engine and sample, alternating engine order, each with
+10,000 timed ticks. Both use GNU 13.3.0, C++23, `-O3 -DNDEBUG` on the same Linux
+x86-64 shared host. Compilation and ticks are measured separately, excluding file
+parsing, snapshots, and output formatting. Every final state is compared before
+timing. [Raw runs](../bench/reference-results-2026-10-09.json) include source-tree
+identity, input hashes, compiler, work counters, and adapter identity.
+
+| Sample | Reference compile ms | Gatehaven compile ms | Reference 10k ticks ms | Gatehaven 10k ticks ms |
+| --- | ---: | ---: | ---: | ---: |
+| clock.ccsb | 0.050656 | 0.012999 | 1.526730 | 0.470497 |
+| clock_minimal.ccsb | 0.021622 | 0.007882 | 1.353080 | 0.359882 |
+| double dabble with inputs.ccsb | 19.371000 | 5.686340 | 274.610000 | 0.103516 |
+| duplicator.ccsb | 0.131908 | 0.032859 | 1.409420 | 0.076325 |
+| propagate.ccsb | 0.201553 | 0.076896 | 2.006070 | 0.076294 |
+| readfile_multi.ccsb | 4.191820 | 1.325350 | 16.830400 | 0.081582 |
+
+All six local medians are lower for both compilation and ticks. The largest tick
+reductions come from suspended work after the circuits settle with their file
+ports disconnected. They do not measure full recomputation on every tick.
+Live endpoint callbacks wake the engine and always execute when present.
+
+The reference revision is pinned in [the comparison procedure](reference-validation.md).
+Shared-host timings can vary, so CI uploads measurements without a wall-clock
+pass/fail threshold. Local `--require-no-regression` can enforce the measured
+scenario. Rendering, continuously changing external inputs, attached streams,
+and physical UI latency remain necessary before claiming overall parity.
