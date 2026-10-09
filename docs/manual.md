@@ -102,3 +102,14 @@ F2 help, the recovery chooser, clipboard chooser, and speed dialog consume
 keyboard input while open. Simulation pauses behind these overlays and resumes
 its previous play state when they close. Keyboard navigation is implemented;
 screen-reader integration and a full accessibility audit remain release work.
+
+## Files changed in another window
+
+Saving an already opened file checks whether its contents changed on disk.
+Gatehaven asks before replacing another window's saved work. Cancel keeps your
+current edits; Ctrl+Shift+S saves them under a different name. A removed file
+also requires confirmation before recreating it. Files are written beside the
+destination and replaced atomically, so readers see a complete document.
+
+This check reduces accidental overwrites; it is not a lock on other programs.
+An external writer can still change a file between the check and replacement.
