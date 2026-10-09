@@ -1836,6 +1836,9 @@ int main(int argc, char** argv) {
     try {
         const std::string_view mode = argc > 1 ? argv[1] : "";
         if (mode == "--version" && argc == 2) { std::cout << "Gatehaven " << version << " (SDL3)\n"; return 0; }
+        if (mode == "--build-info" && argc == 2) {
+            std::cout << build_information(); return std::cout ? 0 : 1;
+        }
         if ((mode == "--help" || mode == "-h") && argc == 2) {
             std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version]\n"
                          "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";

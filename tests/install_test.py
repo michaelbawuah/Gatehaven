@@ -55,14 +55,15 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
             ET.parse(root / "share" / "mime" / "packages" / "gatehaven.xml")
             ET.parse(root / "share" / "icons" / "hicolor" / "scalable" / "apps" / "gatehaven.svg")
         assert "Gatehaven" in run(app, "--help")
+        assert run(app, "--build-info") == run(cli, "--build-info")
         env = dict(os.environ, SDL_VIDEODRIVER="dummy")
         run(app, "--self-test", env=env, cwd=root)
         snapshot = root / "installed-preview.bmp"
         frames = set()
-        for state in ("starter", "help", "examples", "hints", "speed", "clipboard", "gate-gallery", "keyboard", "recovery"):
+        for state in ("starter", "help", "examples", "hints", "speed", "clipboard", "gate-gallery", "keyboard", "recovery", "canvas"):
             run(app, "--snapshot", snapshot, state, env=env, cwd=root)
             pixels = snapshot.read_bytes()
             assert pixels[:2] == b"BM"
             frames.add(pixels)
-        assert len(frames) == 9, "Distinct UI states rendered identical frames"
+        assert len(frames) == 10, "Distinct UI states rendered identical frames"
 print("Installed executables, six lessons, notices, metadata and desktop launch passed")
