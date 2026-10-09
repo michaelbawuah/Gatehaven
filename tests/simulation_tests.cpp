@@ -225,3 +225,16 @@ TEST("relay saved conductivity and wire display bits have distinct meanings") {
     engine.initialize(circuit, true);
     CHECK(!engine.conductive({1, 0}) && !engine.powered({2, 0}));
 }
+
+TEST("document snapshots store current conductivity and keep reset states") {
+    Circuit circuit; circuit.set({0, 0}, Element::source);
+    circuit.set({1, 0}, Element::positive_relay, 3); circuit.set({2, 0}, Element::wire);
+    Simulation engine; engine.initialize(circuit);
+    const auto snapshot = engine.document_snapshot(circuit);
+    CHECK(snapshot.saved_state({0, 0}) == 0 && snapshot.saved_state({1, 0}) == 3);
+    CHECK(snapshot.saved_state({2, 0}) == 2 && circuit.saved_state({2, 0}) == 0);
+    engine.step(circuit);
+    CHECK(engine.document_snapshot(circuit).saved_state({1, 0}) == 1);
+    circuit.set({2, 0}, Element::or_gate, 3);
+    CHECK(engine.document_snapshot(circuit).saved_state({2, 0}) == 3);
+}

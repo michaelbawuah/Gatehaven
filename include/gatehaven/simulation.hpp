@@ -31,6 +31,7 @@ public:
     void initialize(const Circuit& circuit, bool reset_levels = false);
     void step(const Circuit& circuit, const Exchange& exchange = {});
     [[nodiscard]] bool conductive(Point point) const;
+    [[nodiscard]] Circuit document_snapshot(const Circuit& circuit) const;
     void reset();
     [[nodiscard]] const SimulationMetrics& metrics() const noexcept { return metrics_; }
     void invalidate(std::span<const Point> points);
