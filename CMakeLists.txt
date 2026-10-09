@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(GATEHAVEN_BUILD_TESTS "Build core tests" ON)
+option(GATEHAVEN_BUILD_APP "Build the SDL3 desktop application" OFF)
 option(GATEHAVEN_SANITIZERS "Enable address and undefined-behavior sanitizers" OFF)
 option(GATEHAVEN_WARNINGS_AS_ERRORS "Treat project warnings as errors" ON)
 
@@ -37,10 +38,31 @@ add_executable(gatehaven-cli src/cli.cpp)
 target_link_libraries(gatehaven-cli PRIVATE gatehaven_core)
 gatehaven_defaults(gatehaven-cli)
 
+if(GATEHAVEN_BUILD_APP)
+    find_package(SDL3 3.4.18 EXACT CONFIG REQUIRED)
+    add_executable(gatehaven src/app/main.cpp src/app/font.cpp)
+    target_link_libraries(gatehaven PRIVATE gatehaven_core SDL3::SDL3)
+    gatehaven_defaults(gatehaven)
+    if(APPLE)
+        set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.michaelbaffourawuah.gatehaven"
+            MACOSX_BUNDLE_BUNDLE_NAME "Gatehaven")
+    endif()
+    if(WIN32)
+        add_custom_command(TARGET gatehaven POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:gatehaven> $<TARGET_FILE_DIR:gatehaven>
+            COMMAND_EXPAND_LISTS)
+    endif()
+endif()
+
 if(GATEHAVEN_BUILD_TESTS)
     enable_testing()
     add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp)
     target_link_libraries(gatehaven_tests PRIVATE gatehaven_core)
     gatehaven_defaults(gatehaven_tests)
     add_test(NAME gatehaven_core COMMAND gatehaven_tests)
+    if(GATEHAVEN_BUILD_APP)
+        add_test(NAME gatehaven_desktop COMMAND gatehaven --self-test)
+        set_tests_properties(gatehaven_desktop PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy")
+    endif()
 endif()
