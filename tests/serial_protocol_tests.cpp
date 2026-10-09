@@ -20,3 +20,16 @@ TEST("serial command bits retain their documented order and reset drops partial 
     }
     CHECK(!decoder.push(true)); decoder.reset(); CHECK(!decoder.push(false));
 }
+TEST("input byte requests wait at EOF and resume without resetting the circuit") {
+    InputProtocol input;
+    std::optional<std::uint8_t> next;
+    const InputProtocol::Read read = [&]() -> std::expected<std::optional<std::uint8_t>, std::string> { auto result = next; next.reset(); return result; };
+    const InputProtocol::More more = [&]() -> std::expected<bool, std::string> { return next.has_value(); };
+    for (auto bit : serial_reply(0)) CHECK(!input.step(bit != 0, read, more));
+    for (unsigned i = 0; i < 20; ++i) CHECK(!input.step(false, read, more));
+    CHECK(input.pending() == 1);
+    next = 0xA5; CHECK(!input.step(false, read, more));
+    std::vector<std::uint8_t> reply;
+    for (unsigned i = 0; i < 11; ++i) reply.push_back(input.step(false, read, more) ? 1 : 0);
+    CHECK(reply == serial_reply(0, 0xA5, 8)); CHECK(input.pending() == 0);
+}
