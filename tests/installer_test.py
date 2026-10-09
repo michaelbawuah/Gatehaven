@@ -10,6 +10,7 @@ def run(*args):
     return subprocess.run(list(map(str, args)), check=True, capture_output=True, text=True, timeout=60).stdout
 
 if sys.platform.startswith("linux"):
+    import xml.etree.ElementTree as ET
     packages = list(build.glob("gatehaven_*.deb"))
     assert len(packages) == 1, packages
     for package in packages:
@@ -20,6 +21,11 @@ if sys.platform.startswith("linux"):
             root = Path(directory) / "usr"
             assert (root / "bin/gatehaven").is_file()
             assert (root / "share/gatehaven/docs/manual.md").is_file()
+            mime = ET.parse(root / "share/mime/packages/gatehaven.xml")
+            ns = {"m": "http://www.freedesktop.org/standards/shared-mime-info"}
+            assert {node.attrib["pattern"] for node in mime.findall(".//m:glob", ns)} == {"*.ghv", "*.ccsb"}
+            desktop = (root / "share/applications/com.michaelbaffourawuah.gatehaven.desktop").read_text()
+            assert "application/x-ccsb;" in desktop
             assert "Gatehaven" in run(root / "bin/gatehaven-cli", "--version")
 elif sys.platform == "darwin":
     import plistlib
