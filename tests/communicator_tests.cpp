@@ -36,3 +36,13 @@ TEST("cached communicator groups refresh after shape edits and circuit replaceme
     first = second; calls = 0; sim.step(first, exchange); CHECK(calls == 1 && sim.powered({9, 9}));
     first.clear(); calls = 0; sim.step(first, exchange); CHECK(calls == 0);
 }
+
+TEST("received bits remain distinct from conducted power and reset with endpoint edits") {
+    Circuit c; c.set({0, 0}, Element::screen); c.set({1, 0}, Element::source);
+    Simulation simulation; simulation.step(c);
+    CHECK(simulation.powered({0, 0})); CHECK(!simulation.received({0, 0}));
+    simulation.step(c, [](const CommunicatorGroup&, bool) { return true; });
+    CHECK(simulation.received({0, 0})); CHECK(!simulation.received({1, 0}));
+    const std::array point{Point{0, 0}}; simulation.invalidate(point);
+    CHECK(!simulation.received({0, 0})); simulation.reset(); CHECK(!simulation.received({0, 0}));
+}
