@@ -202,10 +202,11 @@ jobs:
       - name: Record same-host throughput without a noisy shared-runner timing gate
         run: python bench/compare_reference.py build/reference-adapter build/compat/gatehaven-cli build/reference/samples --runs 3 --ticks 1000 > build/reference-performance.json
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
         with:
           name: Gatehaven-compatibility-evidence
           retention-days: 30
-          if-no-files-found: error
+          if-no-files-found: warn
           path: |
             build/legacy-audit.json
             build/behavior.json
