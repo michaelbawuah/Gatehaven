@@ -1,4 +1,5 @@
 #include "test.hpp"
+#include <algorithm>
 #include "gatehaven/legacy_document.hpp"
 #include <sstream>
 using namespace gatehaven;
