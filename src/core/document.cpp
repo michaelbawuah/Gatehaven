@@ -102,6 +102,9 @@ std::expected<void, DocumentError> write_document(std::ostream& output, const Ci
 
 std::expected<Circuit, DocumentError> load_document(const std::filesystem::path& path,
                                                   DocumentLimits limits) {
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(path, error)) return std::unexpected(DocumentError{0,
+        error ? "Could not inspect document: " + error.message() : "Document is not a regular file"});
     std::ifstream input(path, std::ios::binary);
     if (!input) return std::unexpected(DocumentError{0, "Could not open document"});
     return read_document(input, limits);

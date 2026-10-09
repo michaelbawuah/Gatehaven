@@ -76,3 +76,9 @@ TEST("line limits count the mandatory document header") {
     std::istringstream one("GATEHAVEN 1\n"); CHECK(read_document(one, {.max_lines = 1}));
     std::istringstream two("GATEHAVEN 1\n# comment\n"); CHECK(!read_document(two, {.max_lines = 1}));
 }
+
+TEST("document loader rejects directories before opening an input stream") {
+    const auto result = load_document(std::filesystem::temp_directory_path());
+    CHECK(!result && result.error().line == 0);
+    CHECK(result.error().message.find("regular file") != std::string::npos);
+}
