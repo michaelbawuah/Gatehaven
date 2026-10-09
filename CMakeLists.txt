@@ -31,7 +31,7 @@ function(gatehaven_defaults target)
     endif()
 endfunction()
 
-add_library(gatehaven_core src/core/circuit.cpp src/core/simulation.cpp src/core/document.cpp src/core/editor.cpp src/core/examples.cpp)
+add_library(gatehaven_core src/core/circuit.cpp src/core/simulation.cpp src/core/document.cpp src/core/editor.cpp src/core/examples.cpp src/core/clipboard_codec.cpp)
 target_include_directories(gatehaven_core PUBLIC include)
 gatehaven_defaults(gatehaven_core)
 
@@ -64,7 +64,7 @@ endif()
 
 if(GATEHAVEN_BUILD_TESTS)
     enable_testing()
-    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp)
+    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp tests/clipboard_codec_tests.cpp)
     target_link_libraries(gatehaven_tests PRIVATE gatehaven_core)
     gatehaven_defaults(gatehaven_tests)
     add_test(NAME gatehaven_core COMMAND gatehaven_tests)

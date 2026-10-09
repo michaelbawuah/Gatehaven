@@ -33,7 +33,12 @@ private:
     std::size_t stored_changes_{};
 };
 
-struct StampCell { std::int64_t x; std::int64_t y; Element element; };
+struct StampCell {
+    std::int64_t x;
+    std::int64_t y;
+    Element element;
+    bool operator==(const StampCell&) const = default;
+};
 struct Stamp {
     std::int64_t width{};
     std::int64_t height{};
@@ -41,6 +46,7 @@ struct Stamp {
     void rotate_clockwise();
     void flip_horizontal();
     void flip_vertical();
+    bool operator==(const Stamp&) const = default;
 };
 
 [[nodiscard]] Stamp capture(const Circuit& circuit, Bounds region);
