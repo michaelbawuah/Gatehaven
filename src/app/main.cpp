@@ -281,7 +281,7 @@ public:
             interaction_button_.reset(); endpoints_.release_screens();
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && pan_button_ && input_button(e.button) == pan_button_) {
-            if (pan_distance_ < 3 && pan_origin_) view.center_on(*pan_origin_);
+            if (pan_distance_ < 3 && pan_origin_ && pan_clicks_ >= 2) view.center_on(*pan_origin_);
             pan_button_.reset(); pan_origin_.reset();
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
@@ -429,6 +429,7 @@ private:
     std::optional<std::size_t> pan_button_;
     std::optional<Point> pan_origin_;
     float pan_distance_{};
+    Uint8 pan_clicks_{};
     std::optional<std::size_t> interaction_button_;
     FileEndpoints endpoints_;
     std::vector<Cell> preview_;
@@ -553,7 +554,7 @@ private:
             return;
         }
         if (drag_ || pan_button_) return; // One gesture at a time; release its owning button to finish.
-        if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; pan_origin_ = hover_; pan_distance_ = 0; return; }
+        if (tools_[*button].kind == ToolKind::panner) { pan_button_ = *button; pan_origin_ = hover_; pan_distance_ = 0; pan_clicks_ = e.clicks; return; }
         if (tools_[*button].kind == ToolKind::interactor) {
             if (circuit.at(*hover_) == Element::screen) { interaction_button_ = *button; endpoints_.hold_screen(*hover_); }
             else if (is_communicator(circuit.at(*hover_))) communicator_dialog(*hover_);
