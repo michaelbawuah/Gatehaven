@@ -827,7 +827,7 @@ private:
             const std::int64_t distance = control ? 4 : 1;
             const auto dx = e.key == SDLK_LEFT ? -distance : e.key == SDLK_RIGHT ? distance : 0;
             const auto dy = e.key == SDLK_UP ? -distance : e.key == SDLK_DOWN ? distance : 0;
-            const auto moved = move_selection(circuit, selection_, dx, dy);
+            const auto moved = move_selection(simulation.document_snapshot(circuit), selection_, dx, dy);
             if (!moved) status_ = moved.error();
             else if (apply(moved->edits)) { selection_ = moved->selection; selection_changed_ = true; }
             return;
@@ -1671,6 +1671,18 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(save_document(legacy_path, legacy_fixture).has_value() && app.open(legacy_path), "Legacy open failed");
     key(SDLK_S, SDL_KMOD_CTRL);
     require(load_document(legacy_path).value() == legacy_fixture, "Legacy save lost saved levels");
+    const auto moving_path = session_directory / "live selection.ghv";
+    Circuit moving;
+    moving.set({0, 0}, Element::source); moving.set({1, 0}, Element::wire);
+    moving.set({2, 0}, Element::signal); moving.set({3, 0}, Element::or_gate);
+    require(save_document(moving_path, moving).has_value() && app.open(moving_path), "Could not load moving-state fixture");
+    key(SDLK_RIGHT); key(SDLK_Q);
+    require(app.simulation.powered({3, 0}) && app.circuit.saved_state({3, 0}) == 0, "Moving-state fixture did not evolve");
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {3, 0}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {3, 0});
+    key(SDLK_DOWN);
+    require(app.circuit.saved_state({3, 1}) == 2 && app.simulation.powered({3, 1}), "Selection movement lost live output level");
+    key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_ESCAPE);
+    require(app.circuit == moving, "Stateful movement did not undo structure and stored levels");
     require(app.open(save_path), "Could not restore save workflow fixture");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
     require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
