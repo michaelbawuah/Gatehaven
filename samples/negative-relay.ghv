@@ -1,0 +1,15 @@
+GATEHAVEN 1
+-4 0 source
+-3 0 wire
+-2 0 wire
+-1 0 wire
+0 0 negative-relay
+1 0 wire
+2 0 wire
+3 0 wire
+4 0 signal
+5 0 screen
+0 1 signal
+0 2 wire
+0 3 wire
+0 4 screen
