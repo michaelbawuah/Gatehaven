@@ -73,6 +73,15 @@ std::expected<Circuit, std::string> RecoveryStore::restore(std::string_view cand
         return std::move(*circuit);
     } catch (const std::exception& error) { return std::unexpected(error.what()); }
 }
+std::expected<void, std::string> RecoveryStore::remove(std::string_view candidate) {
+    if (!valid_id(candidate) || candidate == impl_->id) return std::unexpected("Invalid recovery identity");
+    try {
+        platform::FileLock owner(impl_->root / (std::string(candidate) + ".lock"));
+        if (!owner.try_lock(true)) return std::unexpected("This circuit is open in another window");
+        std::filesystem::remove(impl_->root / (std::string(candidate) + ".ghv"));
+        return {};
+    } catch (const std::exception& error) { return std::unexpected(error.what()); }
+}
 const std::string& RecoveryStore::id() const { return impl_->id; }
 std::expected<std::unique_ptr<RecoveryStore>, std::string> RecoveryStore::open(const std::filesystem::path& directory) {
     try { return std::unique_ptr<RecoveryStore>(new RecoveryStore(std::make_unique<Impl>(directory))); }

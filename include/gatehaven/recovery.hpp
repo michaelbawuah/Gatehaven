@@ -21,6 +21,7 @@ public:
     [[nodiscard]] std::expected<void, std::string> discard();
     [[nodiscard]] std::expected<std::vector<RecoveryEntry>, std::string> scan() const;
     [[nodiscard]] std::expected<Circuit, std::string> restore(std::string_view id);
+    [[nodiscard]] std::expected<void, std::string> remove(std::string_view id);
 private:
     struct Impl;
     explicit RecoveryStore(std::unique_ptr<Impl> impl);
