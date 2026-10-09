@@ -45,7 +45,7 @@ static int run_cli(int argc, char** argv) {
         std::cout << "Saved example to " << argv[argc - 1] << '\n';
         return 0;
     }
-    if (argc == 4 && std::string_view(argv[1]) == "normalize") {
+    if (argc == 4 && (std::string_view(argv[1]) == "normalize" || std::string_view(argv[1]) == "convert")) {
         const auto circuit = load_document(utf8_path(argv[2]));
         if (!circuit) { std::cerr << "Line " << circuit.error().line << ": " << circuit.error().message << '\n'; return 1; }
         const auto saved = save_document(utf8_path(argv[3]), *circuit);
@@ -67,14 +67,15 @@ static int run_cli(int argc, char** argv) {
     if ((command != "check" && command != "run" && command != "stats" && command != "trace" && command != "profile" && command != "digest") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
         auto& output = help ? std::cout : std::cerr;
-        output << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
+        output << "Gatehaven CLI (.ghv and .ccsb input)\n  gatehaven-cli check FILE.ghv\n"
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
                      "  gatehaven-cli stats FILE.ghv\n"
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
                      "  gatehaven-cli profile FILE.ghv [STEPS]\n"
                      "  gatehaven-cli digest FILE.ghv [STEPS]\n"
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
-                     "  gatehaven-cli normalize FILE.ghv OUTPUT.ghv\n"
+                     "  gatehaven-cli normalize FILE OUTPUT.ghv\n"
+                     "  gatehaven-cli convert INPUT OUTPUT.ghv|OUTPUT.ccsb\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
                      "  gatehaven-cli --version\n  gatehaven-cli --build-info\n  gatehaven-cli --manual-path\n";

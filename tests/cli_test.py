@@ -96,3 +96,18 @@ with tempfile.TemporaryDirectory(prefix="gatehaven normalize ") as directory:
     source.write_text("invalid", encoding="utf-8")
     run("normalize", source, output, code=1)
     assert output.read_bytes() == before
+
+with tempfile.TemporaryDirectory(prefix="gatehaven legacy ") as directory:
+    native = Path(directory) / "source.ghv"
+    legacy = Path(directory) / "converted.CCSB"
+    restored = Path(directory) / "restored.ghv"
+    native.write_text("GATEHAVEN 2\n0 0 source 0\n1 0 or 3\n", encoding="utf-8")
+    run("convert", native, legacy)
+    assert legacy.read_bytes()[:4] == b"CCPG"
+    run("convert", legacy, restored)
+    assert restored.read_text(encoding="utf-8") == native.read_text(encoding="utf-8")
+    run("check", legacy)
+    assert json.loads(run("stats", native)) == json.loads(run("stats", legacy))
+    assert run("trace", native, 3) == run("trace", legacy, 3)
+    run("convert", legacy, legacy)
+    assert legacy.read_bytes()[:4] == b"CCPG"
