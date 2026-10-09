@@ -52,7 +52,14 @@ std::expected<std::vector<RecoveryEntry>, std::string> RecoveryStore::scan() con
             if (!valid_id(candidate) || candidate == impl_->id) continue;
             platform::FileLock owner(impl_->root / (candidate + ".lock"));
             if (!owner.try_lock(true)) continue;
-            entries.push_back({candidate, entry.last_write_time(), entry.file_size()});
+            std::error_code error;
+            const auto size = std::filesystem::file_size(entry.path(), error);
+            if (error == std::errc::no_such_file_or_directory) continue;
+            if (error) return std::unexpected(error.message());
+            const auto modified = std::filesystem::last_write_time(entry.path(), error);
+            if (error == std::errc::no_such_file_or_directory) continue;
+            if (error) return std::unexpected(error.message());
+            entries.push_back({candidate, modified, size});
         }
         std::sort(entries.begin(), entries.end(), [](const auto& a, const auto& b) { return a.modified > b.modified; });
         return entries;

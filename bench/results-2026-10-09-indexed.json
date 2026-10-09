@@ -1,0 +1,371 @@
+{
+  "environment": "Linux x86_64, GCC 13.3.0, Release, shared host, five independent processes per case",
+  "results": {
+    "wire-chain": {
+      "median_ms_per_step": 0.0019299,
+      "median_cold_ms": 1.6868,
+      "runs": [
+        {
+          "workload": "wire-chain",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.6868,
+          "total_ms": 0.057897,
+          "ms_per_step": 0.0019299,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-chain",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.47446,
+          "total_ms": 0.057076,
+          "ms_per_step": 0.00190253,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-chain",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 2.77646,
+          "total_ms": 0.057677,
+          "ms_per_step": 0.00192257,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-chain",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.51376,
+          "total_ms": 0.063004,
+          "ms_per_step": 0.00210013,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-chain",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.82408,
+          "total_ms": 0.058077,
+          "ms_per_step": 0.0019359,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        }
+      ]
+    },
+    "wire-grid": {
+      "median_ms_per_step": 0.00307663,
+      "median_cold_ms": 2.10362,
+      "runs": [
+        {
+          "workload": "wire-grid",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 2.12384,
+          "total_ms": 0.089375,
+          "ms_per_step": 0.00297917,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-grid",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.95539,
+          "total_ms": 0.096305,
+          "ms_per_step": 0.00321017,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-grid",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 2.10362,
+          "total_ms": 0.092299,
+          "ms_per_step": 0.00307663,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-grid",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 2.03435,
+          "total_ms": 0.092298,
+          "ms_per_step": 0.0030766,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "wire-grid",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 2.81968,
+          "total_ms": 0.136676,
+          "ms_per_step": 0.00455587,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        }
+      ]
+    },
+    "gates": {
+      "median_ms_per_step": 0.0031417,
+      "median_cold_ms": 1.68054,
+      "runs": [
+        {
+          "workload": "gates",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.45691,
+          "total_ms": 0.096044,
+          "ms_per_step": 0.00320147,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "gates",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.54614,
+          "total_ms": 0.077306,
+          "ms_per_step": 0.00257687,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "gates",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.70429,
+          "total_ms": 0.094251,
+          "ms_per_step": 0.0031417,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "gates",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.71192,
+          "total_ms": 0.132059,
+          "ms_per_step": 0.00440197,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        },
+        {
+          "workload": "gates",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.68054,
+          "total_ms": 0.076956,
+          "ms_per_step": 0.0025652,
+          "propagations": 2,
+          "settled_ticks": 29,
+          "topology_builds": 1
+        }
+      ]
+    },
+    "screens": {
+      "median_ms_per_step": 0.11032,
+      "median_cold_ms": 6.23071,
+      "runs": [
+        {
+          "workload": "screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.17905,
+          "total_ms": 3.17322,
+          "ms_per_step": 0.105774,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 5.81431,
+          "total_ms": 3.18508,
+          "ms_per_step": 0.106169,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.23071,
+          "total_ms": 3.30959,
+          "ms_per_step": 0.11032,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.34843,
+          "total_ms": 3.86303,
+          "ms_per_step": 0.128768,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.79514,
+          "total_ms": 3.52832,
+          "ms_per_step": 0.117611,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        }
+      ]
+    },
+    "pulsed-screens": {
+      "median_ms_per_step": 0.0976227,
+      "median_cold_ms": 6.48675,
+      "runs": [
+        {
+          "workload": "pulsed-screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.48675,
+          "total_ms": 2.74717,
+          "ms_per_step": 0.0915723,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "pulsed-screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 5.97993,
+          "total_ms": 2.88442,
+          "ms_per_step": 0.0961472,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "pulsed-screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 7.37804,
+          "total_ms": 2.92868,
+          "ms_per_step": 0.0976227,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "pulsed-screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 7.55061,
+          "total_ms": 3.19566,
+          "ms_per_step": 0.106522,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "pulsed-screens",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 6.38196,
+          "total_ms": 3.08077,
+          "ms_per_step": 0.102692,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        }
+      ]
+    },
+    "feedback": {
+      "median_ms_per_step": 0.0502074,
+      "median_cold_ms": 1.79525,
+      "runs": [
+        {
+          "workload": "feedback",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.85787,
+          "total_ms": 1.82037,
+          "ms_per_step": 0.0606789,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "feedback",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.79525,
+          "total_ms": 1.60699,
+          "ms_per_step": 0.0535662,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "feedback",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.66394,
+          "total_ms": 1.50622,
+          "ms_per_step": 0.0502074,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "feedback",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.68806,
+          "total_ms": 1.47104,
+          "ms_per_step": 0.0490347,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        },
+        {
+          "workload": "feedback",
+          "cells": 10000,
+          "steps": 30,
+          "cold_ms": 1.82337,
+          "total_ms": 1.47086,
+          "ms_per_step": 0.0490287,
+          "propagations": 31,
+          "settled_ticks": 0,
+          "topology_builds": 1
+        }
+      ]
+    }
+  }
+}
