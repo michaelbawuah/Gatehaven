@@ -54,6 +54,7 @@ private:
     mutable bool snapshot_dirty_{};
     std::uint64_t ticks_{};
     SimulationMetrics metrics_;
+    bool settled_{};
 };
 
 } // namespace gatehaven
