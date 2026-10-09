@@ -141,3 +141,15 @@ whether they are powered. Gates and ports show stored and reset levels, and
 communicators report transmitting/receiving. Inspection does not advance time
 or edit the circuit. The bottom status strip also shows crossing axes and relay
 conductivity. Native dialog accessibility still needs platform screen-reader QA.
+
+## Keyboard canvas
+
+F9 enters a cell cursor at the pointer, or the center of the view. Arrows navigate
+one cell; Ctrl+arrows move four. The camera follows, and navigation never advances
+the simulation. Digits or Tab choose tools; Enter applies the left-button tool at
+the cursor. Q then Enter selects that cell for copy, delete, or transformation.
+Ctrl+V then Enter places a copied circuit. Hold Enter with the Interactor to press
+a screen; release Enter to release it. F10 steps while the cursor is active.
+F8 opens the text inspector. Escape, F9, or a pointer click leaves cursor mode.
+The native dialog and offline manual provide readable text, but the custom
+canvas does not yet expose a complete screen-reader accessibility tree.

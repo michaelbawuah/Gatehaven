@@ -1385,7 +1385,7 @@ private:
     void render_help(SDL_Renderer* r) const {
         rectangle(r, 338, 132, 846, 608, ink);
         ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", white, 2.5F);
-        constexpr std::array<std::string_view, 20> lines{
+        constexpr std::array<std::string_view, 22> lines{
             "1-0: COMPONENTS      Q: SELECT REGION",
             "F5/F6/F7: SCREEN / FILE IN / FILE OUT",
             "I: INTERACT WITH SCREENS AND FILE PORTS",
@@ -1393,7 +1393,7 @@ private:
             "HOLD E + CLICK: SAMPLE A TOOL",
             "SHIFT + DRAW: POLYLINE; BACKSPACE: RETRACE",
             "SELECT: SHIFT ADDS, ALT SUBTRACTS",
-            "SPACE: PLAY/PAUSE    RIGHT: ONE TICK",
+            "SPACE: PLAY/PAUSE    RIGHT/F10: ONE TICK",
             "CTRL SPACE: SET TICKS PER SECOND",
             "R: RESET            F: FRAME CIRCUIT",
             "CTRL C/X/V: COPY / CUT / PASTE",
@@ -1404,10 +1404,12 @@ private:
             "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
             "F1: MANUAL   F3: EXAMPLES   F4: RECOVERY",
             "TAB: FOCUS CONTROLS. ENTER: ACTIVATE",
+            "F9: KEYBOARD CANVAS. ARROWS: NAVIGATE",
+            "ENTER: USE TOOL. F8: INSPECT CELL",
             "TWO FINGERS: PAN AND PINCH TO ZOOM",
             "F2 OR ESC: CLOSE    B: BEGINNER HINTS"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
-            ui::text(r, 378, 216 + static_cast<float>(i) * 25, lines[i], white, 1.75F);
+            ui::text(r, 378, 208 + static_cast<float>(i) * 23, lines[i], white, 1.75F);
         }
     }
 };
