@@ -382,10 +382,7 @@ public:
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
         if (placing_ && hover_) {
-            const auto edits = paste(placement_, *hover_);
-            if (edits) for (const auto& cell : *edits) {
-                if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
-            }
+            visit_stamp(placement_, *hover_, visible, [&](Cell cell) { draw_cell(r, cell, 0, true); });
         }
         if (selection_) draw_selection(r, *selection_.bounds());
         if (drag_tool_.kind == ToolKind::selector && drag_ && hover_) {
