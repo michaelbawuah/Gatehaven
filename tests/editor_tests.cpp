@@ -159,3 +159,11 @@ TEST("paste validates empty borders and malformed stamp cells before returning e
     CHECK(!paste({0, 1, {}}, {0, 0}));
     CHECK(paste({}, {0, 0})->empty());
 }
+
+TEST("recovered document baselines remain unsaved after undoing their first edit") {
+    Circuit circuit; circuit.set({0, 0}, Element::wire); History history;
+    history.mark_unsaved(); CHECK(history.modified()); CHECK(!history.can_undo());
+    const std::array edit{Cell{{1, 0}, Element::source}};
+    CHECK(history.apply(circuit, edit)); CHECK(history.undo(circuit)); CHECK(history.modified());
+    history.mark_saved(); CHECK(!history.modified());
+}

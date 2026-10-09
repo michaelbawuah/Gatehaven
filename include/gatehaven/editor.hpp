@@ -24,6 +24,7 @@ public:
     [[nodiscard]] std::size_t undo_depth() const noexcept { return undo_.size(); }
     [[nodiscard]] std::size_t redo_depth() const noexcept { return redo_.size(); }
     void mark_saved() { saved_revision_ = revision_; }
+    void mark_unsaved() { revision_ = next_revision_++; }
     [[nodiscard]] bool modified() const noexcept { return revision_ != saved_revision_; }
     [[nodiscard]] std::span<const Point> last_changes() const noexcept { return last_changes_; }
 
