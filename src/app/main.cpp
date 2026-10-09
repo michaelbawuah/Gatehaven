@@ -835,6 +835,13 @@ private:
         }
         rectangle(r, x + 1, y + 1, s - 2, s - 2,
                   powered ? SDL_Color{217, 238, 227, 255} : SDL_Color{233, 238, 241, 255});
+        if (cell.element == Element::screen) {
+            const bool bright = simulation.sent(cell.position);
+            rectangle(r, x + 3, y + 3, std::max(1.0F, s - 6), std::max(1.0F, s - 6),
+                      bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{57, 64, 84, 255});
+            if (s >= 18) ui::text(r, x + s / 2 - 3, y + s / 2 - 3.5F, "S", bright ? ink : white, 1);
+            return;
+        }
         if (cell.element == Element::wire || cell.element == Element::crossing || cell.element == Element::signal) {
             const auto horizontal = (ports & 10) != 0 ? teal : SDL_Color{99, 117, 128, 255};
             const auto vertical = (ports & 5) != 0 ? teal : SDL_Color{99, 117, 128, 255};
@@ -864,7 +871,9 @@ private:
             const float padding = std::min(3.0F, s / 8);
             rectangle(r, x + padding, y + padding, s - 2 * padding, s - 2 * padding,
                       cell.element == Element::source ? orange : powered ? teal : SDL_Color{91, 89, 130, 255});
-            const auto label = cell.element == Element::source ? std::string_view("+") :
+            const auto label = cell.element == Element::file_input ? std::string_view("IN") :
+                               cell.element == Element::file_output ? std::string_view("OUT") :
+                               cell.element == Element::source ? std::string_view("+") :
                                cell.element == Element::positive_relay ? std::string_view("+R") :
                                cell.element == Element::negative_relay ? std::string_view("-R") : name(cell.element);
             if (s >= 18) {
