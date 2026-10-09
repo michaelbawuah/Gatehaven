@@ -113,3 +113,8 @@ destination and replaced atomically, so readers see a complete document.
 
 This check reduces accidental overwrites; it is not a lock on other programs.
 An external writer can still change a file between the check and replacement.
+
+In the recovery chooser, Page Up/Page Down move five entries and Home/End jump
+to the newest/oldest entry. The counter shows your position in the full list.
+Delete asks for confirmation: Enter permanently removes only that abandoned
+snapshot; Escape keeps it. Saved circuit files and live windows are unaffected.
