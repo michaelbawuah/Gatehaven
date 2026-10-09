@@ -165,6 +165,10 @@ jobs:
       - run: build/bench/gatehaven-bench 10000 20 screens
       - run: build/bench/gatehaven-bench 10000 20 pulsed-screens
       - run: build/bench/gatehaven-bench 10000 20 feedback
+      - name: Measure active grouped file endpoints
+        run: |
+          build/bench/gatehaven-io-bench 10000 512 3 > build/bench/active-io.json
+          build/bench/gatehaven-io-bench 10000 512 3 uncached > build/bench/active-io-uncached.json
       - name: Measure large-circuit editing
         run: build/bench/gatehaven-editor-bench 100000 > build/bench/editor.json
       - name: Collect repeated benchmark evidence
@@ -178,6 +182,8 @@ jobs:
           path: |
             build/bench/measurements.json
             build/bench/editor.json
+            build/bench/active-io.json
+            build/bench/active-io-uncached.json
 
   static-analysis:
     name: Core static analysis
