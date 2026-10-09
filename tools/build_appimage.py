@@ -13,6 +13,7 @@ import tempfile
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_ASSET_BYTES = 32 * 1024 * 1024
 
 def run(*args, cwd=None, env=None):
     result = subprocess.run(list(map(str, args)), cwd=cwd, env=env, text=True, capture_output=True, timeout=240)
@@ -24,11 +25,11 @@ def download(asset, cache):
     target = cache / asset["sha256"]
     if not target.exists():
         with urllib.request.urlopen(asset["url"], timeout=60) as response:
-            data = response.read(32 * 1024 * 1024 + 1)
-        if len(data) > 32 * 1024 * 1024 or hashlib.sha256(data).hexdigest() != asset["sha256"]:
+            data = response.read(MAX_ASSET_BYTES + 1)
+        if len(data) > MAX_ASSET_BYTES or hashlib.sha256(data).hexdigest() != asset["sha256"]:
             raise ValueError("packaging dependency checksum or size mismatch")
         target.write_bytes(data)
-    if hashlib.sha256(target.read_bytes()).hexdigest() != asset["sha256"]:
+    if target.stat().st_size > MAX_ASSET_BYTES or hashlib.sha256(target.read_bytes()).hexdigest() != asset["sha256"]:
         raise ValueError("cached packaging dependency checksum mismatch")
     target.chmod(0o755)
     return target
