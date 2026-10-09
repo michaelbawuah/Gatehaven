@@ -989,6 +989,29 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_ESCAPE);
     require(SDL_PushEvent(&motion), "Could not push post-dialog motion"); dispatch(app, renderer);
     require(app.view.center_x == after_pan, "Opening a dialog left a pan gesture active");
+    key(SDLK_ESCAPE); key(SDLK_2);
+    SDL_SetModState(SDL_KMOD_SHIFT);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-4, 12}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-4, 12});
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-1, 12}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, 12});
+    require(app.circuit == edited, "A staged polyline modified the circuit before finishing");
+    SDL_SetModState(SDL_KMOD_NONE);
+    mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-1, 9}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {-1, 9});
+    require(app.circuit.at({-1, 12}) == Element::wire && app.circuit.at({-1, 10}) == Element::crossing,
+            "Desktop polyline failed to connect its insulated corner");
+    key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.circuit == edited, "Polyline did not undo as one transaction");
+    key(SDLK_Q);
+    for (const Uint8 clicks : {Uint8{2}, Uint8{3}}) {
+        const auto [x, y] = app.view.screen({-7, -2});
+        SDL_Event click{}; click.type = SDL_EVENT_MOUSE_BUTTON_DOWN; click.button.button = SDL_BUTTON_LEFT;
+        click.button.clicks = clicks; click.button.x = static_cast<float>(x + app.view.scale / 2);
+        click.button.y = static_cast<float>(y + app.view.scale / 2);
+        require(SDL_PushEvent(&click), "Could not push connected selection click"); dispatch(app, renderer);
+        key(SDLK_C, SDL_KMOD_CTRL);
+        const auto selected = (*peer)->read(0);
+        require(selected && selected->cells.size() == (clicks == 2 ? 9U : 27U), "Connected selection gesture chose the wrong circuit");
+    }
+    key(SDLK_ESCAPE);
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
