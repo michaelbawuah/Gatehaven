@@ -9,21 +9,22 @@ logic gates, and step through a circuit to see how its signals change.
 
 ![Gatehaven desktop prototype](docs/images/desktop-prototype.png)
 
-**Status: 0.3 development preview, not a finished release.** Windows, macOS,
+**Status: 0.4 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
 for exactly what has been tested.
 
 The editor now includes chained polylines, connected and sparse selections,
 interactive screens, binary file communicators, persistent tool preferences,
 native pinch navigation, crash recovery, keyboard access to every control,
-and six built-in circuit lessons. Successful desktop jobs on the
+offline manuals, save-conflict protection, and six built-in circuit lessons.
+Large clipboard and stroke previews use clipped queries. Successful desktop jobs on the
 [Actions page](https://github.com/michaelbawuah/Gatehaven/actions/workflows/ci.yml)
 provide unsigned [native preview packages](docs/packaging.md).
 
 ## Try the core
 
 A C++23 compiler and CMake 3.28 or later are required. The simulation core has no
-external dependencies. Tests also require Python 3 for the cross-process checks.
+external dependencies. Generated offline guides and tests require Python 3.
 The initial local build uses GCC 13.3.0 and CMake 4.4.4.
 
 ```sh
@@ -130,8 +131,16 @@ or clipboard. Press F3 for editable [lessons](samples/README.md).
 
 [Architecture](docs/architecture.md) · [Roadmap](docs/roadmap.md) ·
 [Document format](docs/document-format.md) · [Shared clipboards](docs/shared-clipboards.md) ·
-[Manual](docs/manual.md) · [Communicators](docs/communicators.md) · [Verification](docs/verification.md)
+[Manual](docs/manual.md) · [CLI tools](docs/cli.md) · [State digests](docs/state-digest.md) · [Communicators](docs/communicators.md) · [Verification](docs/verification.md)
 
 The application source does not yet have a selected public license.
 External library notices are retained in `third_party/` and must accompany
 redistributed dependency code.
+
+## Build evidence and previews
+
+Native Actions jobs cover Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows
+x64/ARM64. Download an artifact only after that exact run passes. Windows x64
+also produces an unsigned installer; ARM64 uses a ZIP. Each package includes
+`build-metadata.json`; `gatehaven-cli --build-info` prints its compiler and target.
+See the packaging guide for installation and remaining acceptance requirements.
