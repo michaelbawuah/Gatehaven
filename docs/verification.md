@@ -106,3 +106,23 @@ not validate later commits. The remaining brief requires independently verified
 `.ccsb` compatibility, original-application performance comparisons, real native
 dialog/display/touch checks, release signatures, and clean-machine installation.
 New gameplay modes remain deferred until those sandbox requirements are met.
+
+## 0.4 candidate verification
+
+- Editor regressions compare clipped strokes and indexed previews with complete
+  edits, including crossings, retracing, sparse holes, transforms and limits.
+- Save tests preserve externally changed files when replacement is declined.
+  Recovery tests cover deletion confirmation and active-document preservation.
+- CLI digests are checked against an independent Python byte encoder. Native
+  normalization tests verify BOM/CRLF input, ordering, atomic in-place saves and
+  preservation after malformed input. These are Gatehaven format checks.
+- Installed products resolve offline help after relocation and include matching
+  compiler/architecture/dependency metadata. Windows x64 CI installs, launches,
+  inspects its Open With registration, and uninstalls an actual NSIS preview.
+- Windows ARM64 has native core and SDL desktop jobs. Static analysis currently
+  covers circuit, topology, simulation, and statistics with the runner's Clang 18;
+  broader C++23 library-dependent analysis remains follow-up work.
+
+Configured jobs are not evidence until the exact candidate finishes successfully.
+A local dummy SDL run does not validate native dialogs, touch hardware, display
+scaling, signing, or the full clean-machine matrix.
