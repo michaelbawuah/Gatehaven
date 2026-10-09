@@ -73,6 +73,12 @@ Glyph glyph(char c) {
 void text(SDL_Renderer* renderer, float x, float y, std::string_view value,
           SDL_Color color, float scale) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    std::array<SDL_FRect, 512> pixels;
+    std::size_t count = 0;
+    const auto flush = [&] {
+        if (count) SDL_RenderFillRects(renderer, pixels.data(), static_cast<int>(count));
+        count = 0;
+    };
     for (const char ch : value) {
         const auto rows = glyph(ch);
         for (std::size_t row = 0; row < rows.size(); ++row) {
@@ -82,11 +88,12 @@ void text(SDL_Renderer* renderer, float x, float y, std::string_view value,
                 const float top = std::round(y + static_cast<float>(row) * scale);
                 const float right = std::round(x + static_cast<float>(column + 1) * scale);
                 const float bottom = std::round(y + static_cast<float>(row + 1) * scale);
-                const SDL_FRect pixel{left, top, std::max(1.0F, right - left), std::max(1.0F, bottom - top)};
-                SDL_RenderFillRect(renderer, &pixel);
+                pixels[count++] = {left, top, std::max(1.0F, right - left), std::max(1.0F, bottom - top)};
+                if (count == pixels.size()) flush();
             }
         }
         x += 6 * scale;
     }
+    flush();
 }
 } // namespace gatehaven::ui
