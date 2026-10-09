@@ -49,6 +49,9 @@ paths to user files. Returning to the saved revision with Undo clears the unsave
 indicator. Save your circuits before closing the last window.
 
 B toggles context hints, off by default. F2 shows shortcuts. F1 opens this manual.
+F3 opens six editable [circuit lessons](../samples/README.md) in separate windows.
+F5/F6/F7 choose Screen/File In/File Out. Use I to interact with them; see the
+[communicator and serial protocol guide](communicators.md) before connecting files.
 Command can replace Ctrl on macOS. Touch-generated pointer events have a separate
 tool binding; full multitouch navigation and hardware acceptance remain in progress.
 
