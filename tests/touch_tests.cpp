@@ -1,5 +1,6 @@
 #include "test.hpp"
 #include "gatehaven/touch.hpp"
+#include "gatehaven/taps.hpp"
 #include "gatehaven/viewport.hpp"
 #include <cmath>
 #include <limits>
@@ -39,4 +40,17 @@ TEST("pinch transformation keeps the world anchor under the moving centroid") {
     view.pan(update.after.x - update.before.x, update.after.y - update.before.y);
     const auto after = view.world(update.after.x, update.after.y);
     CHECK(std::abs(world.first - after.first) < 1e-9 && std::abs(world.second - after.second) < 1e-9);
+}
+
+TEST("tap sequences reject drags delays clock rollback and different devices") {
+    TapSequence taps;
+    CHECK(taps.begin(1, 0, {10, 10}) == 1); taps.end(10, {10, 10});
+    CHECK(taps.begin(1, 20, {12, 10}) == 2); taps.end(30, {12, 10});
+    CHECK(taps.begin(1, 40, {10, 10}) == 3); taps.end(50, {10, 10});
+    CHECK(taps.begin(1, 60, {10, 10}) == 1); taps.move({100, 100}); taps.end(70, {10, 10});
+    CHECK(taps.begin(1, 80, {10, 10}) == 1); taps.end(90, {10, 10});
+    CHECK(taps.begin(2, 100, {10, 10}) == 1); taps.end(110, {10, 10});
+    CHECK(taps.begin(2, 600000111, {10, 10}) == 1); taps.end(600000120, {10, 10});
+    CHECK(taps.begin(2, 100, {10, 10}) == 1); taps.clear();
+    CHECK(taps.begin(2, 200, {10, 10}) == 1);
 }
