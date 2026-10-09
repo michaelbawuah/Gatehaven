@@ -58,3 +58,14 @@ cells but cannot restore discarded handles or undo bytes written to a file.
 The protocol engine has exhaustive byte-decoder coverage and real temporary-file
 tests. Native file dialogs and physical mouse/touch behavior still require manual
 checks on each supported operating system.
+
+## Implementation and compatibility
+
+The desktop caches group-to-file routing by circuit revision and invalidates it
+on file choice, held-screen changes, edits, or removal. It still exchanges every
+bit on every active tick; no pending request or reply is skipped to save work.
+Status errors come from the stream actually selected for the group.
+
+[External comparison notes](reference-validation.md#observed-protocol-differences)
+list the observed empty-file, reset, reserved-command, and group-ownership
+differences. Standard byte transfer and reload ordering match the pinned peer.
