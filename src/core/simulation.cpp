@@ -63,7 +63,9 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         }
         topology_ = std::move(rebuilt); power_ = std::move(preserved);
         topology_revision_ = circuit.revision();
+        ++metrics_.topology_builds;
     }
+    ++metrics_.propagations;
     const auto& nodes = topology_.nodes();
     power_.swap(previous_);
     power_.assign(nodes.size(), 0);
@@ -104,6 +106,7 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
             frontier_.emplace_back(next, added);
         }
     }
+    metrics_.frontier_visits += frontier_.size();
     valid_.assign(nodes.size(), true); snapshot_dirty_ = true;
     ++ticks_;
 }
@@ -113,7 +116,7 @@ void Simulation::reset() {
     power_.assign(topology_.nodes().size(), 0);
     sent_.assign(power_.size(), false); valid_.assign(power_.size(), false);
     snapshot_dirty_ = false;
-    ticks_ = 0;
+    ticks_ = 0; metrics_ = {};
 }
 
 void Simulation::invalidate(std::span<const Point> points) {

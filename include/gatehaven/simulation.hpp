@@ -17,11 +17,19 @@ struct Power {
     bool operator==(const Power&) const = default;
 };
 
+struct SimulationMetrics {
+    std::uint64_t topology_builds{};
+    std::uint64_t propagations{};
+    std::uint64_t frontier_visits{};
+    std::uint64_t settled_ticks{};
+};
+
 class Simulation {
 public:
     using Exchange = std::function<bool(const CommunicatorGroup&, bool)>;
     void step(const Circuit& circuit, const Exchange& exchange = {});
     void reset();
+    [[nodiscard]] const SimulationMetrics& metrics() const noexcept { return metrics_; }
     void invalidate(std::span<const Point> points);
     [[nodiscard]] bool powered(Point point) const { return ports(point) != 0; }
     [[nodiscard]] std::uint8_t ports(Point point) const;
@@ -45,6 +53,7 @@ private:
     mutable std::map<Point, Power> state_;
     mutable bool snapshot_dirty_{};
     std::uint64_t ticks_{};
+    SimulationMetrics metrics_;
 };
 
 } // namespace gatehaven
