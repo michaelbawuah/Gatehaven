@@ -43,6 +43,21 @@ Circuit relay_demo_circuit(bool negative) {
     return c;
 }
 
+Circuit gate_gallery_circuit() {
+    Circuit c;
+    constexpr std::array gates{Element::and_gate, Element::or_gate, Element::nand_gate, Element::nor_gate};
+    for (std::size_t i = 0; i < gates.size(); ++i) {
+        const auto x = static_cast<Coordinate>(i) * 10;
+        c.set({x, 0}, gates[i]);
+        for (const Coordinate side : {Coordinate{-1}, Coordinate{1}}) {
+            c.set({x + side, 0}, Element::signal); c.set({x + side * 2, 0}, Element::wire);
+            c.set({x + side * 3, 0}, Element::screen);
+        }
+        c.set({x, -1}, Element::wire); c.set({x, -2}, Element::signal); c.set({x, -3}, Element::screen);
+    }
+    return c;
+}
+
 Circuit oscillator_circuit() {
     Circuit c;
     c.set({0, 0}, Element::nor_gate);

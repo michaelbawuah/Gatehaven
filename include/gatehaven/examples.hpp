@@ -7,4 +7,5 @@ namespace gatehaven {
 [[nodiscard]] Circuit oscillator_circuit();
 [[nodiscard]] Circuit screen_switch_circuit();
 [[nodiscard]] Circuit relay_demo_circuit(bool negative);
+[[nodiscard]] Circuit gate_gallery_circuit();
 } // namespace gatehaven

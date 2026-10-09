@@ -19,6 +19,22 @@ TEST("relay examples expose opposite control behavior without accidental power b
         CHECK(sim.powered({3, 0}) == (negative != pressed));
     }
 }
+TEST("gate gallery reproduces all two-input truth-table combinations") {
+    const auto c = gate_gallery_circuit();
+    for (unsigned mask = 0; mask < 4; ++mask) {
+        Simulation sim;
+        const Simulation::Exchange input = [&](const CommunicatorGroup& group, bool) {
+            if (group.id.y != 0) return false;
+            const auto position = ((group.id.x % 10) + 10) % 10;
+            return position == 7 ? (mask & 1) != 0 : (mask & 2) != 0;
+        };
+        sim.step(c, input); sim.step(c, input);
+        CHECK(sim.powered({0, -1}) == (mask == 3));
+        CHECK(sim.powered({10, -1}) == (mask != 0));
+        CHECK(sim.powered({20, -1}) == (mask != 3));
+        CHECK(sim.powered({30, -1}) == (mask == 0));
+    }
+}
 
 TEST("starter output turns on after two steps and its crossing stays isolated") {
     const auto circuit = starter_circuit();
