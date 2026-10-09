@@ -139,7 +139,7 @@ public:
                 } else launch_open(path);
             }
         }
-        if (!running || dialog_pending_) { accumulator_ = 0; return; }
+        if (!running || dialog_pending_ || clipboard_menu_) { accumulator_ = 0; return; }
         accumulator_ += std::clamp(elapsed, 0.0, 0.25);
         const double interval = 1.0 / speeds_[speed_index_];
         unsigned work = 0;
@@ -161,6 +161,15 @@ public:
             drag_.reset(); preview_.clear(); accumulator_ = 0;
         }
         if (e.type == SDL_EVENT_KEY_DOWN && !e.key.repeat) key(e.key);
+        if (clipboard_menu_) {
+            if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN && e.button.button == SDL_BUTTON_LEFT) {
+                for (unsigned slot = 0; slot < 10; ++slot) {
+                    if (clipboard_button(slot).contains(e.button.x, e.button.y)) choose_clipboard(slot);
+                    if (!clipboard_menu_) break;
+                }
+            }
+            return;
+        }
         if (e.type == SDL_EVENT_MOUSE_WHEEL && view.area.contains(e.wheel.mouse_x, e.wheel.mouse_y)) {
             const double amount = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y;
             view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
@@ -254,7 +263,7 @@ public:
         ui::text(r, 22, 641, "LEFT DRAG TO DRAW", ink, 1.25F);
         ui::text(r, 22, 664, "RIGHT DRAG TO ERASE", muted, 1.25F);
         ui::text(r, 22, 693, "SHARED CLIPBOARD " + std::to_string(clipboard_), ink, 1.25F);
-        ui::text(r, 22, 716, "CTRL + DIGIT TO SWITCH", muted, 1.0F);
+        ui::text(r, 22, 716, "CTRL SHIFT C/V: CHOOSE", muted, 1.0F);
         ui::text(r, 22, 738, "B: KEYBOARD HELP", muted, 1.0F);
         rectangle(r, 0, 764, 1280, 36, ink);
         std::string status = status_;
@@ -264,6 +273,7 @@ public:
         ui::text(r, 786, 777, (dirty_ ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
                  std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), white, 1.25F);
         if (help_) render_help(r);
+        if (clipboard_menu_) render_clipboard_menu(r);
         if (dialog_pending_) {
             rectangle(r, 414, 334, 548, 92, ink);
             ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", white, 2);
@@ -287,6 +297,7 @@ private:
     ui::InstanceLauncher launcher_;
     Stamp placement_;
     unsigned clipboard_{};
+    std::optional<char> clipboard_menu_;
     std::filesystem::path path_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
@@ -361,16 +372,18 @@ private:
     void key(const SDL_KeyboardEvent& e) {
         const bool control = (e.mod & (SDL_KMOD_CTRL | SDL_KMOD_GUI)) != 0;
         const bool shift = (e.mod & SDL_KMOD_SHIFT) != 0;
+        if (clipboard_menu_) {
+            if (e.key == SDLK_ESCAPE) clipboard_menu_.reset();
+            else if (e.key >= SDLK_0 && e.key <= SDLK_9) choose_clipboard(static_cast<unsigned>(e.key - SDLK_0));
+            else if (e.key == SDLK_LEFT) clipboard_ = (clipboard_ + 9) % 10;
+            else if (e.key == SDLK_RIGHT) clipboard_ = (clipboard_ + 1) % 10;
+            else if (e.key == SDLK_RETURN) choose_clipboard(clipboard_);
+            return;
+        }
         if (e.key == SDLK_ESCAPE) {
             drag_.reset(); preview_.clear(); selection_.reset(); placing_ = false; help_ = false; return;
         }
         if (control) {
-            if (e.key >= SDLK_0 && e.key <= SDLK_9) {
-                clipboard_ = static_cast<unsigned>(e.key - SDLK_0);
-                placing_ = false;
-                status_ = "SHARED CLIPBOARD " + std::to_string(clipboard_);
-                return;
-            }
             switch (e.key) {
             case SDLK_S: request_save(shift); break;
             case SDLK_O: file_dialog(false); break;
@@ -378,9 +391,9 @@ private:
             case SDLK_Z: undo(shift); break;
             case SDLK_Y: undo(true); break;
             case SDLK_A: selection_ = circuit.bounds(); selecting_ = true; break;
-            case SDLK_C: copy(false); break;
-            case SDLK_X: copy(true); break;
-            case SDLK_V: begin_paste(); break;
+            case SDLK_C: clipboard_action('c', shift); break;
+            case SDLK_X: clipboard_action('x', shift); break;
+            case SDLK_V: clipboard_action('v', shift); break;
             case SDLK_SPACE: speed_index_ = (speed_index_ + 1) % speeds_.size(); accumulator_ = 0; break;
             default: break;
             }
@@ -420,6 +433,40 @@ private:
         if (!result) { status_ = "COPY FAILED: " + result.error(); return; }
         if (cut) erase_selection();
         status_ = "COPIED TO SHARED CLIPBOARD " + std::to_string(clipboard_);
+    }
+
+    void clipboard_action(char action, bool choose) {
+        if (action != 'v' && !selection_) { status_ = "SELECT A REGION FIRST"; return; }
+        drag_.reset(); preview_.clear(); placing_ = false;
+        if (choose) { clipboard_menu_ = action; return; }
+        clipboard_ = 0;
+        if (action == 'v') begin_paste(); else copy(action == 'x');
+    }
+
+    void choose_clipboard(unsigned slot) {
+        const auto action = *clipboard_menu_;
+        clipboard_menu_.reset();
+        clipboard_ = slot;
+        if (action == 'v') begin_paste(); else copy(action == 'x');
+    }
+
+    static ViewRect clipboard_button(unsigned slot) {
+        return {376.0 + static_cast<double>(slot % 5) * 108,
+                328.0 + static_cast<double>(slot / 5) * 70, 96, 54};
+    }
+
+    void render_clipboard_menu(SDL_Renderer* r) const {
+        rectangle(r, 340, 234, 600, 288, ink);
+        const std::string action = *clipboard_menu_ == 'v' ? "PASTE FROM" : *clipboard_menu_ == 'x' ? "CUT TO" : "COPY TO";
+        ui::text(r, 376, 266, action + " SHARED CLIPBOARD", white, 2);
+        ui::text(r, 376, 300, "0 FOLLOWS THE LAST CLIPBOARD USED", {170, 208, 196, 255}, 1.5F);
+        for (unsigned slot = 0; slot < 10; ++slot) {
+            const auto box = clipboard_button(slot);
+            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), 96, 54,
+                      slot == clipboard_ ? teal : muted);
+            ui::text(r, static_cast<float>(box.x + 39), static_cast<float>(box.y + 15), std::to_string(slot), white, 3);
+        }
+        ui::text(r, 376, 480, "PRESS 0-9 OR CLICK A SLOT. ESC: CANCEL", white, 1.5F);
     }
 
     void begin_paste() {
@@ -582,7 +629,7 @@ private:
             "CTRL Z/Y: UNDO / REDO",
             "CTRL S/O/N: SAVE / OPEN / NEW",
             "[ AND ]: ROTATE     H/V: FLIP",
-            "CTRL 0-9: CHOOSE A CLIPBOARD",
+            "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
             "B OR ESC: CLOSE THIS HELP"};
         for (std::size_t i = 0; i < lines.size(); ++i) {
             ui::text(r, 378, 246 + static_cast<float>(i) * 36, lines[i], white, 1.75F);
@@ -645,9 +692,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit == edited, "Open replaced the current unsaved circuit");
     auto peer = ClipboardSession::join(session_directory);
     require(peer.has_value(), "Could not join shared clipboard for editor test");
-    key(SDLK_3, SDL_KMOD_CTRL);
     key(SDLK_A, SDL_KMOD_CTRL);
-    key(SDLK_C, SDL_KMOD_CTRL);
+    key(SDLK_C, static_cast<SDL_Keymod>(SDL_KMOD_CTRL | SDL_KMOD_SHIFT));
+    key(SDLK_3);
     const auto copied = (*peer)->read(3);
     require(copied && copied->cells.size() == edited.size(), "Editor copy was not shared");
     const Stamp first{2, 1, {{0, 0, Element::source}, {1, 0, Element::wire}}};
