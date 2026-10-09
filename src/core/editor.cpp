@@ -138,11 +138,13 @@ std::expected<std::vector<Cell>, std::string> paste(const Stamp& stamp, Point or
     if (stamp.width != 0 && !translated(origin, stamp.width - 1, stamp.height - 1)) return std::unexpected("Pasted selection border exceeds coordinate limits");
     std::vector<Cell> edits;
     edits.reserve(stamp.cells.size());
+    std::set<Point> seen;
     for (const auto& cell : stamp.cells) {
         if (cell.x < 0 || cell.y < 0 || cell.x >= stamp.width || cell.y >= stamp.height || cell.element == Element::empty ||
             static_cast<std::size_t>(cell.element) >= element_names.size()) return std::unexpected("Invalid stamp cell");
         const auto point = translated(origin, cell.x, cell.y);
         if (!point) return std::unexpected("Pasted circuit would exceed coordinate limits");
+        if (!seen.insert(*point).second) return std::unexpected("Duplicate stamp coordinate");
         edits.push_back({*point, cell.element});
     }
     return edits;

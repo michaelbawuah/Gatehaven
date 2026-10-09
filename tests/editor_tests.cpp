@@ -192,3 +192,7 @@ TEST("history accounting includes redo and releases abandoned branches") {
     CHECK(h.apply(c, *pencil_line({5, 0}, {5, 0}, Element::source)));
     CHECK(h.stored_changes() == 1); h.clear(); CHECK(h.stored_changes() == 0);
 }
+
+TEST("ambiguous duplicate stamp coordinates fail before placement") {
+    CHECK(!paste({1, 1, {{0, 0, Element::wire}, {0, 0, Element::source}}}, {0, 0}));
+}
