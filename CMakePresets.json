@@ -1,0 +1,43 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {"major": 3, "minor": 28, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "core",
+      "displayName": "Core and command-line tools",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug", "GATEHAVEN_BUILD_APP": "OFF"}
+    },
+    {
+      "name": "release",
+      "inherits": "core",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Release", "GATEHAVEN_BUILD_BENCHMARKS": "ON"}
+    },
+    {
+      "name": "sanitize",
+      "inherits": "core",
+      "cacheVariables": {"GATEHAVEN_SANITIZERS": "ON"},
+      "condition": {"type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows"}
+    },
+    {
+      "name": "desktop",
+      "inherits": "core",
+      "cacheVariables": {
+        "GATEHAVEN_BUILD_APP": "ON",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+      }
+    }
+  ],
+  "buildPresets": [
+    {"name": "core", "configurePreset": "core", "configuration": "Debug"},
+    {"name": "release", "configurePreset": "release", "configuration": "Release"},
+    {"name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug"},
+    {"name": "desktop", "configurePreset": "desktop", "configuration": "Debug"}
+  ],
+  "testPresets": [
+    {"name": "core", "configurePreset": "core", "configuration": "Debug", "output": {"outputOnFailure": true}},
+    {"name": "release", "configurePreset": "release", "configuration": "Release", "output": {"outputOnFailure": true}},
+    {"name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug", "output": {"outputOnFailure": true}},
+    {"name": "desktop", "configurePreset": "desktop", "configuration": "Debug", "output": {"outputOnFailure": true}}
+  ]
+}

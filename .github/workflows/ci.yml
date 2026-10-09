@@ -1,0 +1,89 @@
+name: build-and-test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Core / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install pinned CMake
+        run: python -m pip install cmake==4.4.4
+      - name: Configure C++23
+        run: cmake -S . -B build/ci -DCMAKE_BUILD_TYPE=Release -DGATEHAVEN_BUILD_BENCHMARKS=ON
+      - name: Build with warnings as errors
+        run: cmake --build build/ci --config Release --parallel 2
+      - name: Test
+        run: ctest --test-dir build/ci -C Release --output-on-failure
+
+  sanitizers:
+    name: Address and undefined behavior checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python -m pip install cmake==4.4.4
+      - run: cmake -S . -B build/sanitize -DCMAKE_BUILD_TYPE=Debug -DGATEHAVEN_SANITIZERS=ON
+      - run: cmake --build build/sanitize --parallel 2
+      - run: ctest --test-dir build/sanitize --output-on-failure
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+  desktop-smoke:
+    name: SDL3 desktop smoke / Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: libsdl-org/SDL
+          ref: 829a65d769d935c4852f8159e964312c0957260a # release-3.4.18
+          path: build/deps/SDL
+      - run: python -m pip install cmake==4.4.4
+      - name: Build pinned SDL3 with a software-only CI backend
+        run: >-
+          cmake -S build/deps/SDL -B build/deps/sdl-build
+          -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build/deps/sdl-install
+          -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TEST_LIBRARY=OFF
+          -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF -DSDL_UNIX_CONSOLE_BUILD=ON
+          -DSDL_X11=OFF -DSDL_WAYLAND=OFF -DSDL_OPENGL=OFF -DSDL_OPENGLES=OFF
+          -DSDL_VULKAN=OFF -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_SENSOR=OFF
+      - run: cmake --build build/deps/sdl-build --parallel 2
+      - run: cmake --install build/deps/sdl-build
+      - name: Build desktop application
+        run: >-
+          cmake -S . -B build/app -DGATEHAVEN_BUILD_APP=ON -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/build/deps/sdl-install
+      - run: cmake --build build/app --parallel 2
+      - run: ctest --test-dir build/app --output-on-failure
+      - name: Render the starter circuit
+        run: SDL_VIDEODRIVER=dummy build/app/gatehaven --snapshot build/app/gatehaven.bmp
+
+  benchmark:
+    name: Simulation benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python -m pip install cmake==4.4.4
+      - run: cmake -S . -B build/bench -DCMAKE_BUILD_TYPE=Release -DGATEHAVEN_BUILD_BENCHMARKS=ON
+      - run: cmake --build build/bench --parallel 2
+      - run: build/bench/gatehaven-bench 10000 20

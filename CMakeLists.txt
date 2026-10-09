@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(GATEHAVEN_BUILD_TESTS "Build core tests" ON)
 option(GATEHAVEN_BUILD_APP "Build the SDL3 desktop application" OFF)
+option(GATEHAVEN_BUILD_BENCHMARKS "Build repeatable simulation workloads" OFF)
 option(GATEHAVEN_SANITIZERS "Enable address and undefined-behavior sanitizers" OFF)
 option(GATEHAVEN_WARNINGS_AS_ERRORS "Treat project warnings as errors" ON)
 
@@ -37,6 +38,12 @@ gatehaven_defaults(gatehaven_core)
 add_executable(gatehaven-cli src/cli.cpp)
 target_link_libraries(gatehaven-cli PRIVATE gatehaven_core)
 gatehaven_defaults(gatehaven-cli)
+
+if(GATEHAVEN_BUILD_BENCHMARKS)
+    add_executable(gatehaven-bench bench/simulation_bench.cpp)
+    target_link_libraries(gatehaven-bench PRIVATE gatehaven_core)
+    gatehaven_defaults(gatehaven-bench)
+endif()
 
 if(GATEHAVEN_BUILD_APP)
     find_package(SDL3 3.4.18 EXACT CONFIG REQUIRED)
