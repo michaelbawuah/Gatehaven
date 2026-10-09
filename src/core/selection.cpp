@@ -76,7 +76,7 @@ std::vector<Cell> Selection::cells(const Circuit& circuit) const {
     result.reserve(points_.size());
     for (const auto point : points_) {
         const auto element = circuit.at(point);
-        if (element != Element::empty) result.push_back({point, element});
+        if (element != Element::empty) result.push_back({point, element, circuit.saved_state(point)});
     }
     return result;
 }
@@ -90,7 +90,7 @@ Stamp capture_selection(const Circuit& circuit, const Selection& selection) {
     for (const auto point : selection.points()) {
         const auto element = circuit.at(point);
         if (element != Element::empty) stamp.cells.push_back({static_cast<std::int64_t>(point.x) - region->min.x,
-                               static_cast<std::int64_t>(point.y) - region->min.y, element});
+                               static_cast<std::int64_t>(point.y) - region->min.y, element, circuit.saved_state(point)});
     }
     return stamp;
 }
@@ -104,7 +104,7 @@ std::expected<ShapeEdit, std::string> place_selection(const Circuit& circuit, co
     if (!target) return std::unexpected(target.error());
     ShapeEdit result;
     result.edits = selection.cells(circuit);
-    for (auto& cell : result.edits) cell.element = Element::empty;
+    for (auto& cell : result.edits) { cell.element = Element::empty; cell.state = 0; }
     result.edits.insert(result.edits.end(), target->begin(), target->end());
     std::set<Point> selected;
     for (const auto& cell : *target) selected.insert(cell.position);

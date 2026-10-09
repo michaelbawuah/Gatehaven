@@ -1090,7 +1090,7 @@ private:
     void erase_selection() {
         if (!selection_) return;
         auto edits = selection_.cells(circuit);
-        for (auto& cell : edits) cell.element = Element::empty;
+        for (auto& cell : edits) { cell.element = Element::empty; cell.state = 0; }
         if (apply(edits)) selection_.clear();
     }
 

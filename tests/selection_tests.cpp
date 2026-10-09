@@ -55,3 +55,13 @@ TEST("selection frames cannot exclude selected cells or invert their axes") {
     selection.set_frame({{4, 5}, {2, 3}}); CHECK(selection.bounds() == original);
     selection.set_frame({{0, 0}, {6, 6}}); CHECK(selection.bounds()->min == Point{0, 0});
 }
+
+TEST("sparse selection movement retains levels and clears removed cells") {
+    Circuit circuit; circuit.set({0, 0}, Element::and_gate, 2);
+    auto selection = Selection::rectangle(circuit, {{0, 0}, {2, 2}});
+    CHECK(selection.cells(circuit).front().state == 2);
+    auto moved = move_selection(circuit, selection, 5, 7);
+    CHECK(moved && moved->edits.front().state == 0 && moved->edits.back().state == 2);
+    History history; CHECK(history.apply(circuit, moved->edits).value());
+    CHECK(circuit.saved_state({5, 7}) == 2 && circuit.at({0, 0}) == Element::empty);
+}
