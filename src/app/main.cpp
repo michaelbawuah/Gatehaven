@@ -237,6 +237,9 @@ public:
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
             e.type == SDL_EVENT_FINGER_UP || e.type == SDL_EVENT_FINGER_CANCELED) { touch_event(e); return; }
+        if (touches_.size() != 0 &&
+            ((e.type == SDL_EVENT_MOUSE_MOTION && e.motion.which != SDL_TOUCH_MOUSEID) ||
+             ((e.type == SDL_EVENT_MOUSE_BUTTON_DOWN || e.type == SDL_EVENT_MOUSE_BUTTON_UP) && e.button.which != SDL_TOUCH_MOUSEID))) return;
         if (e.type == SDL_EVENT_DROP_FILE && e.drop.data) {
             launch_open(utf8_path(e.drop.data)); return;
         }
@@ -1357,6 +1360,8 @@ int main(int argc, char** argv) {
             std::cerr << "Usage: gatehaven [FILE.ghv | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
             return 2;
         }
+        SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+        SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
         if (!SDL_SetAppMetadata("Gatehaven", version, application_id) || !SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
         const SdlLifetime lifetime;
         TestDirectory test_directory;
