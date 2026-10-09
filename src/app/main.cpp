@@ -1637,6 +1637,13 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit == lost_circuit && app.history.modified() && !app.running, "Recovery did not create an unsaved paused document");
     require(!app.history.can_undo(), "Recovery retained the previous document history");
     app.finish_recovery();
+    auto disposable = RecoveryStore::open(recovery_directory).value();
+    require(disposable->write(lost_circuit).has_value(), "Could not stage deletion test");
+    disposable.reset(); app.show_recovery(); key(SDLK_DELETE); key(SDLK_RETURN);
+    key(SDLK_ESCAPE);
+    auto inspector = RecoveryStore::open(recovery_directory).value();
+    require(inspector->scan()->empty(), "Confirmed deletion retained its abandoned snapshot");
+    require(app.circuit == lost_circuit, "Deleting a snapshot changed the active document");
     app.render(renderer);
     require(SDL_RenderPresent(renderer), "Render failed");
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
