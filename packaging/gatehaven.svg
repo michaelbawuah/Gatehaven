@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Gatehaven">
+  <rect width="256" height="256" rx="56" fill="#f6f8f8"/>
+  <path d="M34 91h49M34 165h49M175 128h47" fill="none" stroke="#00856f" stroke-width="14" stroke-linecap="round"/>
+  <path d="M80 57h42a71 71 0 0 1 0 142H80Z" fill="#00856f"/>
+  <path d="M105 88h21a40 40 0 0 1 0 80h-21Z" fill="#e1f1ec"/>
+  <circle cx="34" cy="91" r="12" fill="#dc6228"/>
+  <circle cx="34" cy="165" r="12" fill="#dc6228"/>
+  <circle cx="222" cy="128" r="12" fill="#00856f"/>
+</svg>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Gatehaven
+Comment=Build circuits and explore digital logic
+Exec=gatehaven %f
+Icon=gatehaven
+Terminal=false
+Categories=Education;Science;Electronics;
+Keywords=Logic;Circuit;Simulation;
+MimeType=application/x-gatehaven;
+StartupNotify=true
