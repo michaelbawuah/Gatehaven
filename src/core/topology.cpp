@@ -4,7 +4,7 @@
 namespace gatehaven {
 CompiledCircuit::CompiledCircuit(const Circuit& circuit) {
     nodes_.reserve(circuit.size());
-    for (const auto& cell : circuit.cells()) nodes_.push_back({cell});
+    if (const auto bounds = circuit.bounds()) circuit.visit(*bounds, [&](Cell cell) { nodes_.push_back({cell}); });
     for (auto& node : nodes_) for (std::size_t direction = 0; direction < directions.size(); ++direction) {
         if (const auto next = neighbor(node.cell.position, directions[direction])) node.adjacent[direction] = index(*next);
     }
