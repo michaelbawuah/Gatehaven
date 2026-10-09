@@ -9,9 +9,15 @@ logic gates, and step through a circuit to see how its signals change.
 
 ![Gatehaven desktop prototype](docs/images/desktop-prototype.png)
 
-**Status: early desktop prototype, not a finished release.** Windows, macOS,
+**Status: 0.2 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
 for exactly what has been tested.
+
+The editor now includes chained polylines, connected and sparse selections,
+interactive screens, binary file communicators, persistent tool preferences,
+and six built-in circuit lessons. Successful desktop jobs on the
+[Actions page](https://github.com/michaelbawuah/Gatehaven/actions/workflows/ci.yml)
+provide unsigned [native preview packages](docs/packaging.md).
 
 ## Try the core
 
@@ -32,6 +38,9 @@ On Linux and macOS:
 ```sh
 ./build/core/gatehaven-cli check samples/starter.ghv
 ./build/core/gatehaven-cli run samples/oscillator.ghv 10
+./build/core/gatehaven-cli stats samples/starter.ghv
+./build/core/gatehaven-cli trace samples/oscillator.ghv 8
+./build/core/gatehaven-cli svg samples/gate-gallery.ghv gallery.svg
 ```
 
 With Visual Studio's multi-configuration generator, executables are under
@@ -57,19 +66,26 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Choose a component | Sidebar or digits 1 through 0 |
 | Bind a tool | Click its sidebar name with the button to bind |
 | Draw / erase (default bindings) | Left / right mouse drag |
+| Chain snapped lines | Shift+click; Backspace retraces; Enter or double-click finishes |
 | Pan / zoom (default bindings) | Middle mouse drag / scroll wheel |
 | Sample a component tool | Hold E and click with the button to bind |
 | Play or pause / single step | Space / Right arrow when no selection is active |
 | Set simulation speed | Ctrl+Space or the speed button; 1–1,000 ticks/s |
 | Reset / frame circuit | R / F |
 | Select a region | Q, then drag |
+| Add / subtract selection | Shift / Alt while selecting |
+| Select an electrical net / physical circuit | Double / triple-click with Select |
 | Move a selection | Arrow keys; hold Ctrl to move four cells |
+| Duplicate / invert selection | Ctrl+D / Ctrl+I |
 | Copy / cut / paste | Ctrl+C / Ctrl+X / Ctrl+V |
 | Copy / cut / paste with a chosen shared clipboard | Ctrl+Shift+C / Ctrl+Shift+X / Ctrl+Shift+V, then 0–9 |
 | Undo / redo | Ctrl+Z / Ctrl+Y |
 | Rotate / flip selection or clipboard | [ and ] / H and V |
 | Save / Save As / Open / New | Ctrl+S / Ctrl+Shift+S / Ctrl+O / Ctrl+N |
-| Show keyboard help | B |
+| Screen / File In / File Out | F5 / F6 / F7 |
+| Interact with a communicator | I, then hold a screen or click a file port |
+| Manual / shortcuts / circuit lessons | F1 / F2 / F3 |
+| Toggle beginner hints | B |
 
 Command can replace Ctrl on macOS. Undo records one drawing stroke as one edit.
 Gate and relay pencils place a Signal when clicked on an existing cell of the
@@ -83,8 +99,15 @@ another window updates it. Closing the last instance clears clipboard contents.
 After an abrupt shutdown of every instance, the next launch clears abandoned data.
 
 The binding markers identify left (red), right (blue), middle (green), X1 (cyan),
-X2 (magenta), and touch (yellow). Button bindings are kept for the current window;
-saved preferences and full multitouch navigation are still planned.
+X2 (magenta), and touch (yellow). Bindings, speed, and beginner hints are saved
+when the window closes; the last window to save determines the next launch's
+preferences. Full multitouch navigation is still planned.
+
+Adjacent communicators of the same type operate as a group. Screen brightness
+shows the circuit's outgoing signal; holding it with Interact drives its incoming
+signal. File ports require an explicit file choice in that window and use the
+[serial protocol](docs/communicators.md). File paths never travel with a circuit
+or clipboard. Press F3 for editable [lessons](samples/README.md).
 
 ## Under the hood
 
@@ -100,7 +123,7 @@ saved preferences and full multitouch navigation are still planned.
 
 [Architecture](docs/architecture.md) · [Roadmap](docs/roadmap.md) ·
 [Document format](docs/document-format.md) · [Shared clipboards](docs/shared-clipboards.md) ·
-[Verification](docs/verification.md)
+[Manual](docs/manual.md) · [Communicators](docs/communicators.md) · [Verification](docs/verification.md)
 
 The application source does not yet have a selected public license.
 External library notices are retained in `third_party/` and must accompany

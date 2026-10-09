@@ -33,7 +33,13 @@ launch independent processes. The desktop has file dialogs, region selection,
 rotation/flips, keyboard movement, a clipboard chooser, a custom speed dialog,
 five mouse-button bindings plus a separate touch binding, and an eyedropper.
 
-Next: connected and additive/subtractive selection, polyline drawing, beginner
-hints, and persistent input preferences. Communicators, legacy import, full
-multitouch navigation, installers, signing, and native hardware acceptance are
-still outstanding. Performance parity is not established.
+Connected and additive/subtractive selection, sparse duplication, polyline
+drawing, beginner hints, and persistent input preferences are implemented.
+Screen and file communicators now have protocol, lifecycle, and real-file tests.
+Six built-in lessons, CLI traces/statistics/SVG export, install rules, portable
+archives, and installed-product checks are available.
+
+Next: independently specified legacy import, full multitouch navigation,
+accessibility review, measured large-circuit improvements, native installers,
+signing, and hardware/clean-machine acceptance. Performance parity is not
+established. The final release still depends on these acceptance gates.
