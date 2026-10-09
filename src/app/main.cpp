@@ -399,7 +399,8 @@ public:
         }
     }
 
-    void render(SDL_Renderer* r) const {
+    std::size_t render(SDL_Renderer* r) const {
+        std::size_t visible_cells = 0;
         SDL_SetRenderDrawColor(r, paper.r, paper.g, paper.b, 255);
         SDL_RenderClear(r);
         const SDL_Rect clip{240, 96, 1040, 668};
@@ -415,6 +416,7 @@ public:
             }
         }
         circuit.visit(visible, [&](const Cell& cell) {
+            ++visible_cells;
             draw_cell(r, cell, simulation.ports(cell.position));
             if (selection_.contains(cell.position)) {
                 const auto [x, y] = view.screen(cell.position);
@@ -516,6 +518,7 @@ public:
             rectangle(r, 414, 334, 548, 92, ink);
             ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", white, 2);
         }
+        return visible_cells;
     }
 
 private:
@@ -1423,6 +1426,50 @@ void dispatch(App& app, SDL_Renderer* renderer) {
     }
 }
 
+// Measures the real render path with fixed visible work and optional off-screen cells.
+void render_benchmark(App& app, SDL_Renderer* renderer, std::size_t extra_cells, unsigned frames) {
+    app.start_blank();
+    for (Coordinate y = -24; y < 24; ++y) for (Coordinate x = -32; x < 32; ++x)
+        app.circuit.set({x, y}, palette[static_cast<std::size_t>((x + 32 + (y + 24) * 64) % static_cast<Coordinate>(palette.size()))]);
+    for (std::size_t i = 0; i < extra_cells; ++i)
+        app.circuit.set({static_cast<Coordinate>(10000 + i % 1000), static_cast<Coordinate>(10000 + i / 1000)}, Element::wire);
+    app.simulation.initialize(app.circuit);
+    SDL_SetRenderVSync(renderer, 0);
+    std::cout << "{\"schema\":1,\"source_revision\":\"" << source_revision
+              << "\",\"video_driver\":\"" << SDL_GetCurrentVideoDriver()
+              << "\",\"renderer\":\"" << SDL_GetRendererName(renderer)
+              << "\",\"logical_width\":1280,\"logical_height\":800,\"total_cells\":" << app.circuit.size()
+              << ",\"extra_cells\":" << extra_cells << ",\"frames\":" << frames << ",\"scenarios\":[";
+    constexpr std::array<std::string_view, 3> scenarios{"static", "pan", "zoom"};
+    for (std::size_t scenario = 0; scenario < scenarios.size(); ++scenario) {
+        app.view.scale = 32; app.view.center_on({0, 0});
+        std::vector<double> timings; timings.reserve(frames);
+        std::size_t smallest = std::numeric_limits<std::size_t>::max(), largest = 0;
+        for (unsigned frame = 0; frame < frames + 12; ++frame) {
+            const auto begin = std::chrono::steady_clock::now();
+            if (scenario == 1) app.view.pan(frame % 2 == 0 ? 16 : -16, 0);
+            if (scenario == 2) app.view.zoom(frame % 2 == 0 ? 0.5 : 2.0, 760, 430);
+            const auto visible = app.render(renderer);
+            if (!SDL_RenderPresent(renderer)) throw std::runtime_error(SDL_GetError());
+            const auto end = std::chrono::steady_clock::now();
+            if (frame >= 12) {
+                timings.push_back(std::chrono::duration<double, std::milli>(end - begin).count());
+                smallest = std::min(smallest, visible); largest = std::max(largest, visible);
+            }
+        }
+        auto sorted = timings; std::sort(sorted.begin(), sorted.end());
+        if (scenario) std::cout << ',';
+        std::cout << "{\"name\":\"" << scenarios[scenario] << "\",\"visible_min\":" << smallest
+                  << ",\"visible_max\":" << largest << ",\"median_ms\":" << sorted[sorted.size() / 2]
+                  << ",\"p95_ms\":" << sorted[(sorted.size() * 95 - 1) / 100]
+                  << ",\"max_ms\":" << sorted.back() << ",\"frame_ms\":[";
+        for (std::size_t i = 0; i < timings.size(); ++i) { if (i) std::cout << ','; std::cout << timings[i]; }
+        std::cout << "]}";
+    }
+    std::cout << "],\"limits\":[\"Software renderer; no physical input-to-photon measurement\","
+                 "\"Initialization excluded; timings include render submission and present\"]}\n";
+}
+
 void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& session_directory,
                const std::vector<std::optional<std::filesystem::path>>& launched, const std::vector<std::string>& demos, const std::vector<std::string>& inspections) {
     const auto require = [](bool ok, const char* message) {
@@ -1844,13 +1891,22 @@ int main(int argc, char** argv) {
         const bool child_test = mode == "--self-test-child";
         const bool testing = mode == "--self-test" || child_test;
         const bool snapshot = mode == "--snapshot";
+        const bool benchmark = mode == "--benchmark-render";
+        std::size_t extra_cells = 0; unsigned frames = 60;
+        const auto parse_count = [](const char* text, auto& value) {
+            const std::string_view input(text);
+            const auto [end, error] = std::from_chars(input.data(), input.data() + input.size(), value);
+            return error == std::errc{} && end == input.data() + input.size();
+        };
+        if (benchmark && (argc < 2 || argc > 4 || (argc > 2 && !parse_count(argv[2], extra_cells)) ||
+            (argc > 3 && !parse_count(argv[3], frames)) || extra_cells > 1000000 || frames < 10 || frames > 600)) return 2;
         const bool blank = mode == "--new";
         const bool demo = mode.starts_with("--demo=");
         if (demo && !make_example(mode.substr(7))) {
             std::cerr << "Unknown example. Choose starter, oscillator, screen-switch, positive-relay, negative-relay, or gate-gallery.\n";
             return 2;
         }
-        if ((testing && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && argc > 2)) {
+        if ((testing && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && !benchmark && argc > 2)) {
             std::cerr << "Usage: gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
             return 2;
         }
@@ -1860,7 +1916,7 @@ int main(int argc, char** argv) {
         const SdlLifetime lifetime;
         TestDirectory test_directory;
         std::filesystem::path session_directory;
-        if (testing || snapshot) {
+        if (testing || snapshot || benchmark) {
             test_directory.path = std::filesystem::temp_directory_path() /
                 ("gatehaven-smoke-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
             session_directory = test_directory.path;
@@ -1871,9 +1927,9 @@ int main(int argc, char** argv) {
         }
         auto clipboard = ClipboardSession::join(session_directory);
         if (!clipboard) throw std::runtime_error(clipboard.error());
-        if (testing || snapshot) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+        if (testing || snapshot || benchmark) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
         auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if (testing || snapshot) flags |= SDL_WINDOW_HIDDEN;
+        if (testing || snapshot || benchmark) flags |= SDL_WINDOW_HIDDEN;
         SDL_Window* raw_window = nullptr;
         SDL_Renderer* raw_renderer = nullptr;
         const bool created = SDL_CreateWindowAndRenderer("Gatehaven", 1280, 800, flags, &raw_window, &raw_renderer);
@@ -1899,7 +1955,7 @@ int main(int argc, char** argv) {
         App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher),
                 testing ? OverwritePrompt([](SDL_Window*) { return false; }) : OverwritePrompt(confirm_overwrite),
                 testing ? InspectionDialog([&](SDL_Window*, const std::string& text) { inspections.push_back(text); return true; }) : InspectionDialog(show_inspection));
-        if (!testing && !snapshot) app.load_settings(session_directory.parent_path() / "preferences.ghp");
+        if (!testing && !snapshot && !benchmark) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
             if (!child_test) {
@@ -1908,6 +1964,7 @@ int main(int argc, char** argv) {
             }
             return 0;
         }
+        if (benchmark) { render_benchmark(app, renderer.get(), extra_cells, frames); return std::cout ? 0 : 1; }
         if (snapshot) {
             if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
                 std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, or recovery.\n";
