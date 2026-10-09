@@ -48,6 +48,7 @@ public:
 private:
     enum class Material { blocked, conductor, crossing, source };
     static Material material(Element element, bool enabled);
+    void propagate();
     std::uint64_t topology_revision_{std::numeric_limits<std::uint64_t>::max()};
     CompiledCircuit topology_;
     std::vector<std::uint8_t> power_;

@@ -52,6 +52,25 @@ Simulation::Material Simulation::material(Element element, bool enabled) {
     return Material::blocked;
 }
 
+void Simulation::propagate() {
+    const auto& nodes = topology_.nodes();
+    for (std::size_t head = 0; head < frontier_.size(); ++head) {
+        const auto [from, outgoing] = frontier_[head];
+        for (std::size_t direction = 0; direction < 4; ++direction) {
+            if ((outgoing & (1U << direction)) == 0) continue;
+            const auto next = nodes[from].adjacent[direction];
+            if (next == no_node || materials_[next] == Material::blocked || !connects(nodes[from].cell.element, nodes[next].cell.element)) continue;
+            const auto channel = materials_[next] == Material::crossing
+                ? static_cast<std::uint8_t>(direction % 2 == 0 ? 5 : 10) : std::uint8_t{15};
+            const auto added = static_cast<std::uint8_t>(channel & static_cast<std::uint8_t>(~power_[next]));
+            if (added == 0) continue;
+            power_[next] = static_cast<std::uint8_t>(power_[next] | added);
+            frontier_.emplace_back(next, added);
+        }
+    }
+    metrics_.frontier_visits += frontier_.size();
+}
+
 void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     if (topology_revision_ != circuit.revision()) {
         CompiledCircuit rebuilt(circuit);
@@ -93,22 +112,8 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
         materials_[i] = material(element, is_communicator(element) ? received_[i] : control(element, active, inputs));
         if (materials_[i] == Material::source) { power_[i] = 15; frontier_.emplace_back(i, std::uint8_t{15}); }
     }
-    for (std::size_t head = 0; head < frontier_.size(); ++head) {
-        const auto [from, outgoing] = frontier_[head];
-        for (std::size_t direction = 0; direction < 4; ++direction) {
-            if ((outgoing & (1U << direction)) == 0) continue;
-            const auto next = nodes[from].adjacent[direction];
-            if (next == no_node || materials_[next] == Material::blocked || !connects(nodes[from].cell.element, nodes[next].cell.element)) continue;
-            const auto channel = materials_[next] == Material::crossing
-                ? static_cast<std::uint8_t>(direction % 2 == 0 ? 5 : 10) : std::uint8_t{15};
-            const auto added = static_cast<std::uint8_t>(channel & static_cast<std::uint8_t>(~power_[next]));
-            if (added == 0) continue;
-            power_[next] = static_cast<std::uint8_t>(power_[next] | added);
-            frontier_.emplace_back(next, added);
-        }
-    }
+    propagate();
     settled_ = topology_.groups().empty() && power_ == previous_;
-    metrics_.frontier_visits += frontier_.size();
     valid_.assign(nodes.size(), true); snapshot_dirty_ = true;
     ++ticks_;
 }
