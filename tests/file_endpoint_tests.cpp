@@ -101,3 +101,34 @@ TEST("merged ports use the latest binding and split ports retain their own strea
     Circuit remaining; remaining.set(left.id, Element::file_input); endpoints.prune(remaining);
     CHECK(endpoints.bound_files() == 1);
 }
+
+TEST("versioned endpoint routes wake on held input and never retain deleted bindings") {
+    Circuit circuit; circuit.set({0, 0}, Element::screen);
+    FileEndpoints endpoints;
+    const CommunicatorGroup screen{{0, 0}, Element::screen, {{0, 0}}};
+    const auto exchange = [&] { endpoints.prune(circuit); return endpoints.exchange(screen, false, circuit.revision()); };
+    CHECK(!exchange()); endpoints.hold_screen({0, 0}); CHECK(exchange());
+    endpoints.release_screens(); CHECK(!exchange());
+    endpoints.hold_screen({0, 0}); CHECK(exchange());
+    circuit.set({0, 0}, Element::empty); CHECK(!exchange());
+    circuit.set({0, 0}, Element::screen); CHECK(!exchange());
+    endpoints.hold_screen({0, 0}); endpoints.reset_protocols(); CHECK(!exchange());
+}
+TEST("versioned file routes preserve queued requests across a new file choice") {
+    const auto path = std::filesystem::temp_directory_path() / ("gatehaven-route-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    struct Cleanup { std::filesystem::path p; ~Cleanup() { std::filesystem::remove(p); } } cleanup{path};
+    CHECK(replace_file(path, "Q"));
+    Circuit circuit; circuit.set({0, 0}, Element::file_input); circuit.set({1, 0}, Element::file_input);
+    const CommunicatorGroup group{{0, 0}, Element::file_input, {{0, 0}, {1, 0}}};
+    FileEndpoints endpoints;
+    const auto exchange = [&](bool bit) { endpoints.prune(circuit); return endpoints.exchange(group, bit, circuit.revision()); };
+    for (auto bit : serial_reply(0)) CHECK(!exchange(bit != 0));
+    CHECK(endpoints.choose_input({1, 0}, path));
+    // A different anchor intentionally starts that binding's protocol; new request follows.
+    for (auto bit : serial_reply(0)) CHECK(!exchange(bit != 0));
+    std::vector<std::uint8_t> reply;
+    for (unsigned i = 0; i < 11; ++i) reply.push_back(exchange(false) ? 1 : 0);
+    CHECK(reply == serial_reply(0, 'Q', 8));
+    circuit.clear(); endpoints.prune(circuit); CHECK(endpoints.bound_files() == 0);
+    endpoints.clear(); CHECK(endpoints.last_error().empty());
+}

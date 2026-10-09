@@ -978,11 +978,8 @@ private:
     void tick() {
         endpoints_.prune(circuit);
         simulation.step(circuit, [&](const CommunicatorGroup& group, bool sending) {
-            const bool received = endpoints_.exchange(group, sending);
-            for (const auto point : group.cells) {
-                const auto error = endpoints_.error(point);
-                if (!error.empty()) status_ = "FILE PORT: " + error;
-            }
+            const bool received = endpoints_.exchange(group, sending, circuit.revision());
+            if (!endpoints_.last_error().empty()) status_ = "FILE PORT: " + endpoints_.last_error();
             return received;
         });
     }
