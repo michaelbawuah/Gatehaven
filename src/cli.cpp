@@ -19,6 +19,11 @@ static int run_cli(int argc, char** argv) {
         std::cout << "Gatehaven " << version << " (C++23)\n";
         return 0;
     }
+    if (argc == 2 && std::string_view(argv[1]) == "--build-info") {
+        std::cout << "Gatehaven " << version << "\nCompiler: " << compiler_id << ' ' << compiler_version
+                  << "\nTarget: " << target_system << ' ' << target_processor << "\nLanguage: C++23\n";
+        return std::cout ? 0 : 1;
+    }
     if (argc == 2 && std::string_view(argv[1]) == "examples") {
         for (const auto name : example_names) std::cout << name << '\n';
         return 0;
@@ -54,7 +59,7 @@ static int run_cli(int argc, char** argv) {
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
-                     "  gatehaven-cli --version\n";
+                     "  gatehaven-cli --version\n  gatehaven-cli --build-info\n";
         return help && argc == 2 ? 0 : 2;
     }
     std::uint64_t steps = 10;
