@@ -89,3 +89,13 @@ TEST("viewport visitors include boundaries and never visit distant rows or colum
     unsigned calls = 0;
     circuit.visit({{1, 1}, {-1, -1}}, [&](Cell) { ++calls; }); CHECK(calls == 0);
 }
+
+TEST("cached bounds contract after deleting outer cells and copying or moving a circuit") {
+    Circuit circuit; circuit.set({-100, 5}, Element::wire); circuit.set({100, -5}, Element::source);
+    CHECK(circuit.bounds()->min == Point{-100, -5});
+    auto copy = circuit; circuit.set({-100, 5}, Element::empty);
+    CHECK(circuit.bounds()->min == Point{100, -5}); CHECK(copy.bounds()->min == Point{-100, -5});
+    Circuit moved(std::move(copy)); CHECK(!copy.bounds()); CHECK(moved.bounds()->max == Point{100, 5});
+    moved.clear(); CHECK(!moved.bounds()); moved.set({4, 3}, Element::wire);
+    CHECK(moved.bounds()->min == Point{4, 3});
+}
