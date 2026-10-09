@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "samples": [
+    {
+      "sample": "clock.ccsb",
+      "sha256": "8bbb2f6b7236d64135e1cd91729ce577a8f5aa83c6ea7d0e9c1059090de1b3d4",
+      "width": 18,
+      "height": 18,
+      "occupied": 58,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    },
+    {
+      "sample": "clock_minimal.ccsb",
+      "sha256": "542328aced5d6b565f1ae05dcac2ea1b6ce1064b97b0a835b90d16621d0c361a",
+      "width": 9,
+      "height": 2,
+      "occupied": 16,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    },
+    {
+      "sample": "double dabble with inputs.ccsb",
+      "sha256": "5bd3d7afedf6c9a1a3299c8bae81d83bfcc61c75ff67b97726882207852521cf",
+      "width": 401,
+      "height": 570,
+      "occupied": 64938,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    },
+    {
+      "sample": "duplicator.ccsb",
+      "sha256": "cbe7ba06d4395dbe858bffd74b8ec91d67843e4c7379595f1fc3837c17241938",
+      "width": 30,
+      "height": 12,
+      "occupied": 237,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    },
+    {
+      "sample": "propagate.ccsb",
+      "sha256": "6254d709358aeadbbb910c71dd9946a00953ff0f4716109ebfde0689625764d4",
+      "width": 40,
+      "height": 39,
+      "occupied": 668,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    },
+    {
+      "sample": "readfile_multi.ccsb",
+      "sha256": "1aa5d6a3fe8d739a90f024143c3a35961eda61243074ab088320bdcf253c5e99",
+      "width": 150,
+      "height": 250,
+      "occupied": 15582,
+      "native_cells_match": true,
+      "byte_exact_roundtrip": true
+    }
+  ]
+}

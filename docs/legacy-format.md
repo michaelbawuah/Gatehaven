@@ -27,3 +27,18 @@ writers must bound dense area independently of the number of occupied cells.
 Format evidence: the pinned reference's CanvasState serialization contract and
 six published sample files. The serialization contract alone does not prove
 simulation parity. No reference implementation or assets are distributed here.
+
+## Corpus verification
+
+`tests/compatibility/legacy-corpus-2026-10-09.json` records SHA-256 identities,
+dimensions, occupied counts, independent native cell comparisons, and exact
+binary round trips for all six published reference samples. Run:
+
+```sh
+python tools/audit_legacy.py build/release/gatehaven-cli /path/to/reference/samples
+```
+
+The corpus is supplied separately. Reports contain measurements and identities,
+not third-party circuits or game assets. Exact bytes are expected for the six
+trimmed fixtures; a circuit with unused borders is exported with those borders
+removed. Extra trailing bytes accepted on import are not reproduced.
