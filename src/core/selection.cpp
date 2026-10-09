@@ -8,7 +8,7 @@ Selection Selection::rectangle(const Circuit& circuit, Bounds region) {
     Selection result;
     if (region.min.x > region.max.x || region.min.y > region.max.y) return result;
     result.frame_ = region;
-    for (const auto& cell : circuit.cells_in(region)) result.points_.insert(cell.position);
+    circuit.visit(region, [&](const Cell& cell) { result.points_.insert(cell.position); });
     return result;
 }
 
