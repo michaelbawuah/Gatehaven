@@ -18,6 +18,7 @@ struct DocumentLimits {
     std::size_t max_cells{1'000'000};
     std::size_t max_lines{2'000'000};
     std::size_t max_line_bytes{192};
+    std::uint64_t max_legacy_area{64'000'000};
 };
 
 [[nodiscard]] std::expected<Circuit, DocumentError> read_document(std::istream& input,
