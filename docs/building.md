@@ -99,3 +99,18 @@ See [portable builds](packaging.md) for CPack archives and installed-product tes
 Successful desktop CI jobs upload native preview archives, SHA-256 checksums, and
 screenshots as Actions artifacts retained for 30 days. These are unsigned
 development builds; signing and clean-machine release verification remain open.
+
+## Architecture and recovery checks
+
+The CI matrix includes Linux x86-64 and ARM64, macOS Apple Silicon and Intel,
+and Windows x64 for both core and desktop builds. A configured target is not a
+passing target: inspect the Actions run for the revision you intend to use.
+Windows ARM64, signing, and physical device acceptance remain outside this matrix.
+
+Core tests include native process-kill recovery checks in addition to clipboard
+concurrency. Benchmark builds add six workload checks. Installed-product tests
+exercise nine distinct interface states, Unicode document paths through the CLI,
+and the actual desktop executable from a directory containing spaces.
+
+Run `gatehaven --help` or `gatehaven-cli --help` without opening a graphical
+window. `gatehaven-cli profile FILE.ghv STEPS` emits JSON simulation metrics.
