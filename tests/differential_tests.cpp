@@ -26,3 +26,36 @@ TEST("simulation matches the frozen reference across seeded mixed circuits and e
         }
     }
 }
+
+TEST("optimized state survives reset invalidation copies and topology replacement") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::wire);
+    Simulation fast; reference::ReferenceSimulation slow;
+    for (unsigned operation = 0; operation < 40; ++operation) {
+        if (operation % 7 == 0) { fast.reset(); slow.reset(); }
+        if (operation % 5 == 0) {
+            const std::array changed{Point{1, 0}};
+            fast.invalidate(changed); slow.invalidate(changed);
+        }
+        CHECK(fast.snapshot() == slow.snapshot());
+        fast.step(circuit); slow.step(circuit);
+        CHECK(fast.snapshot() == slow.snapshot());
+        auto copy = fast; copy.reset();
+        CHECK(copy.snapshot().empty()); CHECK(fast.snapshot() == slow.snapshot());
+        if (operation == 20) { Circuit replacement; replacement.set({0, 0}, Element::nor_gate); circuit = std::move(replacement); }
+    }
+}
+
+TEST("settled optimization wakes on edits and never skips communicator exchanges") {
+    Circuit circuit; circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::wire);
+    Simulation simulation;
+    for (unsigned i = 0; i < 100; ++i) simulation.step(circuit);
+    CHECK(simulation.ticks() == 100); CHECK(simulation.metrics().topology_builds == 1);
+    CHECK(simulation.metrics().propagations == 2); CHECK(simulation.metrics().settled_ticks == 98);
+    circuit.set({0, 0}, Element::empty); simulation.step(circuit);
+    CHECK(!simulation.powered({1, 0})); CHECK(simulation.metrics().topology_builds == 2);
+    circuit.set({2, 0}, Element::screen);
+    unsigned exchanges = 0;
+    for (unsigned i = 0; i < 10; ++i) simulation.step(circuit, [&](const auto&, bool) { ++exchanges; return exchanges % 2 != 0; });
+    CHECK(exchanges == 10); CHECK(!simulation.powered({2, 0}));
+}
