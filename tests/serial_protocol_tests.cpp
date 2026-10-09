@@ -28,7 +28,7 @@ TEST("input byte requests wait at EOF and resume without resetting the circuit")
     for (auto bit : serial_reply(0)) CHECK(!input.step(bit != 0, read, more));
     for (unsigned i = 0; i < 20; ++i) CHECK(!input.step(false, read, more));
     CHECK(input.pending() == 1);
-    next = 0xA5; CHECK(!input.step(false, read, more));
+    next = std::uint8_t{0xA5}; CHECK(!input.step(false, read, more));
     std::vector<std::uint8_t> reply;
     for (unsigned i = 0; i < 11; ++i) reply.push_back(input.step(false, read, more) ? 1 : 0);
     CHECK(reply == serial_reply(0, 0xA5, 8)); CHECK(input.pending() == 0);
