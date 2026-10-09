@@ -1889,7 +1889,8 @@ int main(int argc, char** argv) {
             return 0;
         }
         const bool child_test = mode == "--self-test-child";
-        const bool testing = mode == "--self-test" || child_test;
+        const bool display_test = mode == "--self-test-display";
+        const bool testing = mode == "--self-test" || child_test || display_test;
         const bool snapshot = mode == "--snapshot";
         const bool benchmark = mode == "--benchmark-render";
         std::size_t extra_cells = 0; unsigned frames = 60;
@@ -1929,7 +1930,7 @@ int main(int argc, char** argv) {
         if (!clipboard) throw std::runtime_error(clipboard.error());
         if (testing || snapshot || benchmark) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
         auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if (testing || snapshot || benchmark) flags |= SDL_WINDOW_HIDDEN;
+        if ((testing && !display_test) || snapshot || benchmark) flags |= SDL_WINDOW_HIDDEN;
         SDL_Window* raw_window = nullptr;
         SDL_Renderer* raw_renderer = nullptr;
         const bool created = SDL_CreateWindowAndRenderer("Gatehaven", 1280, 800, flags, &raw_window, &raw_renderer);
@@ -1958,7 +1959,13 @@ int main(int argc, char** argv) {
         if (!testing && !snapshot && !benchmark) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
-            if (!child_test) {
+            if (display_test) {
+                if (std::string_view(SDL_GetCurrentVideoDriver()) == "dummy")
+                    throw std::runtime_error("Display verification requires a native video backend");
+                if (!SDL_RenderPresent(renderer.get())) throw std::runtime_error(SDL_GetError());
+                std::cout << "Display smoke passed: " << SDL_GetCurrentVideoDriver() << " / " << SDL_GetRendererName(renderer.get()) << '\n';
+            }
+            if (!child_test && !display_test) {
                 const auto child = ui::test_child_process();
                 if (!child) throw std::runtime_error(child.error());
             }
