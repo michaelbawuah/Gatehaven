@@ -455,7 +455,9 @@ public:
         ui::text(r, 20, 771, status_.substr(0, 73), white, 1.25F);
         if (hover_) {
             const auto info = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
-                ", " + std::to_string(hover_->y) + "]  " + (simulation.powered(*hover_) ? "ON" : "OFF");
+                ", " + std::to_string(hover_->y) + "]  " + (is_communicator(circuit.at(*hover_))
+                    ? std::string("TX ") + (simulation.sent(*hover_) ? "ON" : "OFF") + "  RX " + (simulation.received(*hover_) ? "ON" : "OFF")
+                    : (simulation.powered(*hover_) ? "ON" : "OFF"));
             ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
         }
         ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
