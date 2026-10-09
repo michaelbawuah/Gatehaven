@@ -82,3 +82,17 @@ TEST("copying a running feedback circuit keeps all engine workspaces independent
     const auto unchanged = second.snapshot(); first.step(circuit); first.reset();
     CHECK(second.snapshot() == unchanged); second.step(circuit); CHECK(!second.powered({1, 1}));
 }
+
+TEST("merging and splitting powered nets preserve preceding-tick signal observations") {
+    Circuit circuit;
+    circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::wire);
+    circuit.set({3, 0}, Element::wire); circuit.set({3, 1}, Element::signal); circuit.set({4, 1}, Element::or_gate);
+    Simulation fast; reference::ReferenceSimulation slow;
+    for (unsigned tick = 0; tick < 20; ++tick) {
+        if (tick % 3 == 0) {
+            circuit.set({2, 0}, circuit.at({2, 0}) == Element::empty ? Element::wire : Element::empty);
+            const std::array changed{Point{2, 0}}; fast.invalidate(changed); slow.invalidate(changed);
+        }
+        fast.step(circuit); slow.step(circuit); CHECK(fast.snapshot() == slow.snapshot());
+    }
+}
