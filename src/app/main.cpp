@@ -107,6 +107,17 @@ void SDLCALL dialog_callback(void* userdata, const char* const* paths, int) {
     request->mailbox->result = std::move(result);
 }
 
+using OverwritePrompt = std::function<bool(SDL_Window*)>;
+bool confirm_overwrite(SDL_Window* window) {
+    const SDL_MessageBoxButtonData choices[]{
+        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Cancel"},
+        {0, 1, "Replace changed file"}};
+    const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window, "File changed outside Gatehaven",
+        "This file changed since you opened or saved it. Replace it with this circuit? Cancel and use Save As to keep both versions.", 2, choices, nullptr};
+    int choice = 0;
+    return SDL_ShowMessageBox(&data, &choice) && choice == 1;
+}
+
 class App {
 public:
     Circuit circuit = starter_circuit();
@@ -117,8 +128,8 @@ public:
     bool quit{};
 
     explicit App(SDL_Window* window, ClipboardSession& clipboards,
-                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo)
-        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)) {
+                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo, OverwritePrompt overwrite = confirm_overwrite)
+        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)), confirm_overwrite_(std::move(overwrite)) {
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
     }
@@ -520,6 +531,7 @@ private:
     ClipboardSession& clipboards_;
     ui::InstanceLauncher launcher_;
     ui::DemoLauncher demo_launcher_;
+    OverwritePrompt confirm_overwrite_;
     Stamp placement_;
     StampPreview placement_preview_;
     unsigned clipboard_{};
@@ -1128,13 +1140,7 @@ private:
             const auto current = fingerprint_file(path);
             if (!current) { status_ = current.error(); return false; }
             if (*current != disk_version_) {
-                const SDL_MessageBoxButtonData choices[]{
-                    {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Cancel"},
-                    {0, 1, "Replace changed file"}};
-                const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window_, "File changed outside Gatehaven",
-                    "This file changed since you opened or saved it. Replace it with this circuit? Cancel and use Save As to keep both versions.", 2, choices, nullptr};
-                int choice = 0;
-                if (!SDL_ShowMessageBox(&data, &choice) || choice != 1) { status_ = "SAVE CANCELED - CTRL SHIFT S KEEPS BOTH VERSIONS"; return false; }
+                if (!confirm_overwrite_(window_)) { status_ = "SAVE CANCELED - CTRL SHIFT S KEEPS BOTH VERSIONS"; return false; }
             }
         }
         const auto result = save_document(path, circuit);
@@ -1652,7 +1658,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(!app.history.modified() && load_document(save_path).value() == app.circuit, "Ordinary Save failed");
     require(app.history.apply(app.circuit, std::array{Cell{{44, -17}, Element::source}}).has_value(), "Could not stage save conflict");
     require(save_document(save_path, lost_circuit).has_value(), "Could not stage an external change");
-    // Dummy video cannot approve a native overwrite prompt; failure must preserve both versions.
+    // The injected test prompt declines replacement; both versions must survive.
     key(SDLK_S, SDL_KMOD_CTRL);
     require(app.history.modified() && load_document(save_path).value() == lost_circuit, "Unapproved conflict overwrote external work");
     app.render(renderer);
@@ -1732,7 +1738,8 @@ int main(int argc, char** argv) {
         if (testing) demo_launcher = [&](std::string_view name) -> std::expected<void, std::string> {
             demos.emplace_back(name); return {};
         };
-        App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher));
+        App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher),
+                testing ? OverwritePrompt([](SDL_Window*) { return false; }) : OverwritePrompt(confirm_overwrite));
         if (!testing && !snapshot) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos);
