@@ -59,3 +59,6 @@ with tempfile.TemporaryDirectory(prefix="gatehaven-profile-") as directory:
     assert json.loads(run("profile", path, 0))["ticks"] == 0
     path.write_text("GATEHAVEN 1\n" + "".join(f"{i} 0 wire\n" for i in range(6)), encoding="utf-8")
     run("trace", path, 1000000, code=2)
+
+info = run("--build-info")
+assert "Compiler:" in info and "Target:" in info and "Language: C++23" in info

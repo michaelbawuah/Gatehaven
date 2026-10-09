@@ -94,6 +94,13 @@ jobs:
           ${{ (runner.os != 'Windows' || runner.arch == 'X64') && '-DGATEHAVEN_BUILD_INSTALLERS=ON' || '' }}
       - run: cmake --build build/app --config Release --parallel 2
       - run: ctest --test-dir build/app -C Release --output-on-failure
+      - name: Record exact packaged toolchain
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            build/app/Release/gatehaven-cli.exe --build-info > build/app/toolchain.txt
+          else
+            build/app/gatehaven-cli --build-info > build/app/toolchain.txt
+          fi
       - name: Render the starter circuit
         run: cmake --build build/app --config Release --target gatehaven_snapshot
         env:
@@ -119,6 +126,7 @@ jobs:
             build/app/gatehaven_*.deb
             build/app/*.sha256
             build/app/gatehaven*.bmp
+            build/app/toolchain.txt
 
   benchmark:
     name: Simulation benchmark
