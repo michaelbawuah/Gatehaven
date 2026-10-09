@@ -625,6 +625,12 @@ private:
             if (!SDL_OpenURL("https://github.com/michaelbawuah/Gatehaven/blob/main/docs/manual.md")) status_ = SDL_GetError();
             break;
         case SDLK_F: view.frame(circuit.bounds()); break;
+        case SDLK_HOME: view.frame(circuit.bounds()); break;
+        case SDLK_EQUALS:
+        case SDLK_PLUS:
+        case SDLK_KP_PLUS: view.zoom(1.25, 760, 430); break;
+        case SDLK_MINUS:
+        case SDLK_KP_MINUS: view.zoom(0.8, 760, 430); break;
         case SDLK_D:
         case SDLK_DELETE:
         case SDLK_BACKSPACE: erase_selection(); break;

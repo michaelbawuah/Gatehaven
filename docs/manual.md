@@ -12,6 +12,8 @@ left, right, middle, X1, X2, and touch. Digits 1–0 select a left-button pencil
 Hold E and click a cell to sample its pencil, or empty space to sample the eraser.
 Drag with Pan to move the camera; scroll zooms around the pointer. F frames the
 whole circuit. These actions do not edit your circuit.
+Plus/minus zoom without a mouse wheel; Home also frames the circuit. A panner
+click centers the clicked cell, while a drag moves the existing view.
 
 Ordinary strokes snap to a horizontal or vertical line. Hold Shift and click to
 start a polyline. Further clicks add snapped segments; Backspace removes the last
