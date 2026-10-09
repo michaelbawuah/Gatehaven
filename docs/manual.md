@@ -53,8 +53,21 @@ B toggles context hints, off by default. F2 shows shortcuts. F1 opens this manua
 F3 opens six editable [circuit lessons](../samples/README.md) in separate windows.
 F5/F6/F7 choose Screen/File In/File Out. Use I to interact with them; see the
 [communicator and serial protocol guide](communicators.md) before connecting files.
-Command can replace Ctrl on macOS. Touch-generated pointer events have a separate
-tool binding; full multitouch navigation and hardware acceptance remain in progress.
+Command can replace Ctrl on macOS. Native touch uses its own tool binding; see the gesture controls below.
 
 See [simulation rules](architecture.md) and [verification](verification.md) for
 the implementation's tested behavior and current release limits.
+
+## Touch navigation
+
+One finger uses the yellow Touch binding. Tap a sidebar tool to assign it to
+touch. Put a second finger on the canvas to cancel an unfinished stroke and
+start pan/pinch navigation. Moving both fingers pans; changing their separation
+zooms around the moving midpoint. Lift both fingers before drawing again.
+A third finger suspends navigation until two remain.
+
+Double-tap with the Panner to center a cell. Double/triple-tap with Select to
+choose an electrical net or physical circuit. Long holds and drags do not count
+as repeated taps. Focus loss cancels unfinished touches and releases screen
+interaction. Physical touchscreen and per-monitor scaling acceptance is still
+required; automated SDL events cover the input and coordinate conversion paths.
