@@ -2,6 +2,7 @@
 #include "instances.hpp"
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
+#include "gatehaven/document_path.hpp"
 #include "gatehaven/editor.hpp"
 #include "gatehaven/stamp_preview.hpp"
 #include "gatehaven/examples.hpp"
@@ -261,7 +262,7 @@ public:
                         status_ = chosen ? "COMMUNICATOR FILE CONNECTED" : chosen.error();
                     }
                 } else if (result->save) {
-                    if (!path.has_extension()) path += result->filter == 1 ? ".ccsb" : ".ghv";
+                    path = document_save_path(std::move(path), result->filter);
                     if (save(path) && close_after_save_) quit = true;
                 } else launch_open(path);
             }

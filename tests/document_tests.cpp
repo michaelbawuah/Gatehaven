@@ -119,3 +119,12 @@ TEST("atomic saves honor uppercase legacy extensions and preserve failed exports
     CHECK(save_document(path, circuit, DocumentFormat::native)); CHECK(load_document(path).value() == circuit);
     std::filesystem::remove(path);
 }
+
+#include "gatehaven/document_path.hpp"
+TEST("save dialog filters append only missing extensions") {
+    CHECK(document_save_path("circuit", 1).extension() == ".ccsb");
+    CHECK(document_save_path("circuit", 0).extension() == ".ghv");
+    CHECK(document_save_path("circuit", -1).extension() == ".ghv");
+    CHECK(document_save_path("explicit.CCSB", 0).filename() == "explicit.CCSB");
+    CHECK(document_save_path("explicit.ghv", 1).filename() == "explicit.ghv");
+}
