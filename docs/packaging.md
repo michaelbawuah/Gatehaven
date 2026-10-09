@@ -69,3 +69,28 @@ saved circuits, preferences, shared sessions, and recovery data are retained.
 Windows CI installs into a temporary path, launches both executables, checks the
 quoted file-open command, and uninstalls. This uses the disposable CI machine;
 interactive clean-machine and signing acceptance still remain.
+
+## Linux AppImage
+
+Linux x86-64 and ARM64 preview jobs produce an AppImage in addition to DEB/TGZ.
+The image bundles Gatehaven, its C++ runtime libraries, manuals, examples, and
+required dependency notices. The tool and executable runtime are pinned by
+SHA-256 in `packaging/linux/appimage-tools.json`; cached downloads are rechecked.
+
+```sh
+python tools/build_appimage.py build/app build/app/Gatehaven-x86_64.AppImage
+python tests/appimage_test.py build/app/Gatehaven-x86_64.AppImage
+chmod +x Gatehaven-x86_64.AppImage
+./Gatehaven-x86_64.AppImage
+./Gatehaven-x86_64.AppImage --cli check circuit.ccsb
+```
+
+The build baseline requires glibc 2.39 or newer. Real use also requires a working
+X11 or Wayland session and the system's native file-dialog services. This is not
+an assertion of support for every Linux distribution. The extraction test runs
+without FUSE, checks relocation and the exact SHA-256, and exercises both desktop
+and CLI paths. Distribution/device acceptance is tracked separately.
+
+Both `.ghv` and `.ccsb` are advertised on Linux/macOS and registered as Open With
+choices by the Windows installer. Installers preserve the user's existing default
+application. AppImage desktop integration depends on the user's desktop tooling.
