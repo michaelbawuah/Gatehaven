@@ -9,6 +9,9 @@
 
 namespace gatehaven {
 
+enum class DocumentFormat { automatic, native, legacy };
+[[nodiscard]] DocumentFormat document_format(const std::filesystem::path& path);
+
 struct DocumentError {
     std::size_t line{};
     std::string message;
@@ -28,6 +31,8 @@ struct DocumentLimits {
 [[nodiscard]] std::expected<Circuit, DocumentError> load_document(const std::filesystem::path& path,
                                                                DocumentLimits limits = {});
 [[nodiscard]] std::expected<void, DocumentError> save_document(const std::filesystem::path& path,
-                                                             const Circuit& circuit);
+                                                             const Circuit& circuit,
+                                                             DocumentFormat format = DocumentFormat::automatic,
+                                                             DocumentLimits limits = {});
 
 } // namespace gatehaven

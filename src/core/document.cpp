@@ -129,8 +129,19 @@ std::expected<Circuit, DocumentError> load_document(const std::filesystem::path&
     return legacy ? read_legacy_document(input, limits) : read_document(input, limits);
 }
 
+DocumentFormat document_format(const std::filesystem::path& path) {
+    auto extension = path.extension().u8string();
+    for (auto& ch : extension) if (ch >= u8'A' && ch <= u8'Z') ch = static_cast<char8_t>(ch + (u8'a' - u8'A'));
+    return extension == u8".ccsb" ? DocumentFormat::legacy : DocumentFormat::native;
+}
+
 std::expected<void, DocumentError> save_document(const std::filesystem::path& path,
-                                                const Circuit& circuit) {
+                                                const Circuit& circuit, DocumentFormat format, DocumentLimits limits) {
+    if (format == DocumentFormat::automatic) format = document_format(path);
+    if (format == DocumentFormat::legacy) {
+        const auto layout = legacy_layout(circuit, limits);
+        if (!layout) return std::unexpected(layout.error());
+    }
     // Write beside the target so replacement stays on the same filesystem.
     // noreplace prevents collisions from truncating another temporary file.
     const auto stamp = detail::temporary_token();
@@ -140,7 +151,7 @@ std::expected<void, DocumentError> save_document(const std::filesystem::path& pa
         std::ofstream output(temporary, std::ios::binary | std::ios::out | std::ios::noreplace);
         if (!output) continue;
         RemoveTemporary cleanup{temporary};
-        const auto written = write_document(output, circuit);
+        const auto written = format == DocumentFormat::legacy ? write_legacy_document(output, circuit, limits) : write_document(output, circuit);
         output.flush();
         const bool flushed = static_cast<bool>(output);
         output.close();

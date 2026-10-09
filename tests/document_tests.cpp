@@ -108,3 +108,14 @@ TEST("path loading identifies binary legacy data independently of extension") {
     const auto result = load_document(path); std::filesystem::remove(path);
     CHECK(result && result->at({0, 0}) == Element::source);
 }
+
+TEST("atomic saves honor uppercase legacy extensions and preserve failed exports") {
+    const auto path = std::filesystem::temp_directory_path() / ("gatehaven-save-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".CCSB");
+    Circuit circuit; circuit.set({0, 0}, Element::positive_relay, 3);
+    CHECK(save_document(path, circuit)); CHECK(load_document(path).value() == circuit);
+    { std::ifstream input(path, std::ios::binary); std::string magic(4, ' '); input.read(magic.data(), 4); CHECK(magic == "CCPG"); }
+    auto too_big = circuit; too_big.set({10000, 10000}, Element::wire);
+    CHECK(!save_document(path, too_big)); CHECK(load_document(path).value() == circuit);
+    CHECK(save_document(path, circuit, DocumentFormat::native)); CHECK(load_document(path).value() == circuit);
+    std::filesystem::remove(path);
+}
