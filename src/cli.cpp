@@ -12,7 +12,7 @@
 #include <string_view>
 #include <sstream>
 
-int main(int argc, char** argv) {
+static int run_cli(int argc, char** argv) {
     using namespace gatehaven;
     if (argc == 2 && std::string_view(argv[1]) == "--version") {
         std::cout << "Gatehaven " << version << " (C++23)\n";
@@ -91,3 +91,19 @@ int main(int argc, char** argv) {
     }
     return 0;
 }
+
+#ifdef _WIN32
+int wmain(int argc, wchar_t** arguments) {
+    try {
+        std::vector<std::string> strings; strings.reserve(static_cast<std::size_t>(argc));
+        for (int i = 0; i < argc; ++i) strings.push_back(gatehaven::path_utf8(std::filesystem::path(arguments[i])));
+        std::vector<char*> argv; for (auto& argument : strings) argv.push_back(argument.data());
+        return run_cli(argc, argv.data());
+    } catch (const std::exception& error) { std::cerr << "Gatehaven: " << error.what() << '\n'; return 1; }
+}
+#else
+int main(int argc, char** argv) {
+    try { return run_cli(argc, argv); }
+    catch (const std::exception& error) { std::cerr << "Gatehaven: " << error.what() << '\n'; return 1; }
+}
+#endif
