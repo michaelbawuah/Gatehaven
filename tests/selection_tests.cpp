@@ -47,3 +47,11 @@ TEST("moving a sparse selection leaves holes and restores destination overwrites
     CHECK(history.apply(c, turn->edits));
     CHECK(c.at({1, 0}) == Element::source);
 }
+
+TEST("selection frames cannot exclude selected cells or invert their axes") {
+    auto selection = Selection::points({{2, 3}, {4, 5}});
+    const auto original = selection.bounds();
+    selection.set_frame({{3, 4}, {4, 5}}); CHECK(selection.bounds() == original);
+    selection.set_frame({{4, 5}, {2, 3}}); CHECK(selection.bounds() == original);
+    selection.set_frame({{0, 0}, {6, 6}}); CHECK(selection.bounds()->min == Point{0, 0});
+}

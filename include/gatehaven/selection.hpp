@@ -16,7 +16,11 @@ public:
     [[nodiscard]] explicit operator bool() const { return frame_.has_value(); }
     [[nodiscard]] std::size_t size() const { return points_.size(); }
     [[nodiscard]] std::vector<Cell> cells(const Circuit& circuit) const;
-    void set_frame(Bounds region) { frame_ = region; }
+    void set_frame(Bounds region) {
+        if (region.min.x > region.max.x || region.min.y > region.max.y) return;
+        for (const auto point : points_) if (!region.contains(point)) return;
+        frame_ = region;
+    }
 private:
     std::set<Point> points_;
     std::optional<Bounds> frame_;
