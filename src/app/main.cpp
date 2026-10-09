@@ -1272,6 +1272,13 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         require(SDL_PushEvent(&event), "Could not push keyboard event");
         dispatch(app, renderer);
     };
+    key(SDLK_TAB); key(SDLK_RETURN);
+    require(app.running, "Keyboard focus could not activate Play");
+    key(SDLK_RETURN); require(!app.running, "Keyboard focus could not activate Pause");
+    key(SDLK_ESCAPE);
+    key(SDLK_TAB, SDL_KMOD_SHIFT); // Last tool is Interactor.
+    key(SDLK_RETURN); key(SDLK_1);
+    require(!app.history.modified(), "Keyboard palette navigation edited the circuit");
     const auto original = app.circuit;
     key(SDLK_F3); key(SDLK_DOWN); key(SDLK_RETURN);
     require(demos.size() == 1 && demos.back() == "oscillator", "Example chooser did not launch the selected lesson");
