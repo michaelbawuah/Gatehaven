@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3 development preview — 9 October 2026
+
+- Indexed circuit topology, reusable propagation buffers, lazy snapshots, cached
+  bounds, allocation-free visible rendering, and settled-circuit skipping.
+- Native one-finger tools, two-finger pan/pinch, multi-tap selection/centering,
+  keyboard traversal of all controls, and safer modal input.
+- Automatic unsaved-work snapshots, abandoned-session recovery, and exclusive
+  ownership tested with killed processes and competing consumers.
+- Unicode Windows CLI arguments, JSON circuit profiling, bounded traces,
+  six benchmark workloads, and reference-engine differential tests.
+- Linux ARM64 and Intel Mac CI targets; optional unsigned DEB and DMG previews
+  with package inspection and nine installed interface snapshots.
+- Correct own-pencil Signal placement for communicators and double-click-only
+  Panner centering.
+
+Legacy `.ccsb` compatibility, physical hardware acceptance, screen-reader support,
+Windows installers, signing/notarization, and external performance parity remain
+open. This version is a development preview.
+
 ## 0.2 development preview — 9 October 2026
 
 ### Circuit editing
