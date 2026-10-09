@@ -31,7 +31,7 @@ def main():
         marker = config / "preferences.ghp"; marker.write_text("user-owned settings marker\n")
         circuit = root / "my circuit.ghv"; circuit.write_text("GATEHAVEN 1\n0 0 source\n1 0 wire\n")
         original = circuit.read_bytes()
-        env = {**os.environ, "HOME": directory, "XDG_CONFIG_HOME": str(config), "SDL_VIDEODRIVER": "dummy"}
+        env = {**os.environ, "XDG_CONFIG_HOME": str(config), "SDL_VIDEODRIVER": "dummy"}
         run("apt-get", "install", "--no-install-recommends", "-y", str(package))
         evidence["checks"].append("install")
         evidence["build_info"] = run("gatehaven-cli", "--build-info", cwd=root, env=env)
@@ -39,7 +39,7 @@ def main():
         run("gatehaven", "--self-test", cwd=root, env=env)
         desktop = Path("/usr/share/applications/com.michaelbaffourawuah.gatehaven.desktop")
         run("desktop-file-validate", desktop)
-        run("update-mime-database", "/usr/share/mime")
+        # Check the cache produced by postinst; the test must not repair it first.
         assert b"application/x-ccsb" in Path("/usr/share/mime/types").read_bytes()
         assert Path("/usr/share/gatehaven/docs/manual.html").is_file()
         evidence["checks"].extend(["installed_cli", "installed_desktop", "mime_registration", "offline_manual"])
@@ -50,6 +50,7 @@ def main():
         evidence["checks"].append("reinstall_preserves_user_data")
         run("apt-get", "remove", "-y", "gatehaven")
         assert not Path("/usr/bin/gatehaven").exists() and not desktop.exists()
+        assert b"application/x-ccsb" not in Path("/usr/share/mime/types").read_bytes()
         assert circuit.read_bytes() == original and marker.exists()
         evidence["checks"].append("remove_preserves_user_data")
         run("apt-get", "purge", "-y", "gatehaven")
