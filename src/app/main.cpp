@@ -192,13 +192,17 @@ public:
     }
 
     bool open(const std::filesystem::path& path) {
+        const auto before = fingerprint_file(path);
+        if (!before || !*before) { status_ = before ? "DOCUMENT NO LONGER EXISTS" : before.error(); return false; }
         auto loaded = load_document(path);
         if (!loaded) {
             status_ = "LINE " + std::to_string(loaded.error().line) + ": " + loaded.error().message;
             return false;
         }
+        const auto after = fingerprint_file(path);
+        if (!after || *after != *before) { status_ = "DOCUMENT CHANGED WHILE OPENING - TRY AGAIN"; return false; }
         circuit = std::move(*loaded);
-        path_ = path;
+        path_ = path; disk_version_ = *after;
         history.clear();
         simulation.reset();
         endpoints_.clear();
@@ -511,6 +515,7 @@ private:
     unsigned clipboard_{};
     std::optional<char> clipboard_menu_;
     std::filesystem::path path_;
+    std::optional<FileFingerprint> disk_version_;
     std::filesystem::path preferences_path_;
     std::string title_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
