@@ -177,7 +177,7 @@ jobs:
           clang-tidy-18 -p build/analysis
           --checks='-*,bugprone-use-after-move,bugprone-infinite-loop,bugprone-sizeof-expression,bugprone-suspicious-memory-comparison,performance-for-range-copy'
           --warnings-as-errors='*'
-          src/core/circuit.cpp src/core/simulation.cpp src/core/topology.cpp src/core/netlist.cpp src/core/legacy_document.cpp src/core/statistics.cpp
+          src/core/circuit.cpp src/core/simulation.cpp src/core/topology.cpp src/core/netlist.cpp src/core/statistics.cpp
 
   compatibility:
     name: External compatibility and throughput

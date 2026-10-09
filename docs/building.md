@@ -92,7 +92,10 @@ empty circuit; a document path opens that file in the newly started instance.
 
 Use `clang-format` with the repository configuration and `clang-tidy` with
 `build/core/compile_commands.json`. Targeted Clang 18 static analysis runs in CI for storage, topology, component
-compilation, simulation, legacy decoding, and statistics.
+compilation, simulation, and statistics. The codec also uses `std::expected`,
+whose GCC header feature guard is not compatible with this older analysis
+compiler; its runtime and sanitizer checks still run in full. Broader static
+coverage needs a matching C++23 analysis toolchain.
 
 ## Packaging
 
