@@ -5,6 +5,7 @@
 #include "gatehaven/svg_export.hpp"
 #include "gatehaven/file_io.hpp"
 #include "gatehaven/version.hpp"
+#include "gatehaven/paths.hpp"
 
 #include <charconv>
 #include <iostream>
@@ -24,18 +25,18 @@ int main(int argc, char** argv) {
     if ((argc == 3 || argc == 4) && std::string_view(argv[1]) == "example") {
         const auto circuit = make_example(argc == 3 ? "starter" : argv[2]);
         if (!circuit) { std::cerr << "Unknown example; use gatehaven-cli examples\n"; return 2; }
-        const auto saved = save_document(argv[argc - 1], *circuit);
+        const auto saved = save_document(utf8_path(argv[argc - 1]), *circuit);
         if (!saved) { std::cerr << saved.error().message << '\n'; return 1; }
         std::cout << "Saved example to " << argv[argc - 1] << '\n';
         return 0;
     }
     if (argc == 4 && std::string_view(argv[1]) == "svg") {
-        const auto circuit = load_document(argv[2]);
+        const auto circuit = load_document(utf8_path(argv[2]));
         if (!circuit) { std::cerr << circuit.error().message << '\n'; return 1; }
         std::ostringstream svg;
         const auto rendered = export_svg(svg, *circuit);
         if (!rendered) { std::cerr << rendered.error() << '\n'; return 1; }
-        const auto written = replace_file(argv[3], svg.str());
+        const auto written = replace_file(utf8_path(argv[3]), svg.str());
         if (!written) { std::cerr << written.error() << '\n'; return 1; }
         return 0;
     }
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
             return 2;
         }
     }
-    const auto circuit = load_document(argv[2]);
+    const auto circuit = load_document(utf8_path(argv[2]));
     if (!circuit) {
         std::cerr << "Line " << circuit.error().line << ": " << circuit.error().message << '\n';
         return 1;

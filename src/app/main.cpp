@@ -16,6 +16,7 @@
 #include "gatehaven/recovery.hpp"
 #include "gatehaven/recovery_schedule.hpp"
 #include "gatehaven/version.hpp"
+#include "gatehaven/paths.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -62,10 +63,6 @@ std::optional<std::size_t> input_button(const SDL_MouseButtonEvent& event) {
     case SDL_BUTTON_X2: return 4;
     default: return std::nullopt;
     }
-}
-
-std::filesystem::path utf8_path(std::string_view text) {
-    return std::filesystem::path(std::u8string(text.begin(), text.end()));
 }
 
 void rectangle(SDL_Renderer* r, float x, float y, float w, float h, SDL_Color c, bool outline = false) {
