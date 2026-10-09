@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     assert metadata["target"]["architecture"] in run(cli, "--build-info")
     assert (resources / metadata["sdl_notice"]).is_file()
     assert "Gatehaven CLI" in run(cli, "--help")
-    assert Path(run(cli, "--manual-path", cwd=root).strip()) == resources / "docs/manual.html"
+    assert Path(run(cli, "--manual-path", cwd=root).strip()).samefile(resources / "docs/manual.html")
     for sample in (resources / "samples").glob("*.ghv"):
         run(cli, "check", sample)
     assert len(list((resources / "samples").glob("*.ghv"))) == 6
