@@ -2,6 +2,16 @@
 
 namespace gatehaven {
 
+std::optional<Circuit> make_example(std::string_view name) {
+    if (name == "starter") return starter_circuit();
+    if (name == "oscillator") return oscillator_circuit();
+    if (name == "screen-switch") return screen_switch_circuit();
+    if (name == "positive-relay") return relay_demo_circuit(false);
+    if (name == "negative-relay") return relay_demo_circuit(true);
+    if (name == "gate-gallery") return gate_gallery_circuit();
+    return std::nullopt;
+}
+
 Circuit starter_circuit() {
     Circuit c;
     // Two isolated inputs drive an AND gate in the center of the canvas.

@@ -21,6 +21,11 @@ with tempfile.TemporaryDirectory(prefix="gatehaven cli ") as directory:
     assert "49 cells" in run("check", path)
     stats = json.loads(run("stats", path))
     assert stats["cells"] == 49 and stats["elements"]["source"] == 3
+    for name in run("examples").splitlines():
+        sample = Path(directory) / (name + ".ghv")
+        run("example", name, sample)
+        assert json.loads(run("stats", sample))["cells"] > 0
+    run("example", "unknown", path, code=2)
     rows = list(csv.DictReader(io.StringIO(run("trace", path, 2))))
     output = [r for r in rows if r["x"] == "8" and r["y"] == "0"]
     assert [r["ports"] for r in output] == ["0", "15"]

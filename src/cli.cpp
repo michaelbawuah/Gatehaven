@@ -16,10 +16,16 @@ int main(int argc, char** argv) {
         std::cout << "Gatehaven 0.1.0-dev (C++23)\n";
         return 0;
     }
-    if (argc == 3 && std::string_view(argv[1]) == "example") {
-        const auto saved = save_document(argv[2], starter_circuit());
+    if (argc == 2 && std::string_view(argv[1]) == "examples") {
+        for (const auto name : example_names) std::cout << name << '\n';
+        return 0;
+    }
+    if ((argc == 3 || argc == 4) && std::string_view(argv[1]) == "example") {
+        const auto circuit = make_example(argc == 3 ? "starter" : argv[2]);
+        if (!circuit) { std::cerr << "Unknown example; use gatehaven-cli examples\n"; return 2; }
+        const auto saved = save_document(argv[argc - 1], *circuit);
         if (!saved) { std::cerr << saved.error().message << '\n'; return 1; }
-        std::cout << "Saved starter circuit to " << argv[2] << '\n';
+        std::cout << "Saved example to " << argv[argc - 1] << '\n';
         return 0;
     }
     if (argc == 4 && std::string_view(argv[1]) == "svg") {
@@ -41,6 +47,7 @@ int main(int argc, char** argv) {
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
                      "  gatehaven-cli svg FILE.ghv OUTPUT.svg\n"
                      "  gatehaven-cli example FILE.ghv\n"
+                     "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
                      "  gatehaven-cli --version\n";
         return 2;
     }
