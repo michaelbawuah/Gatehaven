@@ -22,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     resources = root / "share" / "gatehaven"
     assert "Gatehaven" in run(cli, "--version")
     assert "Gatehaven CLI" in run(cli, "--help")
+    assert Path(run(cli, "--manual-path", cwd=root).strip()) == resources / "docs/manual.html"
     for sample in (resources / "samples").glob("*.ghv"):
         run(cli, "check", sample)
     assert len(list((resources / "samples").glob("*.ghv"))) == 6
