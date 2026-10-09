@@ -732,7 +732,11 @@ private:
             else if (!recovery_entries_.empty()) {
                 if (e.key == SDLK_UP) recovery_index_ = (recovery_index_ + recovery_entries_.size() - 1) % recovery_entries_.size();
                 if (e.key == SDLK_DOWN) recovery_index_ = (recovery_index_ + 1) % recovery_entries_.size();
-                if (e.key == SDLK_RETURN) restore_recovery(recovery_index_);
+                if (e.key == SDLK_HOME) recovery_index_ = 0;
+                if (e.key == SDLK_END) recovery_index_ = recovery_entries_.size() - 1;
+                if (e.key == SDLK_PAGEUP) recovery_index_ = recovery_index_ > 5 ? recovery_index_ - 5 : 0;
+                if (e.key == SDLK_PAGEDOWN) recovery_index_ = std::min(recovery_index_ + 5, recovery_entries_.size() - 1);
+                if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER) restore_recovery(recovery_index_);
             }
             return;
         }
