@@ -36,5 +36,24 @@ distribution's normal installation process. The executable must be on `PATH`
 for the desktop launcher. macOS bundles declare the `.ghv` document type.
 
 These builds are development previews. Signing, notarization, Windows file
-registration, installers, clean-machine checks, and physical desktop acceptance
+registration, final installer acceptance, clean-machine checks, and physical desktop acceptance
 remain release work. No step in this build disables operating-system protections.
+
+## Optional native installer previews
+
+Add `-DGATEHAVEN_BUILD_INSTALLERS=ON` with `GATEHAVEN_BUILD_PACKAGES=ON` to
+produce a Debian `.deb` on Linux or a `.dmg` on macOS alongside the archive.
+Windows continues to provide a ZIP. These options require platform packaging
+tools: `dpkg-deb`/`dpkg-shlibdeps` on Debian-based Linux and `hdiutil` on macOS.
+
+DEBs install under `/usr`, declare the runtime dependencies discovered from
+built binaries, and include launcher/MIME resources. Install only the package
+for your architecture and a compatible distribution. CI extracts the package
+into a temporary directory, checks metadata/resources, and executes the CLI.
+DMGs are verified, mounted read-only, inspected, and unmounted by the test.
+These checks do not install into the CI host's system directories.
+
+Every installer has a SHA-256 sidecar and is included in its architecture's
+Actions artifact. DMGs remain unsigned and unnotarized; no build step bypasses
+Gatekeeper. Clean-machine installation/removal, automatic associations, signing,
+Windows installers, and broader Linux distribution coverage remain release gates.
