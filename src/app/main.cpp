@@ -316,7 +316,7 @@ public:
                 line(r, 240, static_cast<float>(y), 1280, static_cast<float>(y), {230, 236, 238, 255});
             }
         }
-        for (const auto& cell : circuit.cells_in(visible)) {
+        circuit.visit(visible, [&](const Cell& cell) {
             draw_cell(r, cell, simulation.ports(cell.position));
             if (selection_.contains(cell.position)) {
                 const auto [x, y] = view.screen(cell.position);
@@ -324,7 +324,7 @@ public:
                     static_cast<float>(view.scale - 4), static_cast<float>(view.scale - 4),
                     selection_changed_ ? SDL_Color{205, 63, 64, 255} : SDL_Color{53, 103, 205, 255}, true);
             }
-        }
+        });
         for (const auto& cell : preview_) {
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
