@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "product": "Gatehaven",
+  "version": "@PROJECT_VERSION@-dev",
+  "compiler": {"id": "@CMAKE_CXX_COMPILER_ID@", "version": "@CMAKE_CXX_COMPILER_VERSION@"},
+  "target": {"system": "@CMAKE_SYSTEM_NAME@", "architecture": "@GATEHAVEN_TARGET_ARCH@"},
+  "language": "C++23",
+  "sdl_version": "3.4.18",
+  "sdl_source_commit": "829a65d769d935c4852f8159e964312c0957260a",
+  "sdl_notice": "third_party/SDL3/LICENSE.txt",
+  "signed_release": false
+}

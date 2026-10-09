@@ -18,3 +18,9 @@ install(DIRECTORY docs samples third_party DESTINATION ${CMAKE_INSTALL_DATADIR}/
 # Include the redistributable Microsoft runtime when built with MSVC.
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR})
 include(InstallRequiredSystemLibraries)
+
+configure_file(packaging/build-metadata.json.in build-metadata.json @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/build-metadata.json" DESTINATION ${CMAKE_INSTALL_DATADIR}/gatehaven)
+if(APPLE AND GATEHAVEN_BUILD_APP)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/build-metadata.json" DESTINATION gatehaven.app/Contents/Resources)
+endif()
