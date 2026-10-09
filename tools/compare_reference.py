@@ -52,13 +52,26 @@ def main():
         for trial in range(args.seeded):
             path = Path(directory) / f"seeded-{trial:04}.ccsb"
             width, height = rng.randrange(1, 18), rng.randrange(1, 14)
-            payload = bytes((rng.randrange(14) << 2) | rng.randrange(4) for _ in range(width * height))
+            payload = bytearray((rng.randrange(14) << 2) | rng.randrange(4) for _ in range(width * height))
+            # Exclude the one explicitly documented spec/reference conflict.
+            for index, byte in enumerate(payload):
+                if byte >> 2 != 3: continue
+                x, y = index % width, index // width
+                adjacent = [index + delta for delta, valid in ((-1, x > 0), (1, x + 1 < width), (-width, y > 0), (width, y + 1 < height)) if valid]
+                if any(payload[next_] >> 2 == 4 for next_ in adjacent): payload[index] = (1 << 2) | (byte & 3)
+            payload = bytes(payload)
             path.write_bytes(struct.pack("<4siii", b"CCPG", 0, width, height) + payload)
             for tick in (0, 1, 2, 7):
                 records.append(compare(reference, candidate, path, tick))
-    report = {"schema": 1, "seed": 20261009, "observations": records,
-              "passed": all(row["mismatches"] == 0 for row in records),
-              "limits": ["No user-driven screen input", "No attached file streams", "Boolean crossing power only; axis isolation has separate core tests"]}
+        conflict = Path(directory) / "source-signal-spec-difference.ccsb"
+        conflict.write_bytes(struct.pack("<4siii", b"CCPG", 0, 2, 1) + bytes([16, 12]))
+        divergence = compare(reference, candidate, conflict, 0)
+        known_difference = divergence["mismatches"] == 1 and divergence["first_mismatches"] == [
+            {"point": (1, 0), "reference": ("signal", 1, 0), "candidate": ("signal", 0, 0)}]
+    report = {"schema": 2, "seed": 20261009, "observations": records, "spec_difference": divergence,
+              "spec_difference_confirmed": known_difference,
+              "passed": known_difference and all(row["mismatches"] == 0 for row in records),
+              "limits": ["Matching seeded fixtures exclude direct Source/Signal adjacency; the difference is asserted separately", "No user-driven screen input", "No attached file streams", "Boolean crossing power only; axis isolation has separate core tests"]}
     print(json.dumps(report, indent=2))
     return 0 if report["passed"] else 1
 
