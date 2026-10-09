@@ -40,3 +40,11 @@ with tempfile.TemporaryDirectory(prefix="gatehaven cli ") as directory:
     run("run", path, "1000001", code=2)
     run("check", Path(directory) / "missing", code=1)
 print("CLI: sample creation, statistics, traces and failure exit codes passed")
+
+with tempfile.TemporaryDirectory(prefix="gatehaven-unicode-") as directory:
+    unicode_path = Path(directory) / "circuit-é-電気.ghv"
+    run("example", unicode_path)
+    run("check", unicode_path)
+    unicode_svg = Path(directory) / "drawing-é-電気.svg"
+    run("svg", unicode_path, unicode_svg)
+    ET.parse(unicode_svg)
