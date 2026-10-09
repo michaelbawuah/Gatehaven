@@ -100,7 +100,8 @@ std::expected<ShapeEdit, std::string> place_selection(const Circuit& circuit, co
     if (stamp.width <= 0 || stamp.height <= 0) return std::unexpected("Selection is empty");
     const auto corner = translated(origin, stamp.width - 1, stamp.height - 1);
     const auto target = paste(stamp, origin);
-    if (!corner || !target) return std::unexpected("Selection exceeds coordinate limits");
+    if (!corner) return std::unexpected("Selection exceeds coordinate limits");
+    if (!target) return std::unexpected(target.error());
     ShapeEdit result;
     result.edits = selection.cells(circuit);
     for (auto& cell : result.edits) cell.element = Element::empty;
