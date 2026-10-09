@@ -104,7 +104,8 @@ void Simulation::step(const Circuit& circuit, const Exchange& exchange) {
     // A rebuilt graph has a new component partition: comparisons become valid
     // only after its first complete tick.
     settled_ = !changed && (!exchange || topology_.groups().empty()) && power_ == previous_;
-    valid_.assign(nodes.size(), true); snapshot_dirty_ = true; invalidated_ = false; ++ticks_;
+    if (changed || invalidated_) valid_.assign(nodes.size(), true);
+    snapshot_dirty_ = true; invalidated_ = false; ++ticks_;
 }
 void Simulation::reset() {
     state_.clear(); power_.assign(nets_.vertex_count(), 0);
