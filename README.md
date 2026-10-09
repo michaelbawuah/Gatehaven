@@ -92,7 +92,8 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Manual / shortcuts / circuit lessons / recovery | F1 / F2 / F3 / F4 |
 | Navigate controls / activate | Tab or Shift+Tab / Enter |
 | Keyboard canvas / use tool | F9, arrows / Enter |
-| Inspect cell / single step in cursor mode | F8 / F10 |
+| Inspect cell or focused control / single step in cursor mode | F8 / F10 |
+| High contrast / window summary | F11 / F12 |
 | Touch pan and zoom | Two fingers on the canvas |
 | Toggle beginner hints | B |
 
@@ -110,7 +111,7 @@ another window updates it. Closing the last instance clears clipboard contents.
 After an abrupt shutdown of every instance, the next launch clears abandoned data.
 
 The binding markers identify left (red), right (blue), middle (green), X1 (cyan),
-X2 (magenta), and touch (yellow). Bindings, speed, and beginner hints are saved
+X2 (magenta), and touch (yellow). Bindings, speed, high contrast, and beginner hints are saved
 when the window closes; the last window to save determines the next launch's
 preferences. One finger uses its binding; two fingers pan and pinch the canvas.
 Recovery snapshots protect unsaved work separately from session clipboards; F4

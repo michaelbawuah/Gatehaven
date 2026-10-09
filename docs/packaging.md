@@ -51,7 +51,24 @@ built binaries, and include launcher/MIME resources. Install only the package
 for your architecture and a compatible distribution. CI extracts the package
 into a temporary directory, checks metadata/resources, and executes the CLI.
 DMGs are verified, mounted read-only, inspected, and unmounted by the test.
-These checks do not install into the CI host's system directories.
+The macOS test also copies the bundle to a path containing spaces and non-ASCII
+text, then checks desktop launch, bundled lessons/notices, and offline help from
+another working directory. Linux extraction and macOS checks do not install into
+the CI host's system directories.
+
+Separate Linux x64 and ARM64 jobs install the actual DEB into a newly created
+Ubuntu 24.04 container. They launch the app/CLI, verify the MIME cache created by
+the package hooks, reinstall the same version, remove, and purge. User circuit
+and settings fixtures must survive. The report records the package hash and the
+resolved container image ID/digest. Run the same check with Docker:
+
+```sh
+python tools/check_deb_container.py build/app build/deb-lifecycle.json
+```
+
+This uses a disposable container, not a full desktop VM. Reinstalling the same
+version does not establish upgrades from an earlier release. Native dialogs,
+file-manager integration and physical hardware still need manual acceptance.
 
 Every installer has a SHA-256 sidecar and is included in its architecture's
 Actions artifact. DMGs remain unsigned and unnotarized; no build step bypasses
@@ -67,8 +84,15 @@ handler and does not change PATH. Uninstall removes only its own association;
 saved circuits, preferences, shared sessions, and recovery data are retained.
 
 Windows CI installs into a temporary path, launches both executables, checks the
-quoted file-open command, and uninstalls. This uses the disposable CI machine;
+quoted file-open command, reinstalls, and uninstalls. It checks that user circuit
+fixtures and unknown files in the install directory survive, existing default
+handler values remain unchanged, and Open With entries are recreated then
+removed appropriately. This uses the disposable CI machine;
 interactive clean-machine and signing acceptance still remain.
+
+The [signing preparation guide](signing.md) covers credentialed Windows ZIP and
+macOS DMG workflows. The ordinary CI pipeline never presents its unsigned previews
+as signed releases.
 
 ## Linux AppImage
 

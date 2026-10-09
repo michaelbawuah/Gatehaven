@@ -34,7 +34,7 @@ def inspect_stage(stage, target):
     if (metadata.get("schema") != 1 or metadata.get("product") != "Gatehaven"
             or metadata.get("target", {}).get("system") != expected_system
             or not re.fullmatch(r"[0-9a-f]{40}", metadata.get("source_revision", ""))):
-        raise ValueError("stage must identify a clean Gatehaven commit and the requested native target")
+        raise ValueError("stage must identify a Gatehaven commit and the requested native target")
     binaries = ["bin/gatehaven-cli.exe", "bin/gatehaven.exe"] if target == "windows" else [
         "bin/gatehaven-cli", "gatehaven.app/Contents/MacOS/gatehaven"]
     for relative in binaries + ["share/gatehaven/docs/manual.html", "share/gatehaven/third_party/SDL3/LICENSE.txt"]:

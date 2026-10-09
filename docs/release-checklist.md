@@ -11,11 +11,11 @@ manual checks below. A final release requires evidence for each supported target
 | External behavior | 860 dormant/active-screen observations; live byte streams, EOF/reload/order; explicit differences | Additional user circuits, physical interactions, acceptance of listed differences |
 | Performance | Repeated dormant/active input timings, verified live I/O, software render/culling measurements | Native GPU rendering, physical input latency and slow-storage behavior |
 | Native builds | Core and SDL jobs for Linux x64/ARM64, macOS Intel/ARM64, Windows x64/ARM64 | Exact candidate run must pass; confirm release compiler/OS choices |
-| Packaging | Archives, DEB, DMG, Windows x64 NSIS, Linux AppImage, hashes and relocation checks | Install/open/upgrade/uninstall on clean machines |
+| Packaging | Archives/installers and hashes; relocated Mac bundle; Windows reinstall/data preservation; fresh Ubuntu container lifecycle jobs | Exact candidate jobs must pass; install/open/upgrade/uninstall on clean machines |
 | Displays | Dummy rendering/coordinate conversion; X11 and Wayland virtual-display CI checks | Confirm candidate display jobs; physical HiDPI/per-monitor moves, resize and minimize |
-| Input | Mouse buttons, synthetic multitouch, keyboard cursor and native text inspection | Physical touch, keyboard layouts, screen readers, contrast/zoom review |
+| Input | Mouse buttons, synthetic multitouch, keyboard cursor, focused-control/window text and saved high contrast | Physical touch, keyboard layouts, screen readers, full contrast/zoom review |
 | Native dialogs | Callback cancellation/error/lifetime tests; selection rules | Actual dialogs, Unicode paths, cancel, shutdown while pending on each OS |
-| Signing | Preview artifacts are deliberately marked unsigned | Configure release identities; sign/verify Windows and sign/notarize/staple macOS |
+| Signing | Credentialed workflow prepared with failure-path tests; ordinary CI previews remain unsigned | Configure identities; run [signing](signing.md), verify downloaded artifacts on clean machines |
 | Recovery | Process-kill, ownership, deletion and failed-replacement checks | Real interruption and restore/save workflows on each target |
 | Distribution | Dependency notices and reproducible dependency pins | Decide the application license and final release/update policy |
 
@@ -34,6 +34,9 @@ for failures. Leave untested scenarios explicitly pending.
    one, and continue in the survivor. Check undo/redo and clipboard transforms.
 4. Move between monitors, resize, minimize/restore, and test one- and two-finger
    gestures. Confirm no stuck drawing or screen holds after focus loss.
+   Use Tab/F8 to describe controls, F9 to navigate cells, F11 to toggle contrast,
+   and F12 to read the window summary. Reopen and confirm the contrast preference.
+   Review crossings with only one powered axis, high zoom, and screen-reader behavior.
 5. Cancel each native file dialog and close while a dialog is pending. Confirm
    circuits do not choose communicator paths; connect explicit test files only.
 6. Exercise active serial input/output, reopen changed files, merge/split groups,
