@@ -82,11 +82,14 @@ jobs:
           -DSDL_VULKAN=OFF -DSDL_AUDIO=OFF -DSDL_HAPTIC=OFF -DSDL_JOYSTICK=OFF -DSDL_SENSOR=OFF
       - run: cmake --build build/deps/sdl-build --config Release --parallel 2
       - run: cmake --install build/deps/sdl-build --config Release
+      - name: Install pinned Windows installer compiler
+        if: runner.os == 'Windows' && runner.arch == 'X64'
+        run: choco upgrade nsis --version=3.13 --allow-downgrade --no-progress -y
       - name: Build desktop application
         run: >-
           cmake -S . -B build/app -DGATEHAVEN_BUILD_APP=ON -DGATEHAVEN_BUILD_PACKAGES=ON -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_PREFIX_PATH=${{ github.workspace }}/build/deps/sdl-install
-          ${{ runner.os != 'Windows' && '-DGATEHAVEN_BUILD_INSTALLERS=ON' || '' }}
+          ${{ (runner.os != 'Windows' || runner.arch == 'X64') && '-DGATEHAVEN_BUILD_INSTALLERS=ON' || '' }}
       - run: cmake --build build/app --config Release --parallel 2
       - run: ctest --test-dir build/app -C Release --output-on-failure
       - name: Render the starter circuit
@@ -98,7 +101,7 @@ jobs:
       - name: Verify uploaded archive contents and checksum
         run: python tests/archive_test.py build/app
       - name: Verify unsigned native installer
-        if: runner.os != 'Windows'
+        if: runner.os != 'Windows' || runner.arch == 'X64'
         run: python tests/installer_test.py build/app
       - name: Upload native preview
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -110,6 +113,7 @@ jobs:
             build/app/Gatehaven-*.zip
             build/app/Gatehaven-*.tar.gz
             build/app/Gatehaven-*.dmg
+            build/app/Gatehaven-*.exe
             build/app/gatehaven_*.deb
             build/app/*.sha256
             build/app/gatehaven*.bmp
