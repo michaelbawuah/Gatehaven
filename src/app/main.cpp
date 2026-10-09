@@ -338,7 +338,7 @@ public:
             pan_button_.reset(); pan_origin_.reset();
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
-            const auto end = view.cell(e.button.x, e.button.y);
+            const auto end = view.area.contains(e.button.x, e.button.y) ? view.cell(e.button.x, e.button.y) : std::nullopt;
             if (end) {
                 update_preview(*end);
                 if (drag_tool_.kind == ToolKind::selector) {
