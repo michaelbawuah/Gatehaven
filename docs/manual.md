@@ -125,3 +125,10 @@ Packaged builds include browser-readable guides. F1 opens the installed manual,
 including the file-port protocol and simulation notes, without an internet
 connection. Browser zoom, text selection, search, and printing work normally.
 A development build without generated guides falls back to the repository copy.
+
+### Saved and reset levels
+
+Opening a circuit establishes tick-zero power immediately. Sources and saved gate
+outputs power connected wires before the first Step. Reset uses the circuit's
+stored reset levels; Step then advances every gate/relay from the preceding tick.
+Editing while paused updates wire connectivity immediately.

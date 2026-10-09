@@ -132,12 +132,14 @@ public:
     explicit App(SDL_Window* window, ClipboardSession& clipboards,
                  ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo, OverwritePrompt overwrite = confirm_overwrite)
         : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)), confirm_overwrite_(std::move(overwrite)) {
+        simulation.initialize(circuit);
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
     }
 
     void start_blank() {
         circuit.clear();
+        simulation.initialize(circuit);
         view.frame(std::nullopt);
         status_ = "NEW CIRCUIT - CHOOSE A COMPONENT TO BEGIN";
     }
@@ -148,6 +150,7 @@ public:
         auto example = make_example(name);
         if (!example) return false;
         circuit = std::move(*example);
+        simulation.initialize(circuit);
         view.frame(circuit.bounds());
         status_ = "EXAMPLE: " + std::string(name) + " - I: INTERACT, SPACE: PLAY";
         return true;
@@ -220,7 +223,7 @@ public:
         circuit = std::move(*loaded);
         path_ = path; disk_version_ = *after;
         history.clear();
-        simulation.reset();
+        simulation.initialize(circuit);
         endpoints_.clear();
         selection_.clear();
         placing_ = false;
@@ -622,6 +625,7 @@ private:
         if (*result) {
             
             simulation.invalidate(history.last_changes());
+            simulation.refresh(circuit);
             endpoints_.prune(circuit);
             status_ = "CIRCUIT UPDATED";
         }
@@ -904,6 +908,7 @@ private:
         if (redo ? history.redo(circuit) : history.undo(circuit)) {
             selection_.clear(); placing_ = false;
              simulation.invalidate(history.last_changes());
+            simulation.refresh(circuit);
             endpoints_.prune(circuit);
             status_ = redo ? "REDONE" : "UNDONE";
         }
@@ -920,7 +925,7 @@ private:
             return received;
         });
     }
-    void reset_simulation() { simulation.reset(); endpoints_.reset_protocols(); accumulator_ = 0; }
+    void reset_simulation() { simulation.initialize(circuit, true); endpoints_.reset_protocols(); accumulator_ = 0; }
 
     void polyline_preview(Point target) {
         const auto result = polyline_->preview(target, view.visible());
@@ -983,7 +988,7 @@ private:
         auto restored = recovery_->restore(recovery_entries_[index].id);
         if (!restored) { status_ = "RECOVERY: " + restored.error(); return; }
         cancel_gesture(); circuit = std::move(*restored); path_.clear();
-        history.clear(); history.mark_unsaved(); simulation.reset(); endpoints_.clear();
+        history.clear(); history.mark_unsaved(); simulation.initialize(circuit); endpoints_.clear();
         selection_.clear(); placing_ = false; running = false; recovery_menu_ = false;
         recovery_dirty_ = true; recovery_schedule_.written(circuit.revision());
         view.frame(circuit.bounds()); status_ = "CIRCUIT RECOVERED - SAVE TO KEEP YOUR WORK";
