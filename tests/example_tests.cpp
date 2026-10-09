@@ -11,6 +11,14 @@ TEST("screen-switch example demonstrates two distinct signal delays") {
     sim.step(c, held); CHECK(sim.powered({6, 0}) && !sim.sent({10, 0}));
     sim.step(c, held); CHECK(sim.sent({10, 0}));
 }
+TEST("relay examples expose opposite control behavior without accidental power bypass") {
+    for (const bool negative : {false, true}) for (const bool pressed : {false, true}) {
+        const auto c = relay_demo_circuit(negative); Simulation sim;
+        const Simulation::Exchange input = [&](const CommunicatorGroup& group, bool) { return pressed && group.id == Point{0, 4}; };
+        sim.step(c, input); sim.step(c, input);
+        CHECK(sim.powered({3, 0}) == (negative != pressed));
+    }
+}
 
 TEST("starter output turns on after two steps and its crossing stays isolated") {
     const auto circuit = starter_circuit();

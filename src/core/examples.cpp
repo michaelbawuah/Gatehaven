@@ -32,6 +32,17 @@ Circuit screen_switch_circuit() {
     return c;
 }
 
+Circuit relay_demo_circuit(bool negative) {
+    Circuit c;
+    c.set({-4, 0}, Element::source);
+    for (Coordinate x = -3; x <= 3; ++x) if (x != 0) c.set({x, 0}, Element::wire);
+    c.set({0, 0}, negative ? Element::negative_relay : Element::positive_relay);
+    c.set({4, 0}, Element::signal); c.set({5, 0}, Element::screen);
+    c.set({0, 1}, Element::signal); c.set({0, 2}, Element::wire);
+    c.set({0, 3}, Element::wire); c.set({0, 4}, Element::screen);
+    return c;
+}
+
 Circuit oscillator_circuit() {
     Circuit c;
     c.set({0, 0}, Element::nor_gate);
