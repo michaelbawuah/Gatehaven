@@ -146,6 +146,10 @@ public:
     }
 
     void update(double elapsed) {
+        const auto file_name = path_.filename().u8string();
+        const std::string title = (history.modified() ? "* " : "") +
+            (path_.empty() ? std::string("Untitled") : std::string(file_name.begin(), file_name.end())) + " - Gatehaven";
+        if (title != title_) { SDL_SetWindowTitle(window_, title.c_str()); title_ = title; }
         std::optional<DialogResult> result;
         {
             const std::lock_guard lock(mailbox_->mutex);
@@ -369,6 +373,7 @@ private:
     unsigned clipboard_{};
     std::optional<char> clipboard_menu_;
     std::filesystem::path path_;
+    std::string title_;
     std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
     unsigned speed_{5};
