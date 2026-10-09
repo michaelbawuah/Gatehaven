@@ -65,3 +65,11 @@ TEST("sparse selection movement retains levels and clears removed cells") {
     History history; CHECK(history.apply(circuit, moved->edits).value());
     CHECK(circuit.saved_state({5, 7}) == 2 && circuit.at({0, 0}) == Element::empty);
 }
+
+TEST("connected selection follows Source-to-Signal edges but stops at control outputs") {
+    Circuit circuit; circuit.set({0, 0}, Element::source); circuit.set({1, 0}, Element::signal);
+    circuit.set({2, 0}, Element::or_gate);
+    const auto selected = connected_selection(circuit, {0, 0}, false);
+    CHECK(selected.size() == 2 && selected.points().contains({1, 0}));
+    CHECK(!selected.points().contains({2, 0}));
+}

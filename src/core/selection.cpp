@@ -16,7 +16,7 @@ Selection connected_selection(const Circuit& circuit, Point seed, bool physical)
     if (circuit.at(seed) == Element::empty) return {};
     std::map<Point, std::uint8_t> visited{{seed, std::uint8_t{15}}};
     std::vector<std::pair<Point, std::uint8_t>> queue{{seed, std::uint8_t{15}}};
-    const auto wire = [](Element e) { return e == Element::wire || e == Element::crossing || e == Element::signal; };
+    const auto wire = [](Element e) { return e == Element::wire || e == Element::crossing || e == Element::signal || e == Element::source; };
     for (std::size_t head = 0; head < queue.size(); ++head) {
         const auto [point, ports] = queue[head];
         const auto from = circuit.at(point);
