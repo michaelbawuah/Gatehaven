@@ -17,7 +17,8 @@ bool Circuit::set(Point point, Element element) {
     if (static_cast<std::size_t>(element) >= element_names.size()) {
         throw std::invalid_argument("Invalid circuit element");
     }
-    if (at(point) == element) return false;
+    const auto before = at(point);
+    if (before == element) return false;
     if (element == Element::empty) {
         const auto row = rows_.find(point.y);
         row->second.erase(point.x);
@@ -28,12 +29,15 @@ bool Circuit::set(Point point, Element element) {
         if (!row.contains(point.x)) ++size_;
         row.insert_or_assign(point.x, element);
     }
+    if (before != Element::empty) --counts_[static_cast<std::size_t>(before)];
+    if (element != Element::empty) ++counts_[static_cast<std::size_t>(element)];
     return true;
 }
 
 void Circuit::clear() {
     rows_.clear();
     size_ = 0;
+    counts_.fill(0);
 }
 
 std::vector<Cell> Circuit::cells() const {

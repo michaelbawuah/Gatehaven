@@ -11,6 +11,15 @@ TEST("communicator element identifiers round trip by name") {
     }
     CHECK(!is_communicator(Element::signal));
 }
+TEST("element counts remain exact through replacements no-ops copies and clear") {
+    Circuit c;
+    c.set({0, 0}, Element::wire); c.set({1, 0}, Element::wire); c.set({1, 0}, Element::wire);
+    CHECK(c.count(Element::wire) == 2);
+    c.set({1, 0}, Element::screen); CHECK(c.count(Element::wire) == 1 && c.count(Element::screen) == 1);
+    const auto copied = c; CHECK(copied.count(Element::screen) == 1);
+    c.set({1, 0}, Element::empty); CHECK(c.count(Element::screen) == 0);
+    c.clear(); CHECK(c.count(Element::wire) == 0 && c.count(Element::empty) == 0);
+}
 
 TEST("sparse cells support negative and extreme coordinates") {
     Circuit circuit;
