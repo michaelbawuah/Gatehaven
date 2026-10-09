@@ -1,6 +1,7 @@
 #include "gatehaven/file_io.hpp"
 #include <chrono>
 #include <fstream>
+#include <limits>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -11,7 +12,7 @@ namespace gatehaven {
 std::expected<std::string, std::string> read_bounded_file(const std::filesystem::path& path, std::size_t limit) {
     try {
         const auto size = std::filesystem::file_size(path);
-        if (size > limit) return std::unexpected("File exceeds size limit");
+        if (size > limit || size > static_cast<std::uintmax_t>(std::numeric_limits<std::streamsize>::max())) return std::unexpected("File exceeds size limit");
         std::ifstream in(path, std::ios::binary);
         std::string bytes(static_cast<std::size_t>(size), '\0');
         if (!in.read(bytes.data(), static_cast<std::streamsize>(size)) || in.peek() != EOF) return std::unexpected("Could not read file");
@@ -19,6 +20,7 @@ std::expected<std::string, std::string> read_bounded_file(const std::filesystem:
     } catch (const std::exception& e) { return std::unexpected(e.what()); }
 }
 std::expected<void, std::string> replace_file(const std::filesystem::path& path, std::string_view bytes) {
+    if (bytes.size() > static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())) return std::unexpected("File exceeds stream size limit");
     const auto token = std::chrono::steady_clock::now().time_since_epoch().count();
     for (unsigned attempt = 0; attempt < 32; ++attempt) {
         auto temporary = path;
