@@ -55,6 +55,9 @@ if(GATEHAVEN_BUILD_APP)
     add_executable(gatehaven src/app/main.cpp src/app/font.cpp src/app/instances.cpp)
     target_link_libraries(gatehaven PRIVATE gatehaven_platform SDL3::SDL3)
     gatehaven_defaults(gatehaven)
+    add_custom_target(gatehaven_snapshot
+        COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven.bmp
+        DEPENDS gatehaven VERBATIM)
     if(APPLE)
         set_target_properties(gatehaven PROPERTIES MACOSX_BUNDLE TRUE
             MACOSX_BUNDLE_GUI_IDENTIFIER "com.michaelbaffourawuah.gatehaven"
@@ -70,8 +73,8 @@ endif()
 
 if(GATEHAVEN_BUILD_TESTS)
     enable_testing()
-    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp tests/clipboard_codec_tests.cpp)
-    target_link_libraries(gatehaven_tests PRIVATE gatehaven_core)
+    add_executable(gatehaven_tests tests/main.cpp tests/circuit_tests.cpp tests/simulation_tests.cpp tests/document_tests.cpp tests/editor_tests.cpp tests/example_tests.cpp tests/viewport_tests.cpp tests/clipboard_codec_tests.cpp tests/process_tests.cpp)
+    target_link_libraries(gatehaven_tests PRIVATE gatehaven_platform)
     gatehaven_defaults(gatehaven_tests)
     add_test(NAME gatehaven_core COMMAND gatehaven_tests)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
