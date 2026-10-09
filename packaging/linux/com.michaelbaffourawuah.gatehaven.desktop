@@ -7,5 +7,5 @@ Icon=gatehaven
 Terminal=false
 Categories=Education;Science;Electronics;
 Keywords=Logic;Circuit;Simulation;
-MimeType=application/x-gatehaven;
+MimeType=application/x-gatehaven;application/x-ccsb;
 StartupNotify=true
