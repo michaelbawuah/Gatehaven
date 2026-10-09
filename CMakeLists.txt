@@ -62,8 +62,9 @@ if(GATEHAVEN_BUILD_APP)
     endif()
     if(WIN32)
         add_custom_command(TARGET gatehaven POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:gatehaven> $<TARGET_FILE_DIR:gatehaven>
-            COMMAND_EXPAND_LISTS)
+            COMMAND ${CMAKE_COMMAND} "-DGH_RUNTIME_DLLS=$<JOIN:$<TARGET_RUNTIME_DLLS:gatehaven>,|>"
+                "-DGH_DEST=$<TARGET_FILE_DIR:gatehaven>" -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_runtime.cmake
+            VERBATIM)
     endif()
 endif()
 
