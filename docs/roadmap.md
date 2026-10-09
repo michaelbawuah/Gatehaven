@@ -51,8 +51,15 @@ comparisons, AppImage previews, keyboard canvas construction, and native cell
 inspection. The matching corpus is explicit; the Source/Signal specification
 difference is documented and tested separately.
 
+Saved high contrast, text descriptions of focused controls, and a window summary
+now supplement keyboard navigation. Installer checks include fresh Ubuntu
+container lifecycle jobs, Windows reinstall preservation, and relocated Mac
+bundles. A credentialed signing/notarization workflow is prepared with automated
+failure checks; ordinary CI downloads remain unsigned.
+
 Next: screen-reader review, physical display/touch/dialog acceptance,
-clean-machine installation, and release signatures. See the [acceptance matrix](release-checklist.md).
+clean-machine installation, release signatures with real credentials, and the
+client's acceptance playthrough. See the [acceptance matrix](release-checklist.md).
 Active-screen comparisons, live input/output protocol comparisons, endpoint
 routing benchmarks, software rendering measurements, and virtual X11/Wayland
 checks are implemented. All six dormant and active-screen sample medians improved

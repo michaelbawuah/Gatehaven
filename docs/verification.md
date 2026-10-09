@@ -186,3 +186,28 @@ No application change was needed for that workspace artifact.
 Virtual displays do not certify physical devices, native dialogs, screen readers,
 GPU performance or signed clean-machine installation. Those remain in the
 [release acceptance matrix](release-checklist.md).
+
+## Accessibility and packaging follow-up, 9 October 2026
+
+Local GNU 13.3 / SDL 3.4.18 checks pass **160/160 core/platform cases**,
+**12/12 desktop suites**, **12/12 Release suites**, and **9/9 ASan/UBSan suites**
+(the same local leak-detection limitation applies). The installed desktop renders
+eleven distinct UI states. A high-contrast frame was visually reviewed; powered
+crossing axes retain independent width and color. Preference migration preserves
+version-one settings. Focused-control descriptions and the window summary are
+covered by desktop event tests, including elapsed-time handling around dialogs.
+
+Linux archive/DEB extraction, checksum, metadata, executable and maintainer-hook
+checks pass locally. Two new CI jobs exercise actual install/reinstall/remove/
+purge in fresh Ubuntu containers on x64 and ARM64. Windows checks now exercise
+same-version replacement and user-file/default-handler preservation; macOS checks
+exercise a relocated bundle from another working directory. Those native jobs
+must pass on the exact published commit before their results are accepted.
+
+Seven signing-workflow tests cover signature warnings/failures, both rejected
+notarization submissions, existing-output preservation, and metadata/credential
+selection checks. They use inert fixtures and simulated native tools. Native
+installed-stage planning is checked on Windows/macOS; no real certificate or
+notarization service has been used. See [signing setup](signing.md) for the
+credentialed workflow and [release acceptance](release-checklist.md) for the
+remaining physical-device, screen-reader, clean-machine and client checks.
