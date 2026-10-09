@@ -80,4 +80,41 @@ std::vector<Cell> Selection::cells(const Circuit& circuit) const {
     }
     return result;
 }
+
+Stamp capture_selection(const Circuit& circuit, const Selection& selection) {
+    const auto region = selection.bounds();
+    if (!region) return {};
+    Stamp stamp{static_cast<std::int64_t>(region->max.x) - region->min.x + 1,
+                static_cast<std::int64_t>(region->max.y) - region->min.y + 1, {}};
+    for (const auto& cell : selection.cells(circuit)) {
+        stamp.cells.push_back({static_cast<std::int64_t>(cell.position.x) - region->min.x,
+                               static_cast<std::int64_t>(cell.position.y) - region->min.y, cell.element});
+    }
+    return stamp;
+}
+
+std::expected<ShapeEdit, std::string> place_selection(const Circuit& circuit, const Selection& selection,
+                                                    const Stamp& stamp, Point origin) {
+    if (stamp.width <= 0 || stamp.height <= 0) return std::unexpected("Selection is empty");
+    const auto corner = translated(origin, stamp.width - 1, stamp.height - 1);
+    const auto target = paste(stamp, origin);
+    if (!corner || !target) return std::unexpected("Selection exceeds coordinate limits");
+    ShapeEdit result;
+    result.edits = selection.cells(circuit);
+    for (auto& cell : result.edits) cell.element = Element::empty;
+    result.edits.insert(result.edits.end(), target->begin(), target->end());
+    std::set<Point> selected;
+    for (const auto& cell : *target) selected.insert(cell.position);
+    result.selection = Selection::points(std::move(selected));
+    result.selection.set_frame({origin, *corner});
+    return result;
+}
+
+std::expected<ShapeEdit, std::string> move_selection(const Circuit& circuit, const Selection& selection,
+                                                   std::int64_t dx, std::int64_t dy) {
+    if (!selection) return std::unexpected("Select a region first");
+    const auto origin = translated(selection.bounds()->min, dx, dy);
+    if (!origin) return std::unexpected("Selection exceeds coordinate limits");
+    return place_selection(circuit, selection, capture_selection(circuit, selection), *origin);
+}
 }
