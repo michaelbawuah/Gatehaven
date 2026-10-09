@@ -7,7 +7,7 @@ operating-system file dialogs.
 
 ## Verified locally
 
-- 39 core/platform test cases pass in the local debug build. Parameterized cases
+- 73 core/platform test cases pass in the local debug build. Parameterized cases
   exercise all four gates with zero through four inputs and every active-input
   count, relay behavior, delayed rising/falling edges, crossing isolation,
   deterministic insertion order, and coordinate boundaries.
@@ -28,12 +28,29 @@ operating-system file dialogs.
   eyedropper sampling, rebound panning, and a rendered frame. New/Open requests
   are checked for document preservation, and a real child executable runs the
   headless smoke workflow independently.
+- The expanded SDL workflow covers snapped polylines and retracing, connected
+  selection, Shift-add/Alt-subtract selection, sparse duplication, example-menu
+  navigation, screen holds/releases, repaint preservation, and dropped-file opens.
+- Communicator checks cover adjacency groups, previous-tick sending, every byte
+  value through both protocol decoding and a simulated file-output circuit,
+  reserved commands, queue bounds, I/O failures, EOF resumption, merge/split file
+  ownership, and reset without rewinding streams.
+- CLI integration checks parse JSON statistics, CSV tick traces, SVG diagrams,
+  six generated lessons, and failure exit codes from real files.
+- Five desktop CTest suites pass: core/platform, CLI, cross-process clipboards,
+  installed-product checks, and SDL desktop events. The installed app runs from
+  a fresh directory containing spaces and renders seven distinct UI states.
+- A local CPack archive was generated and its SHA-256, executable locations,
+  six lessons, manuals, and exact SDL notice bytes were verified. CI performs
+  these checks before uploading native preview packages.
 - A starter-circuit screenshot was rendered from the application and visually
   inspected. Small-font rasterization and connection drawing were corrected.
 - AddressSanitizer and UndefinedBehaviorSanitizer checks run separately from the
   normal build. Local leak detection is unavailable because this environment
   blocks LeakSanitizer's `/proc` task inspection; the GitHub job keeps leak
   detection enabled so that check can run on a normal runner.
+- All three local sanitizer suites pass with ASan and UBSan enabled. The core,
+  CLI, and separate clipboard processes are included in that run.
 
 ## Cross-platform milestone
 
@@ -54,6 +71,8 @@ One release-build run of the wire-chain workload (10,000 cells, 20 timed steps,
 one untimed warm-up) took 123.609 ms total, or 6.18046 ms per step. The benchmark
 verifies that every cell is powered before reporting a result. This is a local
 baseline, not a cross-machine score or proof of performance parity.
+See [the repeated 0.2 measurements](performance.md) for chain, grid, gate, and
+communicator workloads, including run-to-run ranges and remaining profiling work.
 
 ## Still to verify
 
@@ -64,5 +83,7 @@ baseline, not a cross-machine score or proof of performance parity.
 - File-dialog cancellation and shutdown on each supported operating system.
 - Platform and compiler versions for release targets, including each CPU architecture.
 - ThreadSanitizer for any future shared state or simulation workers.
-- Final packages, file associations, signing, and clean-machine installation.
-- Legacy file import, communicator protocols, and comprehensive compatibility checks.
+- Native file associations, signing, and clean-machine installation. Automated
+  package tests validate contents and execution on the build host only.
+- Legacy file import, external protocol compatibility, and comprehensive
+  acceptance against the remaining product brief.

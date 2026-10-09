@@ -52,6 +52,8 @@ Glyph glyph(char c) {
     case '-': return {0,0,0,31,0,0,0};
     case '/': return {1,1,2,4,8,16,16};
     case ':': return {0,4,4,0,4,4,0};
+    case ';': return {0,4,4,0,4,4,8};
+    case '_': return {0,0,0,0,0,0,31};
     case '.': return {0,0,0,0,0,4,4};
     case ',': return {0,0,0,0,4,4,8};
     case '[': return {14,8,8,8,8,8,14};
