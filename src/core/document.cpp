@@ -88,11 +88,12 @@ std::expected<Circuit, DocumentError> read_document(std::istream& input, Documen
 
 std::expected<void, DocumentError> write_document(std::ostream& output, const Circuit& circuit) {
     output << "GATEHAVEN 1\n";
-    for (const auto& cell : circuit.cells()) {
+    circuit.visit({{std::numeric_limits<Coordinate>::min(), std::numeric_limits<Coordinate>::min()},
+                   {std::numeric_limits<Coordinate>::max(), std::numeric_limits<Coordinate>::max()}}, [&](const Cell& cell) {
         // to_chars through to_string is independent of the stream's number locale.
         output << std::to_string(cell.position.x) << ' ' << std::to_string(cell.position.y)
                << ' ' << name(cell.element) << '\n';
-    }
+    });
     if (!output) return std::unexpected(DocumentError{0, "Could not write document"});
     return {};
 }
