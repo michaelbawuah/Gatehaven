@@ -1,0 +1,25 @@
+#include "test.hpp"
+#include "gatehaven/examples.hpp"
+#include "gatehaven/simulation.hpp"
+
+using namespace gatehaven;
+
+TEST("starter output turns on after two steps and its crossing stays isolated") {
+    const auto circuit = starter_circuit();
+    Simulation sim;
+    sim.step(circuit);
+    CHECK(!sim.powered({8, 0}));
+    sim.step(circuit);
+    CHECK(sim.powered({8, 0}));
+    CHECK(sim.powered({8, 7}));
+    CHECK(!sim.powered({0, 10}));
+}
+
+TEST("feedback oscillator alternates without depending on real time") {
+    const auto circuit = oscillator_circuit();
+    Simulation sim;
+    for (unsigned i = 0; i < 100; ++i) {
+        sim.step(circuit);
+        CHECK(sim.powered({0, 0}) == (i % 2 == 0));
+    }
+}

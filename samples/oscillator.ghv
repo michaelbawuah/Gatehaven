@@ -1,0 +1,10 @@
+GATEHAVEN 1
+# One-step NOR feedback oscillator. Advance with the Right arrow.
+0 0 nor
+1 0 wire
+2 0 wire
+0 1 signal
+2 1 wire
+0 2 wire
+1 2 wire
+2 2 wire
