@@ -1559,6 +1559,11 @@ int main(int argc, char** argv) {
     try {
         const std::string_view mode = argc > 1 ? argv[1] : "";
         if (mode == "--version" && argc == 2) { std::cout << "Gatehaven " << version << " (SDL3)\n"; return 0; }
+        if ((mode == "--help" || mode == "-h") && argc == 2) {
+            std::cout << "Gatehaven [FILE.ghv | --new | --demo=NAME | --version]\n"
+                         "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";
+            return 0;
+        }
         const bool child_test = mode == "--self-test-child";
         const bool testing = mode == "--self-test" || child_test;
         const bool snapshot = mode == "--snapshot";

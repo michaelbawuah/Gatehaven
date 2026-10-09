@@ -41,9 +41,11 @@ static int run_cli(int argc, char** argv) {
         return 0;
     }
     const std::string_view command = argc >= 2 ? argv[1] : "";
+    const bool help = command == "--help" || command == "-h";
     if ((command != "check" && command != "run" && command != "stats" && command != "trace") || argc < 3 || argc > 4 ||
         ((command == "check" || command == "stats") && argc != 3)) {
-        std::cerr << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
+        auto& output = help ? std::cout : std::cerr;
+        output << "Gatehaven CLI\n  gatehaven-cli check FILE.ghv\n"
                      "  gatehaven-cli run FILE.ghv [STEPS]\n"
                      "  gatehaven-cli stats FILE.ghv\n"
                      "  gatehaven-cli trace FILE.ghv [STEPS]\n"
@@ -51,7 +53,7 @@ static int run_cli(int argc, char** argv) {
                      "  gatehaven-cli example FILE.ghv\n"
                      "  gatehaven-cli examples\n  gatehaven-cli example NAME FILE.ghv\n"
                      "  gatehaven-cli --version\n";
-        return 2;
+        return help && argc == 2 ? 0 : 2;
     }
     std::uint64_t steps = 10;
     if (argc == 4) {
