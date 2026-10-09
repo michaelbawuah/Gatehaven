@@ -1,5 +1,6 @@
 #include "test.hpp"
 #include "gatehaven/touch.hpp"
+#include "gatehaven/viewport.hpp"
 #include <cmath>
 #include <limits>
 using namespace gatehaven;
@@ -27,4 +28,15 @@ TEST("pinch computes exact scale and centroid while extra contacts suspend navig
     CHECK(touch.move({1, 1}, {6, 0}).action == TouchAction::navigate);
     touch.clear(); CHECK(touch.size() == 0);
     CHECK(touch.down({1, 1}, {std::numeric_limits<double>::quiet_NaN(), 0}).action == TouchAction::none);
+}
+
+TEST("pinch transformation keeps the world anchor under the moving centroid") {
+    Viewport view; TouchGesture touch;
+    static_cast<void>(touch.down({1, 1}, {500, 300})); static_cast<void>(touch.down({1, 2}, {700, 300}));
+    const auto update = touch.move({1, 2}, {800, 400});
+    const auto world = view.world(update.before.x, update.before.y);
+    view.zoom(update.zoom, update.before.x, update.before.y);
+    view.pan(update.after.x - update.before.x, update.after.y - update.before.y);
+    const auto after = view.world(update.after.x, update.after.y);
+    CHECK(std::abs(world.first - after.first) < 1e-9 && std::abs(world.second - after.second) < 1e-9);
 }
