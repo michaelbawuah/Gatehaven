@@ -234,7 +234,7 @@ public:
             rectangle(r, 12, y, 216, 34, selected ? SDL_Color{225, 241, 236, 255} : white);
             if (selected) rectangle(r, 12, y, 3, 34, teal);
             ui::text(r, 26, y + 10, std::to_string((i + 1) % 10), muted, 1.5F);
-            ui::text(r, 52, y + 10, labels[i], selected ? teal : ink, 1.5F);
+            ui::text(r, 52, y + 9, labels[i], selected ? teal : ink, 2.0F);
         }
         rectangle(r, 12, 566, 216, 34, selecting_ ? SDL_Color{225, 241, 236, 255} : paper);
         ui::text(r, 26, 576, "Q  SELECT REGION", selecting_ ? teal : ink, 1.5F);
@@ -508,11 +508,24 @@ private:
         if (cell.element == Element::wire || cell.element == Element::crossing || cell.element == Element::signal) {
             const auto horizontal = (ports & 10) != 0 ? teal : SDL_Color{99, 117, 128, 255};
             const auto vertical = (ports & 5) != 0 ? teal : SDL_Color{99, 117, 128, 255};
-            rectangle(r, x, y + center - stroke / 2, s, stroke, preview ? orange : horizontal);
-            if (cell.element == Element::crossing) {
+            const auto connected = [&](Direction direction) {
+                const auto next = neighbor(cell.position, direction);
+                return preview || (next && circuit.at(*next) != Element::empty);
+            };
+            const bool east = connected(Direction::east), west = connected(Direction::west);
+            const bool north = connected(Direction::north), south = connected(Direction::south);
+            if (west) rectangle(r, x, y + center - stroke / 2, center + stroke / 2, stroke, preview ? orange : horizontal);
+            if (east) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
+                                center + stroke / 2, stroke, preview ? orange : horizontal);
+            if (cell.element == Element::crossing && (north || south)) {
                 rectangle(r, x + center - stroke, y, stroke * 2, s, paper);
             }
-            rectangle(r, x + center - stroke / 2, y, stroke, s, preview ? orange : vertical);
+            if (north) rectangle(r, x + center - stroke / 2, y, stroke, center + stroke / 2, preview ? orange : vertical);
+            if (south) rectangle(r, x + center - stroke / 2, y + center - stroke / 2,
+                                 stroke, center + stroke / 2, preview ? orange : vertical);
+            if (!north && !south && !east && !west) {
+                rectangle(r, x + center - stroke, y + center - stroke, stroke * 2, stroke * 2, color);
+            }
             if (cell.element == Element::signal) {
                 rectangle(r, x + s * 0.3F, y + s * 0.3F, s * 0.4F, s * 0.4F,
                           powered ? orange : SDL_Color{161, 110, 66, 255});

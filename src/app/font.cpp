@@ -1,6 +1,8 @@
 #include "font.hpp"
 
 #include <array>
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 namespace gatehaven::ui {
@@ -74,8 +76,11 @@ void text(SDL_Renderer* renderer, float x, float y, std::string_view value,
         for (std::size_t row = 0; row < rows.size(); ++row) {
             for (unsigned column = 0; column < 5; ++column) {
                 if ((rows[row] & (1U << (4U - column))) == 0) continue;
-                const SDL_FRect pixel{x + static_cast<float>(column) * scale,
-                                      y + static_cast<float>(row) * scale, scale, scale};
+                const float left = std::round(x + static_cast<float>(column) * scale);
+                const float top = std::round(y + static_cast<float>(row) * scale);
+                const float right = std::round(x + static_cast<float>(column + 1) * scale);
+                const float bottom = std::round(y + static_cast<float>(row + 1) * scale);
+                const SDL_FRect pixel{left, top, std::max(1.0F, right - left), std::max(1.0F, bottom - top)};
                 SDL_RenderFillRect(renderer, &pixel);
             }
         }
