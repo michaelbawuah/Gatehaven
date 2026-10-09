@@ -207,7 +207,8 @@ public:
     void update(double elapsed) {
         if (recovery_) {
             if (recovery_schedule_.poll(circuit.revision(), history.modified(), elapsed)) checkpoint();
-            if (!history.modified() && recovery_dirty_) clear_checkpoint();
+            recovery_cleanup_wait_ = std::max(0.0, recovery_cleanup_wait_ - std::clamp(elapsed, 0.0, 30.0));
+            if (!history.modified() && recovery_dirty_ && recovery_cleanup_wait_ == 0) clear_checkpoint();
         }
         const auto file_name = path_.filename().u8string();
         const std::string title = (history.modified() ? "* " : "") +
@@ -516,6 +517,7 @@ private:
     std::unique_ptr<RecoveryStore> recovery_;
     RecoverySchedule recovery_schedule_;
     bool recovery_dirty_{};
+    double recovery_cleanup_wait_{};
 
     void checkpoint() {
         if (!recovery_ || !history.modified()) return;
@@ -526,8 +528,8 @@ private:
     void clear_checkpoint() {
         if (!recovery_) return;
         const auto cleared = recovery_->discard();
-        if (cleared) recovery_dirty_ = false;
-        else status_ = "RECOVERY CLEANUP FAILED: " + cleared.error();
+        if (cleared) { recovery_dirty_ = false; recovery_cleanup_wait_ = 0; }
+        else { recovery_cleanup_wait_ = 30; status_ = "RECOVERY CLEANUP FAILED: " + cleared.error(); }
     }
 
     void cancel_gesture(bool clear_touch = true) {
