@@ -14,7 +14,11 @@ with tempfile.TemporaryDirectory(prefix="gatehaven recovery ") as directory:
         writer.kill()
         writer.wait(timeout=10)
         assert scan() == [identity], "Process crash failed to release recovery ownership"
-        subprocess.run([binary, directory, "restore", identity], check=True, timeout=10)
+        first = subprocess.Popen([binary, directory, "restore", identity], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        second = subprocess.Popen([binary, directory, "restore", identity], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        first.communicate(timeout=10)
+        second.communicate(timeout=10)
+        assert sorted((first.returncode, second.returncode)) == [0, 1], "Two consumers restored the same snapshot"
         assert scan() == [], "Successful restoration left an abandoned snapshot"
     finally:
         if writer.poll() is None:
