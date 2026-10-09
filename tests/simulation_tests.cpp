@@ -1,4 +1,5 @@
 #include "test.hpp"
+#include "gatehaven/inspection.hpp"
 #include "gatehaven/digest.hpp"
 #include "gatehaven/simulation.hpp"
 
@@ -264,4 +265,18 @@ TEST("dormant communicator graphs settle and wake when an endpoint is attached")
     simulation.step(circuit); CHECK(!simulation.powered({1, 0}));
     simulation.step(circuit); simulation.step(circuit);
     CHECK(simulation.metrics().settled_ticks == 2 && simulation.ticks() == 8);
+}
+
+TEST("plain text inspection distinguishes crossing axes, relay state, and reset levels") {
+    Circuit circuit; circuit.set({-1, 0}, Element::source); circuit.set({0, 0}, Element::crossing);
+    circuit.set({5, 0}, Element::positive_relay, 3); circuit.set({9, 0}, Element::screen);
+    Simulation simulation; simulation.initialize(circuit);
+    const auto crossing = describe_cell(circuit, simulation, {0, 0});
+    CHECK(crossing.find("Horizontal: ON\nVertical: OFF") != std::string::npos);
+    const auto relay = describe_cell(circuit, simulation, {5, 0});
+    CHECK(relay.find("Powered: OFF\nConducting: ON") != std::string::npos);
+    CHECK(relay.find("Reset conductivity: ON") != std::string::npos);
+    CHECK(describe_cell(circuit, simulation, {9, 0}).find("Receiving: OFF") != std::string::npos);
+    CHECK(describe_cell(circuit, simulation, {1, 1}).find("No component here.") != std::string::npos);
+    CHECK(simulation.ticks() == 0 && circuit.saved_state({5, 0}) == 3);
 }

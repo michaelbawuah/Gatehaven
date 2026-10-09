@@ -37,7 +37,7 @@ function(gatehaven_defaults target)
 endfunction()
 
 add_library(gatehaven_core src/core/circuit.cpp src/core/simulation.cpp src/core/document.cpp src/core/editor.cpp src/core/examples.cpp src/core/clipboard_codec.cpp)
-target_sources(gatehaven_core PRIVATE src/core/polyline.cpp src/core/legacy_document.cpp)
+target_sources(gatehaven_core PRIVATE src/core/polyline.cpp src/core/legacy_document.cpp src/core/inspection.cpp)
 target_sources(gatehaven_core PRIVATE src/core/selection.cpp)
 target_sources(gatehaven_core PRIVATE src/core/preferences.cpp)
 target_sources(gatehaven_core PRIVATE src/core/communicator.cpp)
