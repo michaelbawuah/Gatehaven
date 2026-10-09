@@ -94,6 +94,8 @@ jobs:
           SDL_VIDEODRIVER: dummy
       - name: Package development archive and checksum
         run: cmake --build build/app --config Release --target package
+      - name: Verify uploaded archive contents and checksum
+        run: python tests/archive_test.py build/app
       - name: Upload native preview
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
