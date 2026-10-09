@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <map>
+#include <set>
 #include <utility>
 
 namespace gatehaven {
@@ -28,17 +28,22 @@ std::expected<std::vector<Cell>, std::string> pencil_line(Point from, Point to, 
 
 std::expected<bool, std::string> History::apply(Circuit& circuit, std::span<const Cell> edits) {
     last_changes_.clear();
-    std::map<Point, Element> final;
     for (const auto& edit : edits) {
         if (static_cast<std::size_t>(edit.element) >= element_names.size()) {
             return std::unexpected("Invalid element in edit");
         }
-        final.insert_or_assign(edit.position, edit.element);
     }
+    std::vector<Cell> final(edits.begin(), edits.end());
+    // Stable order preserves the last requested value at overlapping coordinates.
+    std::stable_sort(final.begin(), final.end(), [](const Cell& a, const Cell& b) { return a.position < b.position; });
     Command command;
-    for (const auto& [point, element] : final) {
+    command.reserve(std::min(final.size(), max_changes_));
+    for (std::size_t i = 0; i < final.size(); ++i) {
+        if (i + 1 < final.size() && final[i].position == final[i + 1].position) continue;
+        const auto& [point, element] = final[i];
         const auto before = circuit.at(point);
         if (before != element) command.push_back({point, before, element});
+        if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
     }
     if (command.empty()) return false;
     if (command.size() > max_changes_) return std::unexpected("Edit exceeds undo history limit");
