@@ -267,6 +267,7 @@ public:
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
             cancel_gesture(); keyboard_focus_.reset(); accumulator_ = 0; checkpoint();
         }
+        if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) hover_.reset();
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (dialog_pending_) return;
         if (e.type == SDL_EVENT_FINGER_DOWN || e.type == SDL_EVENT_FINGER_MOTION ||
