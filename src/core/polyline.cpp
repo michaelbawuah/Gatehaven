@@ -12,6 +12,7 @@ Point snapped_endpoint(Point from, Point target) {
 std::expected<std::vector<Cell>, std::string> polyline_stroke(
     std::span<const Point> vertices, Element element, std::size_t limit) {
     if (vertices.empty()) return std::vector<Cell>{};
+    if (limit == 0) return std::unexpected("Polyline exceeds edit limit");
     if (vertices.size() > 65536 || static_cast<std::size_t>(element) >= element_names.size()) {
         return std::unexpected("Invalid polyline size or element");
     }
@@ -23,10 +24,10 @@ std::expected<std::vector<Cell>, std::string> polyline_stroke(
             return std::unexpected("Polyline segment must follow a grid axis");
         }
         const auto segment = pencil_line(vertices[i - 1], vertices[i], element, limit);
-        if (!segment || segment->size() > limit - std::min(work, limit)) {
+        if (!segment || segment->size() - 1 > limit - std::min(work, limit)) {
             return std::unexpected("Polyline exceeds edit limit");
         }
-        work += segment->size();
+        work += segment->size() - 1;
         for (const auto& cell : *segment) cells[cell.position] = cell.element;
     }
     if (element == Element::crossing) {

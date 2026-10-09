@@ -41,3 +41,9 @@ TEST("insulated polyline turns conduct while straight portions stay insulated") 
     const auto shortened = line.edits().value();
     CHECK(shortened.back().element == Element::crossing);
 }
+TEST("polyline resource bounds count shared vertices once and reject zero capacity") {
+    const std::array points{Point{0, 0}, Point{2, 0}, Point{2, 2}};
+    CHECK(polyline_stroke(points, Element::wire, 5)->size() == 5);
+    CHECK(!polyline_stroke(points, Element::wire, 4));
+    CHECK(!polyline_stroke(std::span(points).first(1), Element::wire, 0));
+}
