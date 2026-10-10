@@ -88,6 +88,11 @@ if(GATEHAVEN_BUILD_APP)
     target_compile_definitions(gatehaven PRIVATE GATEHAVEN_APP_BUILD_CONFIG="$<CONFIG>")
     target_link_libraries(gatehaven PRIVATE gatehaven_platform SDL3::SDL3)
     gatehaven_defaults(gatehaven)
+    # Optional media harness: uses the actual editor but is never installed.
+    add_executable(gatehaven-demo EXCLUDE_FROM_ALL tools/capture_demo.cpp src/app/font.cpp src/app/symbols.cpp src/app/instances.cpp)
+    target_compile_definitions(gatehaven-demo PRIVATE GATEHAVEN_APP_BUILD_CONFIG="$<CONFIG>")
+    target_link_libraries(gatehaven-demo PRIVATE gatehaven_platform SDL3::SDL3)
+    gatehaven_defaults(gatehaven-demo)
     add_custom_target(gatehaven_snapshot
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven.bmp
         COMMAND gatehaven --snapshot ${CMAKE_CURRENT_BINARY_DIR}/gatehaven-help.bmp help

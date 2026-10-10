@@ -4,8 +4,10 @@ Use the exact candidate commit and archive SHA-256 when recording a result.
 Automated native builds and a developer workstation do not substitute for the
 manual checks below. A final release requires evidence for each supported target.
 
-The [10 October preview record](preview-eacd8f2.md) identifies the
-verified `eacd8f2` candidate, Mac package checks, and remaining manual work.
+The [current preview record](preview-0.5.0.md) identifies the verified
+MIT-licensed `02d810f` candidate and its prepared release assets. The
+[earlier workstation record](preview-eacd8f2.md) preserves the separate Mac
+package checks and their original binary identity.
 
 | Area | Current evidence | Remaining acceptance |
 | --- | --- | --- |
