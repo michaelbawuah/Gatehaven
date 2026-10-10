@@ -55,6 +55,21 @@ constexpr std::array<std::string_view, 13> labels{"Wire", "Crossing", "Power sou
 
 constexpr std::array<std::string_view, 6> binding_names{"LEFT", "RIGHT", "MIDDLE", "X1", "X2", "TOUCH"};
 
+std::string shortcut_text(std::string_view text) {
+    std::string result(text);
+#if defined(__APPLE__)
+    constexpr std::array<std::string_view, 2> from{"Ctrl", "Control"}, to{"Cmd", "Command"};
+    for (std::size_t i = 0; i < from.size(); ++i) {
+        std::size_t position = 0;
+        while ((position = result.find(from[i], position)) != std::string::npos) {
+            result.replace(position, from[i].size(), to[i]);
+            position += to[i].size();
+        }
+    }
+#endif
+    return result;
+}
+
 std::optional<std::size_t> input_button(const SDL_MouseButtonEvent& event) {
     if (event.which == SDL_TOUCH_MOUSEID) return 5;
     switch (event.button) {
@@ -79,6 +94,7 @@ void line(SDL_Renderer* r, float x, float y, float xx, float yy, SDL_Color c) {
 }
 
 struct Button { ViewRect rect; std::string label; };
+constexpr std::array<ViewRect, 3> header_controls{{{842, 69, 136, 23}, {990, 69, 124, 23}, {1126, 69, 124, 23}}};
 constexpr std::array<ViewRect, 3> zoom_buttons{{{1072, 710, 34, 32}, {1110, 710, 100, 32}, {1214, 710, 34, 32}}};
 bool zoom_key(SDL_Keycode key) {
     return key == SDLK_EQUALS || key == SDLK_PLUS || key == SDLK_KP_PLUS || key == SDLK_MINUS || key == SDLK_KP_MINUS;
@@ -443,7 +459,7 @@ public:
                                         {std::max(drag_->x, end->x), std::max(drag_->y, end->y)}};
                     selection_.combine(Selection::rectangle(circuit, region), selection_mode_);
                     selection_changed_ = false;
-                    status_ = "Selection ready - Ctrl C to copy";
+                    status_ = shortcut_text("Selection ready - Ctrl C to copy");
                 } else apply(preview_);
             }
             drag_.reset();
@@ -737,8 +753,9 @@ private:
                 }
                 return;
             }
-            if (ViewRect{990, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); examples_menu_ = true; return; }
-            if (ViewRect{1126, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); help_ = true; return; }
+            if (header_controls[0].contains(e.x, e.y)) { toggle_contrast(); return; }
+            if (header_controls[1].contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); examples_menu_ = true; return; }
+            if (header_controls[2].contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); help_ = true; return; }
             const auto toolbar = buttons(running, speed_);
             for (std::size_t i = 0; i < toolbar.size(); ++i) {
                 if (!toolbar[i].rect.contains(e.x, e.y)) continue;
@@ -831,10 +848,11 @@ private:
     }
 
     static constexpr std::size_t palette_end = 10 + palette.size() + 4;
-    static constexpr std::size_t focus_count = palette_end + 5;
+    static constexpr std::size_t zoom_focus_begin = palette_end + header_controls.size();
+    static constexpr std::size_t focus_count = zoom_focus_begin + zoom_buttons.size();
     ViewRect focus_rect(std::size_t index) const {
-        if (index >= palette_end + 2) return zoom_buttons[index - palette_end - 2];
-        if (index >= palette_end) return {990.0 + static_cast<double>(index - palette_end) * 136, 69, 124, 23};
+        if (index >= zoom_focus_begin) return zoom_buttons[index - zoom_focus_begin];
+        if (index >= palette_end) return header_controls[index - palette_end];
         if (index < 10) return buttons(running, speed_)[index].rect;
         if (index < 10 + palette.size()) return {12, 146 + static_cast<double>(index - 10) * 28, 216, 26};
         return {12, 522 + static_cast<double>(index - 10 - palette.size()) * 28, 216, 26};
@@ -843,20 +861,22 @@ private:
     std::string focus_description() const {
         if (!keyboard_focus_) return "Canvas. F9 enables keyboard navigation; F8 inspects the current cell.";
         const auto index = *keyboard_focus_;
-        if (index >= palette_end + 2) {
+        if (index >= zoom_focus_begin) {
             constexpr std::array<std::string_view, 3> descriptions{"Zoom out. Shortcut: minus.", "Reset zoom to 100 percent. Shortcut: Control 0.", "Zoom in. Shortcut: plus."};
-            return std::string(descriptions[index - palette_end - 2]);
+            return shortcut_text(descriptions[index - zoom_focus_begin]);
         }
-        if (index >= palette_end) return index == palette_end ? "Examples. Open the circuit lesson chooser. Shortcut: F3." : "Quick guide. Open keyboard and editing help. Shortcut: F2.";
+        if (index == palette_end) return std::string("High contrast button. Currently ") + (high_contrast_ ? "on." : "off.") +
+            shortcut_text(" Enter toggles contrast. Shortcut: Control Shift K.");
+        if (index > palette_end) return index == palette_end + 1 ? "Examples. Open the circuit lesson chooser. Shortcut: F3." : "Quick guide. Open keyboard and editing help. Shortcut: F2.";
         if (index < 10) {
             constexpr std::array<std::string_view, 10> descriptions{
                 "Start or pause simulation. Shortcut: Space.", "Pause and advance one tick. Shortcut: F10.",
                 "Restore reset levels and reset the tick counter. Shortcut: R.", "Undo the last edit. Shortcut: Control Z.",
                 "Redo an undone edit. Shortcut: Control Y.", "Open a circuit in another window. Shortcut: Control O.",
                 "Save this circuit. Control Shift S opens Save As.", "Frame the whole circuit. Shortcut: F.",
-                "Set simulation speed from 1 to 1000 ticks per second. Shortcut: Control Space.",
+                "Set simulation speed from 1 to 1000 ticks per second. Shortcut: Control Shift T.",
                 "Open a new empty window. Shortcut: Control N."};
-            return buttons(running, speed_)[index].label + " button. " + std::string(descriptions[index]);
+            return buttons(running, speed_)[index].label + " button. " + shortcut_text(descriptions[index]);
         }
         const auto tool = index < 10 + palette.size() ? InputTool{ToolKind::pencil, palette[index - 10]}
             : InputTool{std::array{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor}[index - 10 - palette.size()]};
@@ -885,10 +905,20 @@ private:
         text += focus_description() + "\n\n";
         if (hover_) text += describe_cell(circuit, simulation, *hover_) + "\n";
         text += "Keyboard: Tab moves through controls; Enter activates; Escape returns to canvas.\n"
-                "F9: canvas navigation. Arrows: move cursor. Enter: use the selected tool.\n"
-                "F8: inspect focus or cell. F10: one tick. F11: contrast. F12: this summary.\n"
+                "F9: canvas navigation. Arrows: move cursor; Control Arrows: four cells. Enter: use the selected tool.\n"
+                "F8: inspect focus or cell. F10: one tick. F12: this summary.\n"
+                "Contrast button or Control Shift K: toggle high contrast (F11 also works if available).\n"
+                "Speed button or Control Shift T: change simulation speed.\n"
                 "F1 opens the offline manual in your browser for text resizing and reading.\n";
-        return text;
+#if defined(__APPLE__)
+        text += "On Mac laptops, hold Fn (or enable standard function keys) for F1-F12. macOS may reserve F11 for Show Desktop; use the Contrast button or Command Shift K.\n";
+#endif
+        return shortcut_text(text);
+    }
+
+    void toggle_contrast() {
+        high_contrast_ = !high_contrast_;
+        status_ = high_contrast_ ? "High contrast on" : "Standard colors";
     }
 
     void key(SDL_KeyboardEvent e) {
@@ -1023,7 +1053,11 @@ private:
                 for (const auto& cell : circuit.cells()) if (!selection_.contains(cell.position)) points.insert(cell.position);
                 selection_ = Selection::points(std::move(points)); selection_changed_ = false; break;
             }
-            case SDLK_SPACE: edit_speed(); break;
+            case SDLK_T: if (shift) edit_speed(); break;
+            case SDLK_K: if (shift) toggle_contrast(); break;
+#if !defined(__APPLE__)
+            case SDLK_SPACE: edit_speed(); break; // Keep the existing non-Mac shortcut as an alias.
+#endif
             default: break;
             }
             return;
@@ -1037,10 +1071,7 @@ private:
         case SDLK_SPACE: running = !running; tick_schedule_.reset(); break;
         case SDLK_RIGHT:
         case SDLK_F10: running = false; tick(); break;
-        case SDLK_F11:
-            high_contrast_ = !high_contrast_;
-            status_ = high_contrast_ ? "High contrast on" : "Standard colors";
-            break;
+        case SDLK_F11: toggle_contrast(); break;
         case SDLK_F9:
             cancel_gesture(); keyboard_focus_.reset();
             if (keyboard_cursor_) { keyboard_cursor_.reset(); status_ = "Pointer navigation"; }
@@ -1333,7 +1364,7 @@ private:
             if (!current) { status_ = current.error(); return false; }
             const bool changed = path == path_ && !path_.empty() && *current != disk_version_;
             if (changed || (completed_name && *current && path != path_)) {
-                if (!confirm_overwrite_(window_, path, changed)) { status_ = "Save canceled - Ctrl Shift S keeps both versions"; return false; }
+                if (!confirm_overwrite_(window_, path, changed)) { status_ = shortcut_text("Save canceled - Ctrl Shift S keeps both versions"); return false; }
             }
         }
         const auto result = save_document(path, simulation.document_snapshot(circuit));
@@ -1405,11 +1436,14 @@ private:
         const auto document = path_.empty() ? std::string("Untitled circuit") : path_utf8(path_.filename());
         ui::label(r, 272, 73, ui::ellipsize(document, 240, 12), theme().ink, 12, Weight::semibold);
         if (history.modified()) ui::rounded(r, 526, 79, 5, 5, theme().orange, 2.5F);
-        ui::label(r, 555, 73, "Space  Run / pause     ·     Pinch or scroll  Zoom", theme().muted, 12);
-        for (std::size_t i = 0; i < 2; ++i) {
-            const ViewRect box{990.0 + static_cast<double>(i) * 136, 69, 124, 23};
-            if (hovered(box)) ui::rounded(r, static_cast<float>(box.x), 69, 124, 23, hover, 5);
-            ui::centered(r, static_cast<float>(box.x), 69, 124, 23, i == 0 ? "Examples  F3" : "Quick guide  F2", theme().muted, 12, Weight::regular);
+        ui::label(r, 555, 73, "Space: Run / pause   ·   + / −: Zoom", theme().muted, 12);
+        const std::array<std::string_view, 3> header_labels{high_contrast_ ? "Contrast: On" : "Contrast: Off", "Examples  F3", "Quick guide  F2"};
+        for (std::size_t i = 0; i < header_controls.size(); ++i) {
+            const auto box = header_controls[i];
+            const auto x = static_cast<float>(box.x), w = static_cast<float>(box.width);
+            if (i == 0) ui::panel(r, x, 69, w, 23, high_contrast_ ? active : hovered(box) ? hover : theme().white, theme().border, 5);
+            else if (hovered(box)) ui::rounded(r, x, 69, w, 23, hover, 5);
+            ui::centered(r, x, 69, w, 23, header_labels[i], i == 0 ? theme().ink : theme().muted, 12, Weight::regular);
         }
         ui::label(r, 22, 116, "COMPONENTS", theme().muted, 11, Weight::semibold);
         ui::label(r, 204, 116, "13", theme().muted, 11);
@@ -1460,7 +1494,7 @@ private:
             const auto shortcut = preview_index < 10 ? std::to_string((preview_index + 1) % 10) : "F" + std::to_string(preview_index - 5);
             ui::label(r, 104, 720, shortcut + "  Select tool", theme().teal, 11);
         }
-        ui::label(r, 22, 745, "Clipboard " + std::to_string(clipboard_) + "  ·  Ctrl Shift C / V", theme().muted, 10.5F);
+        ui::label(r, 22, 745, shortcut_text("Clipboard " + std::to_string(clipboard_) + "  ·  Ctrl Shift C / V"), theme().muted, 10.5F);
         rectangle(r, 0, 764, 1280, 36, theme().white);
         line(r, 0, 764, 1280, 764, theme().border);
         ui::rounded(r, 20, 780, 6, 6, theme().teal, 3);
@@ -1644,7 +1678,7 @@ private:
             second = "Double click centers a cell. f frames the whole circuit.";
         } else if (tools_[0].kind == ToolKind::eraser) {
             first = "Drag to erase a line. shift chains eraser segments.";
-            second = "Ctrl z restores the whole edit.";
+            second = "Ctrl Z restores the whole edit.";
         } else if (tools_[0].kind == ToolKind::interactor) {
             first = "Hold a screen to send power into the circuit.";
             second = "Click a file port to choose its input or output file.";
@@ -1657,7 +1691,7 @@ private:
         }
         ui::panel(r, 254, 690, 730, 60, theme().white, theme().border, 8);
         ui::label(r, 270, 701, first, theme().teal, 13, ui::Weight::semibold);
-        ui::label(r, 270, 726, second, theme().muted, 12);
+        ui::label(r, 270, 726, shortcut_text(second), theme().muted, 12);
     }
 
     void render_help(SDL_Renderer* r) const {
@@ -1672,8 +1706,8 @@ private:
             ui::label(r, x, y, title, theme().ink, 16, ui::Weight::semibold);
             for (std::size_t i = 0; i < shortcuts.size(); ++i) {
                 const float row = y + 33 + static_cast<float>(i) * 25;
-                ui::label(r, x, row, shortcuts[i].keys, theme().teal, 11.5F, ui::Weight::semibold);
-                ui::label(r, x + 138, row, shortcuts[i].description, theme().muted, 12.5F);
+                ui::label(r, x, row, shortcut_text(shortcuts[i].keys), theme().teal, 11.5F, ui::Weight::semibold);
+                ui::label(r, x + 138, row, shortcut_text(shortcuts[i].description), theme().muted, 12.5F);
             }
         };
         group(316, 252, "Create & draw", {{{"1–0", "Choose a component"}, {"F5 / F6 / F7", "Screen / file input / output"},
@@ -1681,12 +1715,12 @@ private:
         group(754, 252, "Select & edit", {{{"Q", "Select a region"}, {"Shift / Alt", "Add / subtract selection"},
             {"Ctrl C / X / V", "Copy / cut / paste"}, {"Ctrl Z / Y / D", "Undo / redo / duplicate"}, {"[ ]  /  H V", "Rotate / flip selection"}, {"Arrow keys", "Move selection; Ctrl = ×4"}}});
         group(316, 467, "Run & explore", {{{"Space", "Run or pause"}, {"F10", "Advance one tick"},
-            {"Ctrl Space", "Change simulation speed"}, {"R", "Reset the simulation"}, {"I", "Interact with a screen / port"}, {"F / scroll", "Fit circuit / zoom"}}});
+            {"Ctrl Shift T", "Change simulation speed"}, {"R", "Reset the simulation"}, {"I", "Interact with a screen / port"}, {"F / scroll", "Fit circuit / zoom"}}});
         group(754, 467, "Files & workspace", {{{"Ctrl S / O / N", "Save / open / new circuit"}, {"Ctrl Shift S", "Save As"},
-            {"Ctrl Shift C / V", "Choose a shared clipboard"}, {"F1 / F3 / F4", "Manual / examples / recovery"}, {"F11 / F12", "Contrast / window details"}, {"Pinch / + −", "Zoom; Ctrl 0 resets to 100%"}}});
+            {"Ctrl Shift C / V", "Choose a shared clipboard"}, {"F1 / F3 / F4", "Manual / examples / recovery"}, {"Ctrl Shift K", "Toggle high contrast"}, {"Pinch / + −", "Zoom; Ctrl 0 resets to 100%"}}});
         line(r, 316, 674, 1154, 674, theme().border);
-        ui::label(r, 316, 690, "Keyboard: Tab focuses controls · Enter activates · F9 navigates cells · F8 describes focus.", theme().muted, 12);
-        ui::label(r, 316, 712, "On Mac, Command also works for Ctrl shortcuts. Click anywhere or press Esc to close.", theme().muted, 12);
+        ui::label(r, 316, 690, "Tab: Focus · Enter: Activate · F9: Navigate cells · F8: Describe focus · F12: Window details", theme().muted, 12);
+        ui::label(r, 316, 712, "Mac laptops: Hold Fn for F1–F12, or enable standard function keys in Keyboard settings.", theme().muted, 12);
     }
 };
 
@@ -1807,7 +1841,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     for (int i = 0; i < 4; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT);
     key(SDLK_RETURN); // Quick guide, before the three zoom controls.
     key(SDLK_ESCAPE);
-    for (int i = 0; i < 6; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT); // Interactor.
+    for (int i = 0; i < 7; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT); // Interactor, before Contrast and the help links.
     key(SDLK_RETURN); key(SDLK_1);
     require(!app.history.modified(), "Keyboard palette navigation edited the circuit");
     const auto original = app.circuit;
@@ -1856,12 +1890,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.circuit.size() == original.size() + 5, "Keyboard redo failed");
     key(SDLK_R);
     require(app.simulation.ticks() == 0, "Reset failed");
-    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    key(SDLK_T, SDL_KMOD_GUI | SDL_KMOD_SHIFT);
     key(SDLK_KP_2); key(SDLK_KP_3); key(SDLK_KP_ENTER);
     key(SDLK_SPACE);
     app.update(0.1);
     require(app.simulation.ticks() == 2, "Custom simulation speed was not applied");
-    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    key(SDLK_T, SDL_KMOD_CTRL | SDL_KMOD_SHIFT);
     key(SDLK_0); key(SDLK_RETURN);
     app.update(0.2);
     require(app.simulation.ticks() == 2, "Invalid speed closed the dialog or advanced simulation");
@@ -1918,11 +1952,15 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_RIGHT);
     require(app.circuit.at({-5, -4}) == Element::empty && app.circuit.at({0, -4}) == Element::wire,
             "Right arrow did not move the selection");
-    key(SDLK_DOWN, SDL_KMOD_CTRL);
-    require(app.circuit.at({0, 0}) == Element::wire && app.circuit.at({0, -4}) == Element::empty,
-            "Control-arrow did not move the selection four cells");
+    for (const auto modifier : std::array<SDL_Keymod, 2>{SDL_KMOD_CTRL, SDL_KMOD_GUI}) {
+        mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {-4, -4}); mouse(SDL_EVENT_MOUSE_BUTTON_UP, {0, -4});
+        key(SDLK_DOWN, modifier);
+        require(app.circuit.at({0, 0}) == Element::wire && app.circuit.at({0, -4}) == Element::empty,
+                "Control/Command-arrow did not move the selection four cells");
+        key(SDLK_Z, modifier);
+    }
     require(app.simulation.ticks() == 0, "Moving a selection accidentally stepped simulation");
-    key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_Z, SDL_KMOD_CTRL);
+    key(SDLK_Z, SDL_KMOD_CTRL);
     require(app.circuit == edited, "Selection moves did not undo cleanly");
     key(SDLK_ESCAPE);
     key(SDLK_Q);
@@ -1985,7 +2023,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(SDL_PushEvent(&motion), "Could not push released pan event"); dispatch(app, renderer);
     require(app.view.center_x == after_pan, "Pan continued after its button was released");
     mouse(SDL_EVENT_MOUSE_BUTTON_DOWN, {11, 3}, SDL_BUTTON_RIGHT);
-    key(SDLK_SPACE, SDL_KMOD_CTRL);
+    key(SDLK_T, SDL_KMOD_GUI | SDL_KMOD_SHIFT);
     mouse(SDL_EVENT_MOUSE_BUTTON_UP, {11, 3}, SDL_BUTTON_RIGHT); // Release consumed by the modal dialog.
     key(SDLK_ESCAPE);
     require(SDL_PushEvent(&motion), "Could not push post-dialog motion"); dispatch(app, renderer);
@@ -2126,7 +2164,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_Z, SDL_KMOD_CTRL); key(SDLK_ESCAPE);
     require(app.circuit == moving, "Stateful movement did not undo structure and stored levels");
     const auto navigation_tick = app.simulation.ticks();
-    key(SDLK_F9); key(SDLK_RIGHT); key(SDLK_DOWN, SDL_KMOD_CTRL); key(SDLK_F8);
+    key(SDLK_F9); key(SDLK_RIGHT); key(SDLK_DOWN, SDL_KMOD_GUI); key(SDLK_F8);
     require(inspections.back().starts_with("Cell (4, 4)"), "Keyboard navigation chose the wrong coordinates");
     SDL_Event repeated{}; repeated.type = SDL_EVENT_KEY_DOWN; repeated.key.key = SDLK_DOWN; repeated.key.repeat = true;
     require(SDL_PushEvent(&repeated), "Could not repeat keyboard navigation"); dispatch(app, renderer); key(SDLK_F8);
@@ -2183,6 +2221,56 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto before_summary = app.simulation.ticks(); app.update(10);
     require(app.simulation.ticks() == before_summary, "Time in the details dialog advanced simulation");
     key(SDLK_F11);
+    const auto before_controls = app.circuit;
+    const auto controls_tick = app.simulation.ticks();
+    const auto was_running = app.running;
+    const auto contrast_is = [&](bool enabled) {
+        const auto count = inspections.size();
+        key(SDLK_F12);
+        require(inspections.size() == count + 1, "Window summary was blocked unexpectedly");
+        require(inspections.back().find(enabled ? "High contrast on." : "Standard colors.") != std::string::npos,
+                "Contrast control selected the wrong mode");
+    };
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 910, 80, SDL_BUTTON_LEFT, 0);
+    contrast_is(true);
+    key(SDLK_K, SDL_KMOD_GUI | SDL_KMOD_SHIFT); contrast_is(false);
+    key(SDLK_K, SDL_KMOD_CTRL | SDL_KMOD_SHIFT); contrast_is(true);
+    key(SDLK_K, SDL_KMOD_GUI); key(SDLK_T, SDL_KMOD_CTRL); contrast_is(true);
+    key(SDLK_K, SDL_KMOD_GUI | SDL_KMOD_SHIFT); contrast_is(false);
+    key(SDLK_ESCAPE);
+    for (int i = 0; i < 6; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT);
+    key(SDLK_F8);
+    require(inspections.back().starts_with("High contrast button. Currently off."), "Contrast was absent from the Tab order");
+    key(SDLK_RETURN); key(SDLK_F8);
+    require(inspections.back().starts_with("High contrast button. Currently on."), "Contrast activation lost focus or its state description");
+    key(SDLK_SPACE); contrast_is(false);
+    require(inspections.back().find(shortcut_text("Control Shift K")) != std::string::npos &&
+            inspections.back().find(shortcut_text("Control Shift T")) != std::string::npos,
+            "Window summary omitted the accessible shortcuts");
+#if defined(__APPLE__)
+    require(inspections.back().find("Control") == std::string::npos && inspections.back().find("Fn") != std::string::npos,
+            "Mac summary omitted Command labels or function-key guidance");
+    key(SDLK_SPACE, SDL_KMOD_GUI); key(SDLK_SPACE, SDL_KMOD_CTRL); contrast_is(false);
+    require(app.running == was_running, "Reserved Mac Space shortcuts changed playback");
+#endif
+    key(SDLK_ESCAPE);
+    for (const auto modal : {SDLK_F2, SDLK_F3}) {
+        key(modal); key(SDLK_K, SDL_KMOD_GUI | SDL_KMOD_SHIFT); key(SDLK_ESCAPE); contrast_is(false);
+    }
+    key(SDLK_T, SDL_KMOD_GUI | SDL_KMOD_SHIFT);
+    key(SDLK_K, SDL_KMOD_GUI | SDL_KMOD_SHIFT); key(SDLK_ESCAPE); contrast_is(false);
+    const auto settings_path = session_directory / "contrast-preferences.ghp";
+    app.load_settings(settings_path);
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 910, 80, SDL_BUTTON_LEFT, 0);
+    app.save_settings();
+    const auto settings = read_bounded_file(settings_path, 4096);
+    require(settings && decode_preferences(*settings).has_value() && decode_preferences(*settings)->high_contrast,
+            "Toolbar contrast did not persist in preferences");
+    key(SDLK_K, SDL_KMOD_GUI | SDL_KMOD_SHIFT); contrast_is(false);
+    app.load_settings(settings_path); contrast_is(true);
+    key(SDLK_F11); contrast_is(false);
+    require(app.circuit == before_controls && app.simulation.ticks() == controls_tick && app.running == was_running,
+            "Accessibility controls changed the circuit or simulation");
     for (const auto color : {ui::high_contrast_colors.ink, ui::high_contrast_colors.muted,
                             ui::high_contrast_colors.teal, ui::high_contrast_colors.orange}) {
         const auto linear = [](Uint8 value) { const double c = value / 255.0; return c <= 0.04045 ? c / 12.92 : std::pow((c + 0.055) / 1.055, 2.4); };
