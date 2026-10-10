@@ -279,6 +279,7 @@ public:
     }
 
     void update(double elapsed) {
+        if (quit) return;
         if (discard_elapsed_) { elapsed = 0; discard_elapsed_ = false; }
         if (!std::isfinite(elapsed) || elapsed < 0) elapsed = 0;
         if (recovery_) {
@@ -330,6 +331,7 @@ public:
     }
 
     void event(const SDL_Event& e) {
+        if (quit) return;
         if (e.type == SDL_EVENT_QUIT) {
             if (!dialog_pending_ && discard_changes()) quit = true;
             return;
@@ -2164,9 +2166,16 @@ void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, Clipboar
     close();
     require(app.quit && !app.history.modified() && load_document(saved_path).value() == closing,
             "Save on close did not write the current document before quitting");
+    key(SDLK_RIGHT); key(SDLK_RETURN);
+    require(!app.history.modified() && app.simulation.document_snapshot(app.circuit) == closing,
+            "Events after an accepted close changed a circuit that was already saved");
     App reopened(window, clipboard);
     require(reopened.open(saved_path) && reopened.simulation.document_snapshot(reopened.circuit) == closing && !reopened.history.modified(),
             "Reopening a saved circuit lost component state or retained unsaved history");
+    reopened.running = true;
+    SDL_Event quit_event{}; quit_event.type = SDL_EVENT_QUIT; reopened.event(quit_event);
+    const auto final_tick = reopened.simulation.ticks(); reopened.update(10);
+    require(reopened.quit && reopened.simulation.ticks() == final_tick, "A closed document continued simulating");
     std::cout << "Document workflow passed: construction, canceled close, Save As, failed save, Unicode reopen, undo/redo\n";
 }
 
@@ -2315,8 +2324,10 @@ int main(int argc, char** argv) {
         auto previous = std::chrono::steady_clock::now();
         while (!app.quit) {
             dispatch(app, renderer.get());
+            if (app.quit) break;
             const auto now = std::chrono::steady_clock::now();
             app.update(std::chrono::duration<double>(now - previous).count());
+            if (app.quit) break;
             previous = now;
             app.render(renderer.get());
             SDL_RenderPresent(renderer.get());
