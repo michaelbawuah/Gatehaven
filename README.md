@@ -9,7 +9,7 @@ logic gates, and step through a circuit to see how its signals change.
 
 ![Gatehaven desktop editor with circuit symbols and zoom controls](docs/images/desktop-prototype.png)
 
-[See the gate symbols up close](docs/images/circuit-symbols.png).
+[View all 13 components](docs/images/component-gallery.png) · [Gate symbols up close](docs/images/circuit-symbols.png).
 
 **Status: 0.5 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)

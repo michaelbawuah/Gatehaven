@@ -65,3 +65,11 @@ symbols instead of text tiles. Gate orientation follows nearby connections,
 relay contacts reflect conductivity, and powered screens light up. Automated
 SDL workflows cover pinch, resized-window coordinate conversion, wheel direction,
 keyboard repeat, button hit testing, and cancellation when focus changes.
+
+Component artwork now uses embedded SVG-derived images for gates, sources,
+relays, screens, and file ports, with consistent line weights, antialiasing, and
+filtered levels for small icons and Retina displays. Sidebar icons grow from
+18 to 26 pixels and a large component preview explains the selected or hovered
+part. New circuits start with 64-pixel cells, twice the previous default, and
+symbols use more of each tile. All artwork works offline; package notices retain
+the source image licenses.

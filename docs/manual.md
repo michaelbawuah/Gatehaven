@@ -10,6 +10,10 @@ opens the circuit lessons; **Quick guide** groups the main shortcuts by task.
 The editor uses a light workspace, smooth proportional text, component icons,
 and an outlined keyboard focus. The minimum window is 1120 × 700 to keep the
 controls readable; the default is 1280 × 800. Resizing preserves the canvas ratio.
+Hover over a component or canvas cell to see its large image and a short
+description at the bottom of the sidebar. New circuits start with 64-pixel cells;
+the zoom percentage resets to this larger size. Fit view still shows the whole
+circuit, which can reduce the size of cells in large examples.
 
 ## Draw and navigate
 
