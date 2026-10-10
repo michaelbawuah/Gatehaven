@@ -7,7 +7,7 @@
 Gatehaven is a digital logic sandbox built in C++23. Connect wires, combine
 logic gates, and step through a circuit to see how its signals change.
 
-![Gatehaven desktop prototype](docs/images/desktop-prototype.png)
+![Gatehaven desktop editor with readable typography and component tools](docs/images/desktop-prototype.png)
 
 **Status: 0.5 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)

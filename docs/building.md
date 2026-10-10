@@ -65,6 +65,21 @@ Desktop CI builds on Linux, macOS, and Windows use exactly SDL commit
 X11 and Wayland. All three use a software renderer and dummy video driver
 for automation; these runs do not establish physical display or native dialog QA.
 
+## Desktop typography
+
+The desktop embeds Inter 4.1 regular and semibold glyphs; it does not load a
+system font or download anything at startup. Font textures have area-filtered
+64/32/16 px levels, selected for the current display scale. Proportional metrics
+and UTF-8-aware ellipses keep labels inside their available space. The embedded
+set covers basic Latin, Latin-1, and the punctuation used by the interface;
+unsupported code points display one fallback glyph without changing filenames.
+
+Normal builds consume the checked-in `src/app/font_atlas.inc`. To regenerate it,
+install Pillow 12.3.0 in a development environment and run
+`python tools/bake_ui_font.py`. The script checks the pinned font's SHA-256.
+The Inter source and license are in `third_party/Inter`; the license is included
+in native bundles and archives.
+
 ## Tests and tools
 
 ```sh

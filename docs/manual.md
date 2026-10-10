@@ -5,10 +5,19 @@ The starter has two powered branches feeding an AND gate. Space starts or pauses
 the simulation; Right advances one tick when no selection is active. R restores
 stored reset levels and resets time. Ctrl+Space sets the speed, initially five ticks per second.
 
+Use **Run**, **Step**, **Reset**, and **Fit view** in the top toolbar. **Examples**
+opens the circuit lessons; **Quick guide** groups the main shortcuts by task.
+The editor uses a light workspace, smooth proportional text, component icons,
+and an outlined keyboard focus. The minimum window is 1120 × 700 to keep the
+controls readable; the default is 1280 × 800. Resizing preserves the canvas ratio.
+
 ## Draw and navigate
 
-Click a tool with the mouse button you want to assign. The colored marks identify
-left, right, middle, X1, X2, and touch. Digits 1–0 select a left-button pencil.
+Click a tool with the mouse button you want to assign. The badges identify
+L (left), R (right), M (middle), X1, X2, and T (touch). A plus means more than one
+input uses that tool. The left-button tool also has a filled selected row.
+Tab to a tool and press F8 to hear/read its complete binding description.
+Digits 1–0 select a left-button pencil; their shortcut appears next to the badge.
 Hold E and click a cell to sample its pencil, or empty space to sample the eraser.
 Drag with Pan to move the camera; scroll zooms around the pointer. F frames the
 whole circuit. These actions do not edit your circuit.

@@ -40,3 +40,11 @@ real-machine verification without automatically approving manual checks.
 
 Real-device input/display/dialog checks, review of known compatibility differences,
 screen-reader review, clean-machine installation, and release signing remain open.
+
+The desktop interface now uses embedded Inter regular/semibold typography,
+display-scale-aware font filtering, proportional label fitting, and sentence-case
+controls. A calmer dotted canvas, component icons, input badges, hover states,
+and a compact status bar replace the prototype lettering and dense grid chrome.
+Examples and Quick guide are visible header actions with keyboard focus support.
+The guide, lesson chooser, speed, clipboard, and recovery panels share a clearer
+light layout. Drawing, simulation, saved circuits, and shortcuts remain compatible.
