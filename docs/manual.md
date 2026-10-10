@@ -60,6 +60,11 @@ wide sparse rectangles can exceed its dense-area limit. Both formats preserve
 component levels and never contain paths to user files. Returning to the saved revision with Undo clears the unsaved
 indicator. Save your circuits before closing the last window.
 
+If you omit the extension, Gatehaven adds `.ghv` or `.ccsb` according to the chosen
+format. If that completed filename already exists, confirm replacement or cancel
+and choose a different name. Canceling or failing Save As keeps the circuit open
+and preserves its previous save destination.
+
 B toggles context hints, off by default. F2 shows shortcuts. F1 opens this manual.
 F3 opens six editable [circuit lessons](../samples/README.md) in separate windows.
 F5/F6/F7 choose Screen/File In/File Out. Use I to interact with them; see the

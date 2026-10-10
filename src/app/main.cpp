@@ -137,13 +137,17 @@ CloseChoice confirm_close(SDL_Window* window) {
     return selected == 1 ? CloseChoice::discard : selected == 2 ? CloseChoice::save : CloseChoice::cancel;
 }
 
-using OverwritePrompt = std::function<bool(SDL_Window*)>;
-bool confirm_overwrite(SDL_Window* window) {
+using OverwritePrompt = std::function<bool(SDL_Window*, const std::filesystem::path&, bool)>;
+bool confirm_overwrite(SDL_Window* window, const std::filesystem::path& path, bool changed) {
     const SDL_MessageBoxButtonData choices[]{
         {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, "Cancel"},
-        {0, 1, "Replace changed file"}};
-    const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window, "File changed outside Gatehaven",
-        "This file changed since you opened or saved it. Replace it with this circuit? Cancel and use Save As to keep both versions.", 2, choices, nullptr};
+        {0, 1, "Replace file"}};
+    const std::string message = (changed
+        ? "This file changed since you opened or saved it. Replace it with this circuit? Cancel and use Save As to keep both versions.\n\n"
+        : "Adding the circuit extension gives an existing filename. Replace it with this circuit? Cancel and choose another name to keep both circuits.\n\n") + path_utf8(path);
+    const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window,
+        changed ? "File changed outside Gatehaven" : "A circuit with this name already exists",
+        message.c_str(), 2, choices, nullptr};
     int choice = 0;
     return SDL_ShowMessageBox(&data, &choice) && choice == 1;
 }
@@ -306,8 +310,10 @@ public:
                         status_ = chosen ? "COMMUNICATOR FILE CONNECTED" : chosen.error();
                     }
                 } else if (result->save) {
-                    path = document_save_path(std::move(path), result->filter);
-                    if (save(path) && close_after_save_) quit = true;
+                    const auto destination = document_save_path(path, result->filter);
+                    // The native picker confirmed only the name it returned, not
+                    // an existing file at a name completed afterward by the app.
+                    if (save(destination, destination != path) && close_after_save_) quit = true;
                 } else launch_open(path);
             }
             close_after_save_ = false;
@@ -1239,12 +1245,13 @@ private:
 
     void fresh() { launch(std::nullopt); }
 
-    bool save(const std::filesystem::path& path) {
-        if (path == path_ && !path_.empty()) {
+    bool save(const std::filesystem::path& path, bool completed_name = false) {
+        if ((path == path_ && !path_.empty()) || completed_name) {
             const auto current = fingerprint_file(path);
             if (!current) { status_ = current.error(); return false; }
-            if (*current != disk_version_) {
-                if (!confirm_overwrite_(window_)) { status_ = "Save canceled - Ctrl Shift S keeps both versions"; return false; }
+            const bool changed = path == path_ && !path_.empty() && *current != disk_version_;
+            if (changed || (completed_name && *current && path != path_)) {
+                if (!confirm_overwrite_(window_, path, changed)) { status_ = "Save canceled - Ctrl Shift S keeps both versions"; return false; }
             }
         }
         const auto result = save_document(path, simulation.document_snapshot(circuit));
@@ -2061,10 +2068,14 @@ void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, Clipboar
     std::unique_ptr<DialogRequest> pending;
     CloseChoice close_choice = CloseChoice::cancel;
     unsigned close_prompts = 0;
+    bool approve_overwrite = false;
+    std::vector<std::pair<std::filesystem::path, bool>> overwrite_prompts;
     std::vector<std::optional<std::filesystem::path>> opened;
     App app(window, clipboard,
             [&](std::optional<std::filesystem::path> path) -> std::expected<void, std::string> { opened.push_back(path); return {}; },
-            ui::launch_demo, [](SDL_Window*) { return false; }, show_inspection,
+            ui::launch_demo, [&](SDL_Window*, const std::filesystem::path& path, bool changed) {
+                overwrite_prompts.emplace_back(path, changed); return approve_overwrite;
+            }, show_inspection,
             [&](std::unique_ptr<DialogRequest> request, SDL_Window*) {
                 require(!pending, "A second picker replaced a pending request"); pending = std::move(request);
             },
@@ -2128,6 +2139,26 @@ void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, Clipboar
     require(opened.size() == 1 && opened.back() == saved_path && app.simulation.document_snapshot(app.circuit) == newest,
             "Open picker did not preserve the current circuit in its own window");
 
+    for (const int filter : {0, 1}) {
+        require(app.open(saved_path), "Could not restore overwrite workflow");
+        key(SDLK_F9); key(SDLK_DOWN); key(SDLK_RETURN);
+        const auto replacement = app.simulation.document_snapshot(app.circuit);
+        const auto name = directory / utf8_path(filter == 0 ? "existing étude" : "existing legacy");
+        const auto destination = document_save_path(name, filter);
+        Circuit external; external.set({0, 0}, Element::positive_relay, 3);
+        require(save_document(destination, external).has_value(), "Could not stage completed-name collision");
+        key(SDLK_S, static_cast<SDL_Keymod>(SDL_KMOD_CTRL | SDL_KMOD_SHIFT)); complete(name, false, filter);
+        require(!overwrite_prompts.empty() && overwrite_prompts.back() == std::pair{destination, false},
+                "Completed Save As filename did not ask to replace the actual destination");
+        require(app.history.modified() && load_document(destination).value() == external &&
+                app.simulation.document_snapshot(app.circuit) == replacement, "Declining completed-name replacement lost a circuit");
+        approve_overwrite = true;
+        key(SDLK_S, static_cast<SDL_Keymod>(SDL_KMOD_CTRL | SDL_KMOD_SHIFT)); complete(name, false, filter);
+        require(!app.history.modified() && load_document(destination).value() == replacement,
+                "Approved completed-name replacement failed");
+        approve_overwrite = false;
+    }
+    require(app.open(saved_path), "Could not restore final close fixture"); key(SDLK_F9);
     key(SDLK_RIGHT); key(SDLK_RETURN);
     const auto closing = app.simulation.document_snapshot(app.circuit);
     close();
@@ -2245,7 +2276,7 @@ int main(int argc, char** argv) {
             demos.emplace_back(name); return {};
         };
         App app(window.get(), **clipboard, std::move(launcher), std::move(demo_launcher),
-                testing ? OverwritePrompt([](SDL_Window*) { return false; }) : OverwritePrompt(confirm_overwrite),
+                testing ? OverwritePrompt([](SDL_Window*, const std::filesystem::path&, bool) { return false; }) : OverwritePrompt(confirm_overwrite),
                 testing ? InspectionDialog([&](SDL_Window*, const std::string& text) { inspections.push_back(text); return true; }) : InspectionDialog(show_inspection));
         if (!testing && !snapshot && !benchmark) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
