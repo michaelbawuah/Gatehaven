@@ -7,6 +7,7 @@ import sys
 import tempfile
 
 build = Path(sys.argv[1]).resolve()
+application_license = (Path(__file__).resolve().parents[1] / "LICENSE").read_bytes()
 def run(*args, **kwargs):
     return subprocess.run(list(map(str, args)), check=True, capture_output=True, text=True, timeout=60, **kwargs).stdout
 
@@ -22,6 +23,7 @@ if sys.platform.startswith("linux"):
             root = Path(directory) / "usr"
             assert (root / "bin/gatehaven").is_file()
             assert (root / "share/gatehaven/docs/manual.md").is_file()
+            assert (root / "share/gatehaven/LICENSE").read_bytes() == application_license
             mime = ET.parse(root / "share/mime/packages/gatehaven.xml")
             ns = {"m": "http://www.freedesktop.org/standards/shared-mime-info"}
             assert {node.attrib["pattern"] for node in mime.findall(".//m:glob", ns)} == {"*.ghv", "*.ccsb"}
@@ -65,6 +67,7 @@ elif sys.platform == "darwin":
                 assert Path(run(executable, "--manual-path", cwd=outside).strip()).samefile(resources / "docs/manual.html")
                 assert len(list((resources / "samples").glob("*.ghv"))) == 6
                 assert (resources / "third_party/SDL3/LICENSE.txt").is_file()
+                assert (resources / "LICENSE").read_bytes() == application_license
             finally:
                 run("hdiutil", "detach", mount)
 elif sys.platform == "win32":
@@ -89,6 +92,7 @@ elif sys.platform == "win32":
             try:
                 assert "Gatehaven" in run(root / "bin/gatehaven-cli.exe", "--version")
                 assert (root / "share/gatehaven/docs/manual.html").is_file()
+                assert (root / "share/gatehaven/LICENSE").read_bytes() == application_license
                 for extension in (".ghv", ".ccsb"):
                     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "Software\\Classes\\" + extension + "\\OpenWithProgids") as key:
                         assert winreg.QueryValueEx(key, "Gatehaven.Circuit")[0] == ""

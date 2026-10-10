@@ -24,10 +24,11 @@ SHA-256 checksum file. Extract the whole archive before launching:
 | macOS | `gatehaven.app` | `bin/gatehaven-cli` |
 | Linux | `bin/gatehaven` | `bin/gatehaven-cli` |
 
-The `share/gatehaven` folder contains lessons, manuals, and dependency notices.
+The `share/gatehaven` folder contains lessons, manuals, Gatehaven's MIT `LICENSE`,
+and dependency notices.
 The Mac app also keeps these resources inside its bundle so moving the `.app`
 preserves them. Windows archives include the redistributable compiler runtime.
-Keep dependency notices with any redistributed binaries.
+Keep `LICENSE` and the separate dependency notices with any redistributed binaries.
 
 On Mac, keep one clearly named copy in your Applications folder and launch that
 copy. Older apps in build or test folders remain separate applications. If the

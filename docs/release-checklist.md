@@ -20,7 +20,7 @@ verified `eacd8f2` candidate, Mac package checks, and remaining manual work.
 | Native dialogs | Callback cancellation/error/lifetime tests; complete save/close sequences; completed-filename replacement | Actual dialogs, Unicode paths, cancel, shutdown while pending on each OS |
 | Signing | Credentialed workflow prepared with failure-path tests; ordinary CI previews remain unsigned | Configure identities; run [signing](signing.md), verify downloaded artifacts on clean machines |
 | Recovery | Process-kill, ownership, deletion, failed replacement and editor restore/save/reopen sequences | Real interruption and restore/save workflows on each target |
-| Distribution | Dependency notices and reproducible dependency pins | Decide the application license and final release/update policy |
+| Distribution | MIT license for original code and documentation; bundled dependency notices and reproducible dependency pins | Decide the final release/update policy |
 
 ## Manual test record
 

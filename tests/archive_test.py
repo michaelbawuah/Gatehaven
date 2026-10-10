@@ -9,6 +9,7 @@ build = Path(sys.argv[1])
 archives = sorted([*build.glob("Gatehaven-*.zip"), *build.glob("Gatehaven-*.tar.gz")])
 assert archives, "No Gatehaven package was produced"
 notice = (Path(__file__).resolve().parents[1] / "third_party" / "SDL3" / "LICENSE.txt").read_bytes()
+application_license = (Path(__file__).resolve().parents[1] / "LICENSE").read_bytes()
 for package in archives:
     expected = Path(str(package) + ".sha256").read_text().split()[0]
     assert hashlib.sha256(package.read_bytes()).hexdigest() == expected, package
@@ -21,6 +22,7 @@ for package in archives:
         assert len(roots) == 1
         prefix = roots.pop() + "/"
         resources = prefix + "share/gatehaven/"
+        application_license_paths = [resources + "LICENSE"]
         required = [resources + "build-metadata.json", resources + "README.md", resources + "docs/manual.md", resources + "docs/manual.html", resources + "third_party/SDL3/LICENSE.txt"]
         required.append(resources + "third_party/Inter/LICENSE.txt")
         required += [resources + "samples/" + name + ".ghv" for name in
@@ -32,9 +34,14 @@ for package in archives:
                          prefix + "gatehaven.app/Contents/Info.plist",
                          prefix + "gatehaven.app/Contents/Resources/third_party/SDL3/LICENSE.txt"]
             required.append(prefix + "gatehaven.app/Contents/Resources/third_party/Inter/LICENSE.txt")
+            application_license_paths.append(prefix + "gatehaven.app/Contents/Resources/LICENSE")
         else:
             required.append(prefix + "bin/gatehaven" + suffix)
+        required += application_license_paths
         assert set(required) <= files, (package, set(required) - files)
+        for path in application_license_paths:
+            actual_license = archive.read(path) if zipped else archive.extractfile(path).read()
+            assert actual_license == application_license, (package, path)
         license_path = resources + "third_party/SDL3/LICENSE.txt"
         actual_notice = archive.read(license_path) if zipped else archive.extractfile(license_path).read()
         assert actual_notice == notice

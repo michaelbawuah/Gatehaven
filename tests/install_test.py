@@ -9,6 +9,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 cmake, build, configuration, has_app = sys.argv[1:]
+application_license = (Path(__file__).resolve().parents[1] / "LICENSE").read_bytes()
 
 def run(*args, **kwargs):
     result = subprocess.run(list(map(str, args)), capture_output=True, text=True, timeout=45, **kwargs)
@@ -21,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     suffix = ".exe" if sys.platform == "win32" else ""
     cli = root / "bin" / ("gatehaven-cli" + suffix)
     resources = root / "share" / "gatehaven"
+    assert (resources / "LICENSE").read_bytes() == application_license
     assert "Gatehaven" in run(cli, "--version")
     metadata = json.loads((resources / "build-metadata.json").read_text(encoding="utf-8"))
     assert metadata["schema"] == 1 and metadata["product"] == "Gatehaven"
@@ -60,6 +62,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
             assert info["CFBundleExecutable"] == "gatehaven"
             assert info["UTExportedTypeDeclarations"][0]["UTTypeTagSpecification"]["public.filename-extension"] == ["ghv"]
             assert (bundle / "Resources" / "third_party" / "SDL3" / "LICENSE.txt").is_file()
+            assert (bundle / "Resources" / "LICENSE").read_bytes() == application_license
             assert (bundle / "Resources" / font_notice).is_file()
             assert (bundle / "Resources" / "docs" / "manual.html").is_file()
         else:

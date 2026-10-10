@@ -152,9 +152,14 @@ or clipboard. Press F3 for editable [lessons](samples/README.md).
 [Document format](docs/document-format.md) · [Shared clipboards](docs/shared-clipboards.md) ·
 [Manual](docs/manual.md) · [CLI tools](docs/cli.md) · [State digests](docs/state-digest.md) · [Communicators](docs/communicators.md) · [Verification](docs/verification.md)
 
-The application source does not yet have a selected public license.
-External library notices are retained in `third_party/` and must accompany
-redistributed dependency code.
+## License
+
+Gatehaven's original code and documentation are licensed under the
+[MIT License](LICENSE). Copyright (c) 2026 Michael Baffour Awuah.
+
+Bundled libraries, fonts, and component artwork retain their respective licenses
+and copyright notices in `third_party/`. Keep these notices and Gatehaven's
+`LICENSE` with redistributed copies. Install packages include both.
 
 ## Build evidence and previews
 
