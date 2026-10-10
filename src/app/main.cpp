@@ -2034,6 +2034,7 @@ int main(int argc, char** argv) {
         }
         SDL_SetWindowMinimumSize(window.get(), 800, 500);
         SDL_SetRenderVSync(renderer.get(), 1);
+        const ui::FontAtlas fonts(renderer.get());
         if (diagnostics) {
             ui::diagnostics(std::cout, window.get(), renderer.get()); return std::cout ? 0 : 1;
         }

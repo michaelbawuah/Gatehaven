@@ -95,9 +95,10 @@ normal exit; the last successful save supplies defaults for future windows.
 
 ## Dependency policy
 
-Pin external library versions. Keep their license texts with redistributed
-binaries. Do not add another project's source files, sample circuits, icons,
-fonts, screenshots, or documentation to this repository.
+Pin external dependency versions and retain their license texts with redistributed
+binaries. SDL3 and the Inter UI font are explicit dependencies. Gatehaven's game
+implementation, samples, icons, screenshots, and documentation are maintained
+here; the external circuit reference remains isolated from the shipped product.
 
 ## Recovery and input ownership
 

@@ -1,99 +1,145 @@
 #include "font.hpp"
 
-#include <array>
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <unordered_map>
 
 namespace gatehaven::ui {
 namespace {
-using Glyph = std::array<std::uint8_t, 7>;
-// Small geometric bitmap alphabet drawn specifically for the prototype UI.
-Glyph glyph(char c) {
-    if (c >= 'a' && c <= 'z') c = static_cast<char>(c - 'a' + 'A');
-    switch (c) {
-    case 'A': return {14,17,17,31,17,17,17};
-    case 'B': return {30,17,17,30,17,17,30};
-    case 'C': return {14,17,16,16,16,17,14};
-    case 'D': return {30,17,17,17,17,17,30};
-    case 'E': return {31,16,16,30,16,16,31};
-    case 'F': return {31,16,16,30,16,16,16};
-    case 'G': return {14,17,16,23,17,17,15};
-    case 'H': return {17,17,17,31,17,17,17};
-    case 'I': return {31,4,4,4,4,4,31};
-    case 'J': return {7,2,2,2,18,18,12};
-    case 'K': return {17,18,20,24,20,18,17};
-    case 'L': return {16,16,16,16,16,16,31};
-    case 'M': return {17,27,21,21,17,17,17};
-    case 'N': return {17,25,25,21,19,19,17};
-    case 'O': return {14,17,17,17,17,17,14};
-    case 'P': return {30,17,17,30,16,16,16};
-    case 'Q': return {14,17,17,17,21,18,13};
-    case 'R': return {30,17,17,30,20,18,17};
-    case 'S': return {15,16,16,14,1,1,30};
-    case 'T': return {31,4,4,4,4,4,4};
-    case 'U': return {17,17,17,17,17,17,14};
-    case 'V': return {17,17,17,17,17,10,4};
-    case 'W': return {17,17,17,21,21,27,17};
-    case 'X': return {17,17,10,4,10,17,17};
-    case 'Y': return {17,17,10,4,4,4,4};
-    case 'Z': return {31,1,2,4,8,16,31};
-    case '0': return {14,17,19,21,25,17,14};
-    case '1': return {4,12,4,4,4,4,14};
-    case '2': return {14,17,1,2,4,8,31};
-    case '3': return {30,1,1,14,1,1,30};
-    case '4': return {2,6,10,18,31,2,2};
-    case '5': return {31,16,16,30,1,1,30};
-    case '6': return {14,16,16,30,17,17,14};
-    case '7': return {31,1,2,4,8,8,8};
-    case '8': return {14,17,17,14,17,17,14};
-    case '9': return {14,17,17,15,1,1,14};
-    case '+': return {0,4,4,31,4,4,0};
-    case '-': return {0,0,0,31,0,0,0};
-    case '/': return {1,1,2,4,8,16,16};
-    case ':': return {0,4,4,0,4,4,0};
-    case ';': return {0,4,4,0,4,4,8};
-    case '_': return {0,0,0,0,0,0,31};
-    case '.': return {0,0,0,0,0,4,4};
-    case ',': return {0,0,0,0,4,4,8};
-    case '[': return {14,8,8,8,8,8,14};
-    case ']': return {14,2,2,2,2,2,14};
-    case '(': return {2,4,8,8,8,4,2};
-    case ')': return {8,4,2,2,2,4,8};
-    case '>': return {16,8,4,2,4,8,16};
-    case '<': return {1,2,4,8,4,2,1};
-    case '=': return {0,31,0,31,0,0,0};
-    case '*': return {0,21,14,31,14,21,0};
-    case ' ': return {};
-    default: return {14,17,1,2,4,0,4};
+struct Glyph {
+    std::uint32_t code;
+    int weight, x, y, width, height, left, top;
+    float advance;
+};
+#include "font_atlas.inc"
+
+std::unordered_map<SDL_Renderer*, std::array<SDL_Texture*, 3>> textures;
+
+std::uint32_t next(std::string_view value, std::size_t& offset) {
+    const auto lead = static_cast<unsigned char>(value[offset++]);
+    if (lead < 0x80) return lead;
+    const unsigned count = lead >= 0xf0 && lead <= 0xf4 ? 3 : lead >= 0xe0 && lead <= 0xef ? 2 : lead >= 0xc2 && lead <= 0xdf ? 1 : 0;
+    if (!count || value.size() - offset < count) return '?';
+    std::uint32_t result = lead & (0x7fU >> (count + 1));
+    for (unsigned i = 0; i < count; ++i) {
+        const auto byte = static_cast<unsigned char>(value[offset]);
+        if ((byte & 0xc0) != 0x80) return '?';
+        result = (result << 6) | (byte & 0x3f); ++offset;
+    }
+    if ((count == 1 && result < 0x80) || (count == 2 && result < 0x800) ||
+        (count == 3 && result < 0x10000) || result > 0x10ffff || (result >= 0xd800 && result <= 0xdfff)) return '?';
+    return result;
+}
+
+const Glyph& glyph(std::uint32_t code, Weight weight) {
+    const auto begin = std::begin(glyphs) + (weight == Weight::semibold ? std::size(glyphs) / 2 : 0);
+    const auto end = begin + std::size(glyphs) / 2;
+    const auto found = std::lower_bound(begin, end, code, [](const Glyph& g, auto c) { return g.code < c; });
+    if (found != end && found->code == code) return *found;
+    return begin['?' - ' '];
+}
+}
+
+FontAtlas::FontAtlas(SDL_Renderer* renderer) : renderer_(renderer) {
+    if (textures.contains(renderer)) throw std::runtime_error("Font atlas already initialized");
+    std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
+        SDL_CreateSurface(atlas_width, atlas_height, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface);
+    if (!surface) throw std::runtime_error(SDL_GetError());
+    std::size_t pixel = 0;
+    for (std::size_t i = 0; i < std::size(atlas_runs); i += 2) {
+        for (unsigned run = 0; run < atlas_runs[i]; ++run) {
+            if (pixel >= static_cast<std::size_t>(atlas_width * atlas_height)) throw std::runtime_error("Invalid font atlas");
+            auto* out = static_cast<unsigned char*>(surface->pixels) +
+                (pixel / atlas_width) * static_cast<std::size_t>(surface->pitch) + (pixel % atlas_width) * 4;
+            out[0] = out[1] = out[2] = 255; out[3] = atlas_runs[i + 1]; ++pixel;
+        }
+    }
+    if (pixel != static_cast<std::size_t>(atlas_width * atlas_height)) throw std::runtime_error("Truncated font atlas");
+    // Area-filtered levels prevent thin strokes disappearing when a large atlas
+    // is minified on 1x displays. Keep the 64 px level for Retina and larger type.
+    try {
+        for (std::size_t level = 0; level < textures_.size(); ++level) {
+            auto*& texture = textures_[level];
+            texture = SDL_CreateTextureFromSurface(renderer, surface.get());
+            if (!texture || !SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND) ||
+                !SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_LINEAR)) throw std::runtime_error(SDL_GetError());
+            if (level + 1 == textures_.size()) break;
+            std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> smaller(
+                SDL_CreateSurface((surface->w + 1) / 2, (surface->h + 1) / 2, SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface);
+            if (!smaller) throw std::runtime_error(SDL_GetError());
+            for (int y = 0; y < smaller->h; ++y) for (int x = 0; x < smaller->w; ++x) {
+                unsigned alpha = 0;
+                for (int dy = 0; dy < 2; ++dy) for (int dx = 0; dx < 2; ++dx) {
+                    const int sx = x * 2 + dx, sy = y * 2 + dy;
+                    if (sx < surface->w && sy < surface->h) alpha += static_cast<unsigned char*>(surface->pixels)[sy * surface->pitch + sx * 4 + 3];
+                }
+                auto* out = static_cast<unsigned char*>(smaller->pixels) + y * smaller->pitch + x * 4;
+                out[0] = out[1] = out[2] = 255; out[3] = static_cast<unsigned char>((alpha + 2) / 4);
+            }
+            surface = std::move(smaller);
+        }
+        textures.emplace(renderer, textures_);
+    } catch (...) {
+        for (auto* texture : textures_) SDL_DestroyTexture(texture);
+        throw;
     }
 }
-} // namespace
 
-void text(SDL_Renderer* renderer, float x, float y, std::string_view value,
-          SDL_Color color, float scale) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    std::array<SDL_FRect, 512> pixels;
-    std::size_t count = 0;
-    const auto flush = [&] {
-        if (count) SDL_RenderFillRects(renderer, pixels.data(), static_cast<int>(count));
-        count = 0;
-    };
-    for (const char ch : value) {
-        const auto rows = glyph(ch);
-        for (std::size_t row = 0; row < rows.size(); ++row) {
-            for (unsigned column = 0; column < 5; ++column) {
-                if ((rows[row] & (1U << (4U - column))) == 0) continue;
-                const float left = std::round(x + static_cast<float>(column) * scale);
-                const float top = std::round(y + static_cast<float>(row) * scale);
-                const float right = std::round(x + static_cast<float>(column + 1) * scale);
-                const float bottom = std::round(y + static_cast<float>(row + 1) * scale);
-                pixels[count++] = {left, top, std::max(1.0F, right - left), std::max(1.0F, bottom - top)};
-                if (count == pixels.size()) flush();
-            }
-        }
-        x += 6 * scale;
+FontAtlas::~FontAtlas() { textures.erase(renderer_); for (auto* texture : textures_) SDL_DestroyTexture(texture); }
+
+float text_width(std::string_view value, float size, Weight weight) {
+    float result = 0;
+    for (std::size_t offset = 0; offset < value.size();) result += glyph(next(value, offset), weight).advance;
+    return result * size / atlas_size;
+}
+
+std::string ellipsize(std::string_view value, float max_width, float size, Weight weight) {
+    if (text_width(value, size, weight) <= max_width) return std::string(value);
+    const float dots = text_width("…", size, weight);
+    if (dots > max_width) return {};
+    float width = 0;
+    std::size_t end = 0;
+    for (std::size_t offset = 0; offset < value.size();) {
+        width += glyph(next(value, offset), weight).advance * size / atlas_size;
+        if (width + dots > max_width) break;
+        end = offset;
     }
-    flush();
+    return std::string(value.substr(0, end)) + "…";
+}
+
+void label(SDL_Renderer* renderer, float x, float y, std::string_view value, SDL_Color color, float size, Weight weight) {
+    const auto found = textures.find(renderer);
+    if (found == textures.end()) throw std::runtime_error("Font atlas is not initialized");
+    float scale_x = 1, scale_y = 1;
+    SDL_GetRenderScale(renderer, &scale_x, &scale_y);
+    int logical_width = 0, logical_height = 0;
+    SDL_RendererLogicalPresentation mode{};
+    SDL_GetRenderLogicalPresentation(renderer, &logical_width, &logical_height, &mode);
+    SDL_FRect presentation{};
+    if (logical_height > 0 && SDL_GetRenderLogicalPresentationRect(renderer, &presentation)) scale_y *= presentation.h / static_cast<float>(logical_height);
+    const auto level = size * scale_y <= 16 ? 2U : size * scale_y <= 32 ? 1U : 0U;
+    const float divisor = static_cast<float>(1U << level);
+    auto* texture = found->second[level];
+    SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
+    SDL_SetTextureAlphaMod(texture, color.a);
+    const float factor = size / atlas_size;
+    const float baseline = y + size;
+    for (std::size_t offset = 0; offset < value.size();) {
+        const auto& g = glyph(next(value, offset), weight);
+        if (g.width && g.height) {
+            const SDL_FRect source{static_cast<float>(g.x) / divisor, static_cast<float>(g.y) / divisor, static_cast<float>(g.width) / divisor, static_cast<float>(g.height) / divisor};
+            const SDL_FRect target{x + static_cast<float>(g.left) * factor, baseline + static_cast<float>(g.top) * factor,
+                static_cast<float>(g.width) * factor, static_cast<float>(g.height) * factor};
+            SDL_RenderTexture(renderer, texture, &source, &target);
+        }
+        x += g.advance * factor;
+    }
+}
+
+void text(SDL_Renderer* renderer, float x, float y, std::string_view value, SDL_Color color, float scale) {
+    label(renderer, x, y, value, color, scale * 9.0F);
 }
 } // namespace gatehaven::ui
