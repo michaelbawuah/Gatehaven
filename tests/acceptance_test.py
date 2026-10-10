@@ -39,7 +39,7 @@ class AcceptanceTests(unittest.TestCase):
         self.assertTrue(all(item["status"] == "pending" for item in report["manual"]))
         self.assertEqual(self.app.read_bytes(), b"inert executable fixture")
         self.assertTrue((output / "practice-circuit-é.ghv").exists())
-        self.assertEqual(json.loads((output / "evidence.json").read_text()), report)
+        self.assertEqual(json.loads((output / "evidence.json").read_text(encoding="utf-8")), report)
         acceptance.validate_manual(report)
 
     def test_failed_command_remains_in_report(self):
@@ -86,7 +86,7 @@ class AcceptanceTests(unittest.TestCase):
         report = acceptance.collect(self.app, output, headless=True, runner=self.runner)
         report["build_info"] = '</script><script>unsafe()</script>&'
         acceptance.write_html(report, output)
-        page = (output / "report.html").read_text()
+        page = (output / "report.html").read_text(encoding="utf-8")
         self.assertNotIn(report["build_info"], page)
         self.assertIn("\\u003c/script\\u003e", page)
 
