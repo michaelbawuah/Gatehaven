@@ -79,12 +79,12 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Reset zoom to 100% | Click the zoom percentage or Ctrl/Command+0 |
 | Sample a component tool | Hold E and click with the button to bind |
 | Play or pause / single step | Space / Right arrow when no selection is active |
-| Set simulation speed | Ctrl+Space or the speed button; 1–1,000 ticks/s |
+| Set simulation speed | Speed button or Cmd+Shift+T on Mac / Ctrl+Shift+T on Windows/Linux; 1–1,000 ticks/s |
 | Reset / frame circuit | R / F |
 | Select a region | Q, then drag |
 | Add / subtract selection | Shift / Alt while selecting |
 | Select an electrical net / physical circuit | Double / triple-click with Select |
-| Move a selection | Arrow keys; hold Ctrl to move four cells |
+| Move a selection | Arrow keys; hold Cmd on Mac / Ctrl on Windows/Linux to move four cells |
 | Duplicate / invert selection | Ctrl+D / Ctrl+I |
 | Copy / cut / paste | Ctrl+C / Ctrl+X / Ctrl+V |
 | Copy / cut / paste with a chosen shared clipboard | Ctrl+Shift+C / Ctrl+Shift+X / Ctrl+Shift+V, then 0–9 |
@@ -97,11 +97,15 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Navigate controls / activate | Tab or Shift+Tab / Enter |
 | Keyboard canvas / use tool | F9, arrows / Enter |
 | Inspect cell or focused control / single step in cursor mode | F8 / F10 |
-| High contrast / window summary | F11 / F12 |
+| High contrast | Contrast button or Cmd+Shift+K on Mac / Ctrl+Shift+K on Windows/Linux; F11 if available |
+| Window summary | F12 |
 | Touchscreen pan and zoom | Two fingers on the canvas |
 | Toggle beginner hints | B |
 
-Command can replace Ctrl on macOS. Undo records one drawing stroke as one edit.
+On macOS, use Command for the Ctrl shortcuts above. On Mac laptops, hold Fn for
+F1–F12 or enable standard function keys in Keyboard settings. macOS may reserve
+F11 for Show Desktop; the Contrast button and Cmd+Shift+K avoid that conflict.
+Undo records one drawing stroke as one edit.
 Gate, relay, and communicator pencils place a Signal when clicked on an existing cell of the
 same type. Native documents use `.ghv`; binary `.ccsb` interchange is supported.
 Legacy export translates the occupied rectangle to `(0,0)`; native saves keep

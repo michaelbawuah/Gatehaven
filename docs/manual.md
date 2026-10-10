@@ -1,9 +1,16 @@
 # Gatehaven manual
 
+**Mac keyboard:** use **Cmd** wherever a shortcut below says Ctrl. On Mac laptops,
+hold Fn (or turn on “Use F1, F2, etc. keys as standard function keys”) for F1–F12.
+macOS can reserve F11 for Show Desktop even with Fn; use the **Contrast** button
+or **Cmd+Shift+K** instead. Use **Cmd+Arrow**, rather than Ctrl+Arrow, to avoid
+Mission Control and Spaces shortcuts.
+
 Build a circuit by choosing a component in the sidebar and drawing on the grid.
 The starter has two powered branches feeding an AND gate. Space starts or pauses
 the simulation; Right advances one tick when no selection is active. R restores
-stored reset levels and resets time. Ctrl+Space sets the speed, initially five ticks per second.
+stored reset levels and resets time. The toolbar speed button (initially **5 ticks / s**)
+or **Cmd+Shift+T** on Mac (**Ctrl+Shift+T** on Windows/Linux) sets the speed.
 
 Use **Run**, **Step**, **Reset**, and **Fit view** in the top toolbar. **Examples**
 opens the circuit lessons; **Quick guide** groups the main shortcuts by task.
@@ -61,7 +68,7 @@ on a crossing selects both axes. Triple-click follows all occupied neighboring
 cells, including control connections. Selected cells are blue, then red after a
 move or transform. Only selected cells are edited; holes are preserved.
 
-Arrows move one cell, or four with Ctrl. H/V flip and brackets rotate. D or Delete
+Arrows move one cell, or four with **Cmd on Mac / Ctrl on Windows and Linux**. H/V flip and brackets rotate. D or Delete
 erases. Ctrl+A selects all. Ctrl+Z/Y undoes/redoes edits. Ctrl+C/X/V copies, cuts,
 or pastes through default clipboard 0; add Shift to choose any of ten shared
 slots. Other running Gatehaven windows see the same clipboards. A paste preview
@@ -85,8 +92,8 @@ and preserves its previous save destination.
 B toggles context hints, off by default. F2 shows shortcuts. F1 opens this manual.
 F3 opens six editable [circuit lessons](../samples/README.md) in separate windows.
 F5/F6/F7 choose Screen/File In/File Out. Use I to interact with them; see the
-[communicator and serial protocol guide](communicators.md) before connecting files.
-Command can replace Ctrl on macOS. Native touch uses its own tool binding; see the gesture controls below.
+[File ports guide](communicators.md) before connecting files.
+Native touch uses its own tool binding; see the gesture controls below.
 
 See [simulation rules](architecture.md) and [verification](verification.md) for
 the implementation's tested behavior and current release limits.
@@ -145,7 +152,9 @@ and current mouse/touch bindings in a text dialog. F12 describes the current
 window, unsaved state, simulation, chosen file-connection count, and focused cell
 or control. These dialogs pause elapsed-time accumulation while open.
 
-F11 toggles high contrast. The choice is saved with your tool bindings and speed;
+Click **Contrast: Off / On** beside Examples, or Tab to it and press Enter or Space,
+to toggle high contrast. **Cmd+Shift+K** on Mac (**Ctrl+Shift+K** on Windows/Linux)
+does the same; F11 remains available where the OS allows it. The choice is saved with your tool bindings and speed;
 older preferences still load with the standard colors. Powered wires become
 thicker, with each crossing axis shown independently, so power has a shape cue
 as well as a color cue. F8 also reports each axis in words. This mode improves
@@ -193,7 +202,7 @@ conductivity. Native dialog accessibility still needs platform screen-reader QA.
 ## Keyboard canvas
 
 F9 enters a cell cursor at the pointer, or the center of the view. Arrows navigate
-one cell; Ctrl+arrows move four. The camera follows, and navigation never advances
+one cell; **Cmd+Arrow on Mac / Ctrl+Arrow on Windows and Linux** moves four. The camera follows, and navigation never advances
 the simulation. Digits or Tab choose tools; Enter applies the left-button tool at
 the cursor. Q then Enter selects that cell for copy, delete, or transformation.
 Ctrl+V then Enter places a copied circuit. Hold Enter with the Interactor to press

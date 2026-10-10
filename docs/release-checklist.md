@@ -38,8 +38,11 @@ for failures. Leave untested scenarios explicitly pending.
    one, and continue in the survivor. Check undo/redo and clipboard transforms.
 4. Move between monitors, resize, minimize/restore, and test one- and two-finger
    gestures. Confirm no stuck drawing or screen holds after focus loss.
-   Use Tab/F8 to describe controls, F9 to navigate cells, F11 to toggle contrast,
-   and F12 to read the window summary. Reopen and confirm the contrast preference.
+   Use Tab/F8 to describe controls, F9 to navigate cells, the Contrast button and
+   Cmd/Ctrl+Shift+K to toggle contrast, and F12 to read the window summary.
+   On Mac, test with default OS shortcuts enabled: Cmd+Arrow moves four cells,
+   Cmd+Shift+T opens speed, and Fn may be needed for F1–F12. F11 may show the desktop.
+   Reopen and confirm the contrast preference.
    Review crossings with only one powered axis, high zoom, and screen-reader behavior.
 5. Cancel each native file dialog and close while a dialog is pending. Confirm
    circuits do not choose communicator paths; connect explicit test files only.

@@ -6,6 +6,13 @@ hands-on check passed for you. Use a fresh output folder for each machine and
 candidate. Python 3.10 or newer is required for the collector; the game itself
 does not require Python.
 
+On Mac laptops, hold Fn (or turn on “Use F1, F2, etc. keys as standard function
+keys”) for F1–F12. Use Cmd for Ctrl shortcuts, including Cmd+Arrow to move four
+cells. F11 may still show the desktop; use the Contrast button or Cmd+Shift+K.
+The speed button or Cmd+Shift+T changes simulation speed. The automatic event
+tests do not prove that physical shortcuts pass through macOS: confirm these
+controls by hand with the default OS shortcuts enabled.
+
 ## From a checkout
 
 On a Mac, after building the desktop application:
