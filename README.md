@@ -158,3 +158,7 @@ comparisons have reproducible reports. One direct Source/Signal edge intentional
 follows the supplied brief instead of the older engine; see [comparison scope](docs/reference-validation.md).
 Headless results do not establish full release acceptance. The remaining work is
 tracked in the [release checklist](docs/release-checklist.md).
+
+For a hands-on test, use the [desktop acceptance kit](docs/acceptance.md). It
+collects isolated checks and graphics details, then provides a local checklist
+for your own observations. The kit ships in native packages too.

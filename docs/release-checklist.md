@@ -21,6 +21,10 @@ manual checks below. A final release requires evidence for each supported target
 
 ## Manual test record
 
+Use the packaged [desktop acceptance collector](acceptance.md) to capture the
+binary identity, display diagnostics and automatic checks, then record each
+hands-on result in its offline report. Unperformed checks stay pending.
+
 Record the OS version, CPU architecture, graphics backend, scaling, device,
 compiler, source revision, artifact hash, scenario, result, and reproduction steps
 for failures. Leave untested scenarios explicitly pending.

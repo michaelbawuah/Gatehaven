@@ -32,5 +32,11 @@ routing, batched text rendering, viewport measurements, X11/Wayland virtual-disp
 checks, and a fix for the eight-ticks-per-frame ceiling at high simulation rates.
 Protocol edge differences are explicit in the comparison report.
 
+Saved high contrast, focused-control descriptions and window summaries improve
+keyboard access. Installer checks now cover Windows replacement, relocated Mac
+bundles and fresh Ubuntu container lifecycles. Display diagnostics, native
+rendering measurements and a packaged offline acceptance collector support
+real-machine verification without automatically approving manual checks.
+
 Real-device input/display/dialog checks, review of known compatibility differences,
 screen-reader review, clean-machine installation, and release signing remain open.

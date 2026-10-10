@@ -175,3 +175,10 @@ input and drawing can continue. If the circuit or file system is too slow, the
 actual rate decreases; simulation steps still execute in order. A single slow
 step or file operation can exceed that budget. Pausing clears pending time, and a
 long suspension never creates an unbounded catch-up queue.
+
+## Report a problem or try a release candidate
+
+The optional [desktop check](acceptance.md) collects build/display details and
+opens an offline checklist for your observations. Its practice circuit is
+disposable, and its automatic test modes leave your saved work and preferences
+alone. Save the checklist's results before closing the browser page.
