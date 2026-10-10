@@ -7,7 +7,9 @@
 Gatehaven is a digital logic sandbox built in C++23. Connect wires, combine
 logic gates, and step through a circuit to see how its signals change.
 
-![Gatehaven desktop editor with readable typography and component tools](docs/images/desktop-prototype.png)
+![Gatehaven desktop editor with circuit symbols and zoom controls](docs/images/desktop-prototype.png)
+
+[See the gate symbols up close](docs/images/circuit-symbols.png).
 
 **Status: 0.5 development preview, not a finished release.** Windows, macOS,
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
@@ -72,7 +74,9 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Bind a tool | Click its sidebar name with the button to bind |
 | Draw / erase (default bindings) | Left / right mouse drag |
 | Chain snapped lines | Shift+click; Backspace retraces; Enter or double-click finishes |
-| Pan / zoom (default bindings) | Middle mouse drag / scroll wheel |
+| Pan / zoom (default bindings) | Middle mouse drag / scroll wheel or trackpad pinch |
+| Zoom in / out (12.5%–800%) | Lower-right + / − buttons, or + / − keys; Ctrl/Command also works |
+| Reset zoom to 100% | Click the zoom percentage or Ctrl/Command+0 |
 | Sample a component tool | Hold E and click with the button to bind |
 | Play or pause / single step | Space / Right arrow when no selection is active |
 | Set simulation speed | Ctrl+Space or the speed button; 1–1,000 ticks/s |
@@ -94,7 +98,7 @@ configuration subdirectories may apply. The starter circuit opens automatically.
 | Keyboard canvas / use tool | F9, arrows / Enter |
 | Inspect cell or focused control / single step in cursor mode | F8 / F10 |
 | High contrast / window summary | F11 / F12 |
-| Touch pan and zoom | Two fingers on the canvas |
+| Touchscreen pan and zoom | Two fingers on the canvas |
 | Toggle beginner hints | B |
 
 Command can replace Ctrl on macOS. Undo records one drawing stroke as one edit.

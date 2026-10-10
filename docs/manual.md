@@ -19,10 +19,23 @@ input uses that tool. The left-button tool also has a filled selected row.
 Tab to a tool and press F8 to hear/read its complete binding description.
 Digits 1–0 select a left-button pencil; their shortcut appears next to the badge.
 Hold E and click a cell to sample its pencil, or empty space to sample the eraser.
-Drag with Pan to move the camera; scroll zooms around the pointer. F frames the
-whole circuit. These actions do not edit your circuit.
-Plus/minus zoom without a mouse wheel; Home also frames the circuit. A panner
-double-click centers the clicked cell, while a drag moves the existing view.
+Drag with Pan to move the camera. Scroll or pinch a Mac trackpad to zoom around
+the pointer; the circuit stays anchored there throughout a pinch. Zoom ranges
+from 12.5% to 800%, with gradual scrolling and support for fractional wheel input.
+The lower-right minus and plus buttons zoom around the canvas center; click the
+percentage to reset to 100%. Plus/minus keys also zoom, including Ctrl/Command
+plus/minus; Ctrl/Command+0 resets to 100%. Hold a zoom key to repeat.
+F or Home frames the whole circuit. A panner double-click centers the clicked
+cell, while a drag moves the existing view. Navigation does not edit the circuit.
+
+Placed components use the same circuit symbols as the sidebar: AND has a rounded
+right edge, OR has curved sides, and NAND/NOR add a hollow inversion circle.
+Gates turn toward a connected conducting neighbor, or away from a Signal input
+when there is no output neighbor. This orientation only affects the drawing;
+inputs and outputs still work on any side. Orange terminals identify Signal
+controls. Relay contacts show their current conducting state, and screen centers
+light up when the circuit sends power. Source and file ports also have distinct
+symbols, including when zoomed in.
 
 Clicking a gate, relay, or communicator with its own pencil places a Signal input.
 Ordinary strokes snap to a horizontal or vertical line. Hold Shift and click to
@@ -76,11 +89,15 @@ the implementation's tested behavior and current release limits.
 
 ## Touch navigation
 
-One finger uses the yellow Touch binding. Tap a sidebar tool to assign it to
+On a touchscreen, one finger uses the Touch binding. Tap a sidebar tool to assign it to
 touch. Put a second finger on the canvas to cancel an unfinished stroke and
 start pan/pinch navigation. Moving both fingers pans; changing their separation
 zooms around the moving midpoint. Lift both fingers before drawing again.
 A third finger suspends navigation until two remain.
+
+Mac trackpad pinches use native gesture events. Trackpad finger positions are
+not treated as touchscreen drawing coordinates; ordinary trackpad scrolling
+zooms just like a mouse wheel.
 
 Double-tap with the Panner to center a cell. Double/triple-tap with Select to
 choose an electrical net or physical circuit. Long holds and drags do not count

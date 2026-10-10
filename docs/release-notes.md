@@ -55,3 +55,13 @@ accepted, queued input and simulation updates stop before they can change the
 saved document. Desktop verification now follows complete save/close and recovery
 sequences, including Unicode names, failed writes, canceled dialogs, undo/redo,
 and reopening recovered work.
+
+Canvas navigation now handles native Mac trackpad pinches, keeps zoom anchored
+at the pointer, smooths large wheel deltas, and accepts fractional scrolling.
+Visible minus, percentage/reset, and plus controls support keyboard focus;
+Ctrl/Command plus/minus and Ctrl/Command+0 work too. The zoom ceiling is now 800%.
+Placed gates, sources, relays, screens, and file ports use scalable circuit
+symbols instead of text tiles. Gate orientation follows nearby connections,
+relay contacts reflect conductivity, and powered screens light up. Automated
+SDL workflows cover pinch, resized-window coordinate conversion, wheel direction,
+keyboard repeat, button hit testing, and cancellation when focus changes.
