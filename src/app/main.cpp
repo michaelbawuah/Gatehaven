@@ -2179,6 +2179,66 @@ void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, Clipboar
     std::cout << "Document workflow passed: construction, canceled close, Save As, failed save, Unicode reopen, undo/redo\n";
 }
 
+void recovery_workflow_test(SDL_Window* window, ClipboardSession& clipboard, const std::filesystem::path& directory) {
+    const auto require = [](bool ok, const char* message) { if (!ok) throw std::runtime_error(message); };
+    const auto recovery_directory = directory / "recovery-workflow";
+    auto observer = RecoveryStore::open(recovery_directory).value();
+    const auto key = [](App& app, SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE) {
+        SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN; event.key.key = code; event.key.mod = mod; app.event(event);
+    };
+    std::unique_ptr<DialogRequest> pending;
+    const FileDialog picker = [&](std::unique_ptr<DialogRequest> request, SDL_Window*) {
+        require(!pending, "Recovery opened overlapping save dialogs"); pending = std::move(request);
+    };
+    const auto complete = [&](App& app, const std::optional<std::filesystem::path>& destination) {
+        require(pending != nullptr, "Recovered circuit did not request a save destination");
+        const auto path = destination ? path_utf8(*destination) : std::string{};
+        const char* paths[]{destination ? path.c_str() : nullptr, nullptr};
+        dialog_callback(pending.release(), paths, 0); app.update(0);
+    };
+    Circuit checkpoint;
+    {
+        App writer(window, clipboard); writer.start_blank(); writer.enable_recovery(recovery_directory);
+        key(writer, SDLK_F9); key(writer, SDLK_3); key(writer, SDLK_RETURN);
+        key(writer, SDLK_RIGHT); key(writer, SDLK_1); key(writer, SDLK_RETURN); key(writer, SDLK_F10);
+        checkpoint = writer.simulation.document_snapshot(writer.circuit); writer.update(2.1);
+        require(observer->scan()->empty(), "A live editor's checkpoint appeared abandoned");
+        // Release the editor without normal close cleanup. The separate process
+        // recovery test also verifies ownership release after a real process kill.
+    }
+    const auto entries = observer->scan().value();
+    require(entries.size() == 1 && load_document(recovery_directory / (entries.front().id + ".ghv")).value() == checkpoint,
+            "The editor failed to checkpoint its current simulation state");
+    {
+        App restored(window, clipboard, ui::launch_instance, ui::launch_demo, confirm_overwrite, show_inspection,
+                     picker, [](SDL_Window*) { return CloseChoice::save; });
+        restored.enable_recovery(recovery_directory); key(restored, SDLK_F4); key(restored, SDLK_RETURN);
+        require(restored.history.modified() && restored.simulation.document_snapshot(restored.circuit) == checkpoint,
+                "Recovery menu lost the editor's current levels");
+        SDL_Event quit_event{}; quit_event.type = SDL_EVENT_QUIT; restored.event(quit_event);
+        complete(restored, std::nullopt);
+        require(!restored.quit && restored.history.modified(), "Canceling recovery Save As lost unsaved work");
+        const auto blocked = directory / "blocked recovery.ghv"; std::filesystem::create_directory(blocked);
+        restored.event(quit_event); complete(restored, blocked);
+        require(!restored.quit && restored.history.modified() && observer->scan()->empty(),
+                "Failed recovery save closed the editor or exposed a live checkpoint");
+    }
+    require(observer->scan()->size() == 1, "Canceled or failed recovery save removed the last recoverable copy");
+    const auto destination = directory / utf8_path("recovered étude.ghv");
+    {
+        App restored(window, clipboard, ui::launch_instance, ui::launch_demo, confirm_overwrite, show_inspection, picker);
+        restored.enable_recovery(recovery_directory); key(restored, SDLK_F4); key(restored, SDLK_RETURN);
+        key(restored, SDLK_S, SDL_KMOD_CTRL); complete(restored, destination);
+        require(!restored.quit && !restored.history.modified() && load_document(destination).value() == checkpoint,
+                "Saving the recovered circuit lost its contents or retained unsaved history");
+    }
+    require(observer->scan()->empty(), "Successful recovery save left a stale abandoned checkpoint");
+    App reopened(window, clipboard);
+    require(reopened.open(destination) && reopened.simulation.document_snapshot(reopened.circuit) == checkpoint,
+            "Recovered circuit failed to reopen with its saved levels");
+    std::cout << "Recovery workflow passed: editor checkpoint, restore, canceled/failed save, second restore and saved reopen\n";
+}
+
 struct SdlLifetime { ~SdlLifetime() { SDL_Quit(); } };
 struct TestDirectory {
     std::filesystem::path path;
@@ -2291,6 +2351,7 @@ int main(int argc, char** argv) {
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
             document_workflow_test(window.get(), renderer.get(), **clipboard, session_directory);
+            recovery_workflow_test(window.get(), **clipboard, session_directory);
             if (display_test) {
                 if (!SDL_RenderPresent(renderer.get())) throw std::runtime_error(SDL_GetError());
                 std::cout << "Display smoke passed: " << SDL_GetCurrentVideoDriver() << " / " << SDL_GetRendererName(renderer.get()) << '\n';
