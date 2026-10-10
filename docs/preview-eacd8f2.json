@@ -1,0 +1,377 @@
+{
+  "schema": 1,
+  "product": "Gatehaven",
+  "version": "0.5.0-dev",
+  "recorded_on": "2026-10-10",
+  "status": "unsigned-development-preview",
+  "source_revision": "eacd8f27469b380d8115dd539c99615af179d274",
+  "ci": {
+    "run_id": 38030730887,
+    "url": "https://github.com/michaelbawuah/Gatehaven/actions/runs/38030730887",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 114151008453,
+        "name": "Simulation benchmark",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008583,
+        "name": "Address and undefined behavior checks",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008592,
+        "name": "Core static analysis",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008633,
+        "name": "Core / windows-11-arm",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008641,
+        "name": "SDL3 desktop / macos-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008648,
+        "name": "External compatibility and throughput",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008653,
+        "name": "Core / macos-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008678,
+        "name": "SDL3 desktop / macos-15-intel",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008679,
+        "name": "Core / ubuntu-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008690,
+        "name": "Core / windows-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008695,
+        "name": "Core / macos-15-intel",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008705,
+        "name": "Core / ubuntu-24.04-arm",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008749,
+        "name": "SDL3 desktop / ubuntu-24.04",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008772,
+        "name": "SDL3 desktop / ubuntu-24.04-arm",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008793,
+        "name": "SDL3 desktop / windows-latest",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151008795,
+        "name": "SDL3 desktop / windows-11-arm",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151763758,
+        "name": "Fresh Ubuntu install / ubuntu-24.04",
+        "conclusion": "success"
+      },
+      {
+        "id": 114151763771,
+        "name": "Fresh Ubuntu install / ubuntu-24.04-arm",
+        "conclusion": "success"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 11662375002,
+        "name": "Gatehaven-macOS-ARM64",
+        "digest": "sha256:fde822a7f646004e443cad2d1b9fb9d9311b9de3d6966cb42d0328edd566d5f8",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:26:02Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11662285114,
+        "name": "Gatehaven-Linux-ARM64",
+        "digest": "sha256:d8e8d6b0e0b3fa6af556092f9b43eda3f0c9a9c55ed05d06f2cdd6fca8f1e5b8",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:25:45Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11662275167,
+        "name": "Gatehaven-Windows-X64",
+        "digest": "sha256:7c5de371d64c394819a705ead36994cb3067d6725b4f66b7c437ba8999988642",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:27:08Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11662245319,
+        "name": "Gatehaven-install-evidence-ARM64",
+        "digest": "sha256:0fb323d41a729e53708c12fbfbe749567155bc6e56115032b8df99aafd3dbeb3",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:28:13Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11662147667,
+        "name": "Gatehaven-benchmark-evidence",
+        "digest": "sha256:0ac0d7e404ffcf86b5d324fa15c76b92fd1e6c0816a322143dd7da3d605616a3",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:23:57Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11661758227,
+        "name": "Gatehaven-compatibility-evidence",
+        "digest": "sha256:d6977bbc968e029a25849083f6aba80fde22fa17f0e3c9aac28d3eac5594ea7b",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:24:42Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11661668664,
+        "name": "Gatehaven-macOS-X64",
+        "digest": "sha256:a1c0653a2662fe944300f635a6de267750af081703220e5ba5c82d088760f8f1",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:27:35Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11661543898,
+        "name": "Gatehaven-install-evidence-X64",
+        "digest": "sha256:02377759bd82167df2569c4a08b123ae0bffbbf3c693142073c7241d5ea78d67",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:28:27Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11661508712,
+        "name": "Gatehaven-Windows-ARM64",
+        "digest": "sha256:b61b9a1b6c31291c431c815d4aef65a10a02365a85100ff31eba014dad9a2225",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T07:26:43Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      },
+      {
+        "id": 11661419502,
+        "name": "Gatehaven-Linux-X64",
+        "digest": "sha256:191ff6b41af8e6a1bc596fbf388d34546a27ddfe463e8f7a407783304bc325b6",
+        "digest_scope": "GitHub Actions artifact archive, not an inner package",
+        "expires_at": "2026-11-09T06:25:56Z",
+        "expired_when_checked": false,
+        "source_revision": "eacd8f27469b380d8115dd539c99615af179d274"
+      }
+    ]
+  },
+  "mac_workstation": {
+    "environment": {
+      "system": "Darwin",
+      "release": "25.6.0",
+      "architecture": "arm64",
+      "compiler": "AppleClang 21.0.0.21000101",
+      "cmake": "4.4.4",
+      "configuration": "Release",
+      "sdl": "3.4.18"
+    },
+    "build_directory": "build/mac-controls",
+    "ctest": {
+      "passed": 17,
+      "failed": 0,
+      "packaging_enabled": true,
+      "installers_enabled": true
+    },
+    "installer": {
+      "command": "python3 tests/installer_test.py build/mac-controls",
+      "status": "passed",
+      "checks": [
+        "DMG integrity and SHA-256 sidecar",
+        "Read-only mount and document type declarations",
+        "App version and bundled manual",
+        "Relocated bundle in a path with spaces and non-ASCII text",
+        "Desktop self-test with SDL dummy driver",
+        "Offline help, six lessons and SDL notice"
+      ],
+      "clean_machine": false
+    },
+    "packages": [
+      {
+        "name": "Gatehaven-0.5.0-Darwin-arm64.zip",
+        "bytes": 3231725,
+        "sha256": "7c582ed281cc3281a8a0fb848e527bb8d9a200f1967f3df4521ee6edb62d8ae4",
+        "checksum_sidecar_matched": true,
+        "zip_crc_check": "passed"
+      },
+      {
+        "name": "Gatehaven-0.5.0-Darwin-arm64.dmg",
+        "bytes": 3141272,
+        "sha256": "0707b38fe4b5c1bc7a79faea8ec485a122f8d553cf54e2afbe6f4fa58c1c1c96",
+        "checksum_sidecar_matched": true
+      }
+    ],
+    "binary_sha256": "e4a7a7b0345ad50bab488103e9456ddc1d37f2afd30fdda2927d7fc0bcb4cdb9",
+    "zip_staged_installed_binary_hashes_match": true,
+    "native_acceptance": {
+      "collected_at": "2026-10-10T06:23:54.449842+00:00",
+      "evidence_path": "build/mac-controls/native-evidence-final/evidence.json",
+      "mode": "native-session",
+      "automated_status": "passed",
+      "checks": [
+        {
+          "arguments": [
+            "--build-info"
+          ],
+          "status": "passed",
+          "exit_code": 0
+        },
+        {
+          "arguments": [
+            "--diagnostics"
+          ],
+          "status": "passed",
+          "exit_code": 0
+        },
+        {
+          "arguments": [
+            "--self-test-display"
+          ],
+          "status": "passed",
+          "exit_code": 0
+        },
+        {
+          "arguments": [
+            "--manual-path"
+          ],
+          "status": "passed",
+          "exit_code": 0
+        },
+        {
+          "arguments": [
+            "--benchmark-display",
+            "10000",
+            "30"
+          ],
+          "status": "passed",
+          "exit_code": 0
+        }
+      ],
+      "display": {
+        "video_driver": "cocoa",
+        "renderer": "metal",
+        "sdl_version": 3004018,
+        "window_width": 1280,
+        "window_height": 800,
+        "pixel_width": 2560,
+        "pixel_height": 1600,
+        "output_width": 2560,
+        "output_height": 1600,
+        "logical_width": 1280,
+        "logical_height": 800,
+        "pixel_density": 2,
+        "display_scale": 2,
+        "refresh_hz": 60,
+        "vsync": 1
+      },
+      "package_bound_at_collection": false,
+      "physical_device_acceptance_complete": false
+    },
+    "user_feedback": {
+      "recorded_on": "2026-10-10",
+      "observation": "User confirmed the updated Mac app works after the previously reported gate-symbol issue.",
+      "scope": "Reported usability issue; no individual acceptance cards were signed off."
+    },
+    "manual_scenarios": [
+      {
+        "id": "first_launch",
+        "status": "pending"
+      },
+      {
+        "id": "files",
+        "status": "pending"
+      },
+      {
+        "id": "editing",
+        "status": "pending"
+      },
+      {
+        "id": "windows",
+        "status": "pending"
+      },
+      {
+        "id": "display",
+        "status": "pending"
+      },
+      {
+        "id": "touch",
+        "status": "pending"
+      },
+      {
+        "id": "accessibility",
+        "status": "pending"
+      },
+      {
+        "id": "dialogs",
+        "status": "pending"
+      },
+      {
+        "id": "file_ports",
+        "status": "pending"
+      },
+      {
+        "id": "recovery",
+        "status": "pending"
+      },
+      {
+        "id": "installation",
+        "status": "pending"
+      },
+      {
+        "id": "playthrough",
+        "status": "pending"
+      }
+    ],
+    "signing": {
+      "valid_code_signing_identities": 0,
+      "identity_check": "security find-identity -v -p codesigning",
+      "developer_id_signed": false,
+      "notarization": "not_run"
+    }
+  },
+  "release_acceptance_complete": false,
+  "remaining": [
+    "Complete and export hands-on scenario observations for intended targets.",
+    "Verify installation, update and removal on clean machines with user data preserved.",
+    "Configure macOS and Windows signing credentials; sign and verify exact delivery artifacts.",
+    "Decide the application license, supported release targets and update policy."
+  ]
+}

@@ -29,6 +29,19 @@ The Mac app also keeps these resources inside its bundle so moving the `.app`
 preserves them. Windows archives include the redistributable compiler runtime.
 Keep dependency notices with any redistributed binaries.
 
+On Mac, keep one clearly named copy in your Applications folder and launch that
+copy. Older apps in build or test folders remain separate applications. If the
+interface still shows text tiles after updating, save your work, quit that old
+instance, and launch the newly installed app. Check the exact copy's revision:
+
+```sh
+"/Applications/gatehaven.app/Contents/MacOS/gatehaven" --build-info
+```
+
+Use the actual install path and app name if you placed it in your user
+Applications folder or named it `Gatehaven.app`. Compare `Source revision` with
+the candidate record; the visible version alone may match across preview builds.
+
 `cmake --install build/package --prefix /chosen/location --config Release`
 stages the same contents without an archive. Linux installs include desktop/MIME
 metadata and a vector icon; update the desktop and MIME caches using your

@@ -4,6 +4,9 @@ Use the exact candidate commit and archive SHA-256 when recording a result.
 Automated native builds and a developer workstation do not substitute for the
 manual checks below. A final release requires evidence for each supported target.
 
+The [10 October preview record](preview-eacd8f2.md) identifies the
+verified `eacd8f2` candidate, Mac package checks, and remaining manual work.
+
 | Area | Current evidence | Remaining acceptance |
 | --- | --- | --- |
 | Core semantics | Parameterized rules, traversal differential tests, external observations | Resolve any newly discovered brief/reference conflicts explicitly |

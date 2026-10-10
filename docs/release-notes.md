@@ -79,3 +79,13 @@ reducing renderer pipeline switches. A paired Mac experiment measured a 36.4%
 reduction in median frame time for its alternating zoom workload; this is a
 workload-specific observation. Pixel comparisons protect component appearance,
 selection outlines, overlapping paste previews, contrast and zoom extremes.
+
+High contrast now has a visible, keyboard-focusable header button and a
+Cmd/Ctrl+Shift+K shortcut. Simulation speed uses Cmd/Ctrl+Shift+T, avoiding
+Spotlight on macOS. Mac guides display Command shortcuts, explain the Fn key,
+and keep contrast available when F11 is reserved for Show Desktop. The offline
+acceptance cards now point to the correct File ports help page, and report
+tests read UTF-8 consistently on Windows.
+
+The [10 October preview record](preview-eacd8f2.md) contains the
+verified candidate and package results. This remains an unsigned preview.

@@ -15,6 +15,9 @@ logic gates, and step through a circuit to see how its signals change.
 and Linux are the intended platforms. See [verification notes](docs/verification.md)
 for exactly what has been tested.
 
+[Current preview and release status](docs/preview-eacd8f2.md) lists the
+verified candidate, downloads for each platform, and remaining release work.
+
 The editor now includes chained polylines, connected and sparse selections,
 interactive screens, binary file communicators, persistent tool preferences,
 native pinch navigation, crash recovery, keyboard access to every control,
