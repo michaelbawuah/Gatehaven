@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Gatehaven desktop check</title>
+<style>
+:root{font:16px/1.6 system-ui,sans-serif;color:#192f35;background:#f3f6f5;color-scheme:light}body{margin:0}main{max-width:860px;margin:auto;padding:36px 20px 70px}h1{font-size:2.2rem;line-height:1.2;margin:12px 0}h2{font-size:1.2rem;margin:0 0 10px}p{margin:8px 0 16px}.eyebrow{font-weight:700;color:#005544;letter-spacing:.08em}.card,header,details{padding:24px;margin:18px 0;background:white;border:1px solid #cad7d3;border-radius:10px}label{display:block;font-weight:600;margin:12px 0 5px}select,textarea,input,button{font:inherit;border-radius:5px}select,textarea,input{padding:9px;border:1px solid #607d76;background:white;color:#192f35;box-sizing:border-box}textarea{width:100%;resize:vertical}button{padding:10px 18px;border:2px solid #005544;background:#005544;color:white;cursor:pointer}button:hover{background:#003c30}button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #a34b05;outline-offset:3px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.note{border-left:4px solid #a34b05;padding-left:14px}#message{color:#8a3000;font-weight:600}.status{font-weight:700}summary{cursor:pointer;font-weight:600}@media print{.actions,#message{display:none}.card{break-inside:avoid}body{background:white}main{padding:0}}
+</style>
+<main>
+<header>
+<div class="eyebrow">GATEHAVEN · DESKTOP CHECK</div>
+<h1>Try the build. Record what happened.</h1>
+<p id="identity"></p><p id="automatic" class="status"></p>
+<p class="note">Every hands-on check starts pending. Use the installed game and the disposable practice circuit in this folder. A completed report describes this machine; it does not certify the whole release.</p>
+<p>Save results before closing this page. Nothing is uploaded. To continue later, open this page again and import your saved results.</p>
+<label for="tester-notes">Your test setup</label><textarea id="tester-notes" rows="3" placeholder="Computer, monitors/scaling, input devices, screen reader, clean profile or everyday account…"></textarea>
+</header>
+<div class="actions"><button id="download" type="button">Save results as JSON</button><label for="import">Import saved results</label><input id="import" type="file" accept=".json,application/json"></div>
+<p id="summary" class="status" aria-live="polite"></p><p id="message" role="alert"></p>
+__SCENARIO_CARDS__
+<details><summary>Automatic evidence and build details</summary><pre id="evidence"></pre></details>
+</main>
+<script id="report-data" type="application/json">__REPORT_DATA__</script>
+<script>
+const report=JSON.parse(document.getElementById('report-data').textContent);
+const statuses=['pending','passed','failed','blocked','not_applicable'];
+let dirty=false;
+const byId=id=>document.getElementById(id);
+function update(){const counts=Object.fromEntries(statuses.map(s=>[s,report.manual.filter(x=>x.status===s).length]));byId('summary').textContent=`Hands-on checks: ${counts.passed} passed · ${counts.failed} failed · ${counts.blocked} blocked · ${counts.pending} pending · ${counts.not_applicable} not applicable`;}
+function populate(){for(const item of report.manual){byId('result-'+item.id).value=item.status;byId('notes-'+item.id).value=item.notes;}byId('tester-notes').value=report.tester_notes;update();}
+byId('identity').textContent=`${report.machine.system} ${report.machine.architecture} · ${report.mode} · commit ${report.candidate.source_revision||'unknown'}`;
+byId('automatic').textContent=`Automatic checks: ${report.automated_status}. Final release acceptance: pending.`;
+byId('evidence').textContent=JSON.stringify({...report,manual:undefined,tester_notes:undefined},null,2);
+for(const item of report.manual){byId('result-'+item.id).addEventListener('change',e=>{item.status=e.target.value;dirty=true;update();});byId('notes-'+item.id).addEventListener('input',e=>{item.notes=e.target.value;dirty=true;});}
+byId('tester-notes').addEventListener('input',e=>{report.tester_notes=e.target.value;dirty=true;});
+function validate(manual){if(!Array.isArray(manual)||manual.length!==report.manual.length)throw Error('This file uses a different checklist.');manual.forEach((item,i)=>{if(item.id!==report.manual[i].id||!statuses.includes(item.status)||typeof item.notes!=='string')throw Error('Invalid checklist results.');if(['failed','blocked','not_applicable'].includes(item.status)&&!item.notes.trim())throw Error('Add notes for failed, blocked or inapplicable checks.');});}
+byId('download').addEventListener('click',()=>{try{validate(report.manual);report.release_acceptance_complete=false;report.observations_saved_at=new Date().toISOString();const blob=new Blob([JSON.stringify(report,null,2)+'\n'],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='gatehaven-acceptance-results.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);dirty=false;byId('message').textContent='Results prepared for download. Keep the JSON file to resume or share your observations.';}catch(error){byId('message').textContent=error.message;}});
+byId('import').addEventListener('change',async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024)throw Error('Choose a results file smaller than 5 MB.');const saved=JSON.parse(await file.text());if(saved.schema!==1||saved.checklist_version!==1||saved.product!=='Gatehaven'||saved.candidate?.binary_sha256!==report.candidate.binary_sha256||saved.collected_at!==report.collected_at||saved.release_acceptance_complete!==false||typeof saved.tester_notes!=='string')throw Error('These results belong to a different build or collection.');validate(saved.manual);report.manual.forEach((item,i)=>{item.status=saved.manual[i].status;item.notes=saved.manual[i].notes;});report.tester_notes=saved.tester_notes;populate();dirty=false;byId('message').textContent='Saved observations restored; automatic evidence is unchanged.';}catch(error){byId('message').textContent=error.message;}finally{e.target.value='';}});
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+populate();
+</script>
+</html>
