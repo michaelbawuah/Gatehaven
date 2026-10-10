@@ -38,6 +38,8 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     assert "<main>" in (resources / "docs" / "manual.html").read_text(encoding="utf-8")
     notice = Path("third_party") / "SDL3" / "LICENSE.txt"
     assert (resources / notice).read_bytes() == (Path(__file__).resolve().parents[1] / notice).read_bytes()
+    font_notice = Path("third_party") / "Inter" / "LICENSE.txt"
+    assert (resources / font_notice).read_bytes() == (Path(__file__).resolve().parents[1] / font_notice).read_bytes()
     if has_app == "ON" and sys.platform in ("win32", "darwin"):
         target = "windows" if sys.platform == "win32" else "macos"
         identity = "a" * 40 if target == "windows" else "Developer ID Application: Plan only"
@@ -55,6 +57,7 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
             assert info["CFBundleExecutable"] == "gatehaven"
             assert info["UTExportedTypeDeclarations"][0]["UTTypeTagSpecification"]["public.filename-extension"] == ["ghv"]
             assert (bundle / "Resources" / "third_party" / "SDL3" / "LICENSE.txt").is_file()
+            assert (bundle / "Resources" / font_notice).is_file()
             assert (bundle / "Resources" / "docs" / "manual.html").is_file()
         else:
             app = root / "bin" / ("gatehaven" + suffix)

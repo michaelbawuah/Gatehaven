@@ -22,6 +22,7 @@ for package in archives:
         prefix = roots.pop() + "/"
         resources = prefix + "share/gatehaven/"
         required = [resources + "build-metadata.json", resources + "README.md", resources + "docs/manual.md", resources + "docs/manual.html", resources + "third_party/SDL3/LICENSE.txt"]
+        required.append(resources + "third_party/Inter/LICENSE.txt")
         required += [resources + "samples/" + name + ".ghv" for name in
                      ("starter", "oscillator", "screen-switch", "positive-relay", "negative-relay", "gate-gallery")]
         suffix = ".exe" if "Windows" in package.name else ""
@@ -30,6 +31,7 @@ for package in archives:
             required += [prefix + "gatehaven.app/Contents/MacOS/gatehaven",
                          prefix + "gatehaven.app/Contents/Info.plist",
                          prefix + "gatehaven.app/Contents/Resources/third_party/SDL3/LICENSE.txt"]
+            required.append(prefix + "gatehaven.app/Contents/Resources/third_party/Inter/LICENSE.txt")
         else:
             required.append(prefix + "bin/gatehaven" + suffix)
         assert set(required) <= files, (package, set(required) - files)

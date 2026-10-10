@@ -1,5 +1,6 @@
 #include "font.hpp"
 #include "colors.hpp"
+#include "widgets.hpp"
 #include "instances.hpp"
 #include "gatehaven/clipboard_session.hpp"
 #include "gatehaven/document.hpp"
@@ -49,8 +50,8 @@ constexpr std::array palette{Element::wire, Element::crossing, Element::source,
     Element::signal, Element::and_gate, Element::or_gate, Element::nand_gate,
     Element::nor_gate, Element::positive_relay, Element::negative_relay,
     Element::screen, Element::file_input, Element::file_output};
-constexpr std::array<std::string_view, 13> labels{"WIRE", "CROSSING", "SOURCE", "SIGNAL",
-    "AND", "OR", "NAND", "NOR", "+ RELAY", "- RELAY", "SCREEN", "FILE IN", "FILE OUT"};
+constexpr std::array<std::string_view, 13> labels{"Wire", "Crossing", "Power source", "Signal",
+    "AND gate", "OR gate", "NAND gate", "NOR gate", "Positive relay", "Negative relay", "Screen", "File input", "File output"};
 
 constexpr std::array<SDL_Color, 6> binding_colors{{{205, 63, 64, 255}, {53, 103, 205, 255},
     {36, 139, 74, 255}, {0, 150, 180, 255}, {179, 62, 169, 255}, {190, 153, 0, 255}}};
@@ -81,12 +82,12 @@ void line(SDL_Renderer* r, float x, float y, float xx, float yy, SDL_Color c) {
 
 struct Button { ViewRect rect; std::string label; };
 std::array<Button, 10> buttons(bool running, unsigned speed) {
-    return {{{{272, 22, 102, 40}, running ? "PAUSE" : "PLAY"},
-             {{384, 22, 68, 40}, "STEP"}, {{462, 22, 80, 40}, "RESET"},
-             {{552, 22, 68, 40}, "UNDO"}, {{630, 22, 68, 40}, "REDO"},
-             {{708, 22, 68, 40}, "OPEN"}, {{786, 22, 68, 40}, "SAVE"},
-             {{864, 22, 80, 40}, "FRAME"}, {{954, 22, 130, 40}, std::to_string(speed) + " TICKS/S"},
-             {{1094, 22, 156, 40}, "NEW CIRCUIT"}}};
+    return {{{{272, 22, 102, 40}, running ? "Pause" : "Run"},
+             {{384, 22, 68, 40}, "Step"}, {{462, 22, 80, 40}, "Reset"},
+             {{552, 22, 68, 40}, "Undo"}, {{630, 22, 68, 40}, "Redo"},
+             {{708, 22, 68, 40}, "Open"}, {{786, 22, 68, 40}, "Save"},
+             {{864, 22, 80, 40}, "Fit view"}, {{954, 22, 130, 40}, std::to_string(speed) + " ticks / s"},
+             {{1094, 22, 156, 40}, "+  New circuit"}}};
 }
 
 struct DialogResult { bool save{}; bool canceled{}; std::string path; std::string error; std::optional<Point> endpoint; int filter{}; };
@@ -147,7 +148,7 @@ public:
         circuit.clear();
         simulation.initialize(circuit);
         view.frame(std::nullopt);
-        status_ = "NEW CIRCUIT - CHOOSE A COMPONENT TO BEGIN";
+        status_ = "New circuit - choose a component to begin";
     }
 
     void launch_open(const std::filesystem::path& path) { launch(path); }
@@ -158,7 +159,7 @@ public:
         circuit = std::move(*example);
         simulation.initialize(circuit);
         view.frame(circuit.bounds());
-        status_ = "EXAMPLE: " + std::string(name) + " - I: INTERACT, SPACE: PLAY";
+        status_ = "Example: " + std::string(name) + " · I to interact, Space to run";
         return true;
     }
 
@@ -167,7 +168,7 @@ public:
         else if (state == "help") help_ = true;
         else if (state == "examples") examples_menu_ = true;
         else if (state == "keyboard") keyboard_focus_ = 2;
-        else if (state == "canvas") { keyboard_cursor_ = Point{0, 0}; hover_ = keyboard_cursor_; view.center_on(*keyboard_cursor_); status_ = "KEYBOARD CANVAS - ARROWS: NAVIGATE, F8: INSPECT, F10: STEP, ESC: EXIT"; }
+        else if (state == "canvas") { keyboard_cursor_ = Point{0, 0}; hover_ = keyboard_cursor_; view.center_on(*keyboard_cursor_); status_ = "Keyboard canvas - arrows: navigate, F8: inspect, F10: step, Esc: exit"; }
         else if (state == "recovery") {
             recovery_menu_ = true;
             const auto date = std::chrono::sys_days{std::chrono::year{2026}/10/9};
@@ -186,13 +187,13 @@ public:
         if (!std::filesystem::exists(path, error)) return;
         const auto bytes = read_bounded_file(path, 4096);
         const auto settings = bytes ? decode_preferences(*bytes) : std::expected<Preferences, std::string>(std::unexpected(bytes.error()));
-        if (!settings) { status_ = "SETTINGS IGNORED: " + settings.error(); return; }
+        if (!settings) { status_ = "Settings ignored: " + settings.error(); return; }
         tools_ = settings->bindings; speed_ = settings->speed; beginner_ = settings->beginner; high_contrast_ = settings->high_contrast;
     }
 
     void enable_recovery(const std::filesystem::path& directory) {
         auto opened = RecoveryStore::open(directory);
-        if (!opened) { status_ = "RECOVERY UNAVAILABLE: " + opened.error(); return; }
+        if (!opened) { status_ = "Recovery unavailable: " + opened.error(); return; }
         recovery_ = std::move(*opened);
     }
 
@@ -200,7 +201,7 @@ public:
         if (!recovery_) return;
         cancel_gesture();
         const auto entries = recovery_->scan();
-        if (!entries) { status_ = "RECOVERY: " + entries.error(); return; }
+        if (!entries) { status_ = "Recovery: " + entries.error(); return; }
         recovery_entries_ = *entries; recovery_index_ = 0; recovery_delete_ = false;
         recovery_menu_ = !only_if_available || !recovery_entries_.empty(); help_ = false; examples_menu_ = false;
     }
@@ -227,7 +228,7 @@ public:
             return false;
         }
         const auto after = fingerprint_file(path);
-        if (!after || *after != *before) { status_ = "DOCUMENT CHANGED WHILE OPENING - TRY AGAIN"; return false; }
+        if (!after || *after != *before) { status_ = "Document changed while opening - try again"; return false; }
         circuit = std::move(*loaded);
         path_ = path; disk_version_ = *after;
         keyboard_cursor_.reset();
@@ -239,7 +240,7 @@ public:
         running = false;
         history.mark_saved();
         view.frame(circuit.bounds());
-        status_ = "DOCUMENT OPENED";
+        status_ = "Document opened";
         return true;
     }
 
@@ -263,13 +264,13 @@ public:
         }
         if (result) {
             dialog_pending_ = false;
-            if (!result->error.empty()) status_ = "DIALOG: " + result->error;
-            else if (result->canceled) status_ = "CANCELED";
+            if (!result->error.empty()) status_ = "Dialog: " + result->error;
+            else if (result->canceled) status_ = "Canceled";
             else {
                 auto path = utf8_path(result->path);
                 if (result->endpoint) {
                     const auto expected_type = result->save ? Element::file_output : Element::file_input;
-                    if (circuit.at(*result->endpoint) != expected_type) status_ = "FILE PORT WAS REMOVED";
+                    if (circuit.at(*result->endpoint) != expected_type) status_ = "File port was removed";
                     else {
                         const auto chosen = result->save ? endpoints_.choose_output(*result->endpoint, path) : endpoints_.choose_input(*result->endpoint, path);
                         status_ = chosen ? "COMMUNICATOR FILE CONNECTED" : chosen.error();
@@ -300,7 +301,7 @@ public:
         if (e.type == SDL_EVENT_WINDOW_FOCUS_LOST || e.type == SDL_EVENT_WINDOW_MINIMIZED || e.type == SDL_EVENT_WINDOW_HIDDEN) {
             cancel_gesture(); keyboard_focus_.reset(); tick_schedule_.reset(); checkpoint();
         }
-        if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE && !keyboard_cursor_) hover_.reset();
+        if (e.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) { pointer_.reset(); if (!keyboard_cursor_) hover_.reset(); }
         if (e.type == SDL_EVENT_KEY_UP && e.key.key == SDLK_E) eyedropper_ = false;
         if (e.type == SDL_EVENT_KEY_UP && (e.key.key == SDLK_RETURN || e.key.key == SDLK_KP_ENTER) && keyboard_cursor_) {
             interaction_button_.reset(); endpoints_.release_screens();
@@ -361,6 +362,7 @@ public:
             if (polyline_ && hover_) polyline_preview(*hover_);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
+            pointer_ = SDL_FPoint{e.motion.x, e.motion.y};
             if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
             if (!keyboard_cursor_) hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
@@ -387,7 +389,7 @@ public:
                                         {std::max(drag_->x, end->x), std::max(drag_->y, end->y)}};
                     selection_.combine(Selection::rectangle(circuit, region), selection_mode_);
                     selection_changed_ = false;
-                    status_ = "SELECTION READY - CTRL C TO COPY";
+                    status_ = "Selection ready - Ctrl C to copy";
                 } else apply(preview_);
             }
             drag_.reset();
@@ -403,13 +405,14 @@ public:
         SDL_SetRenderClipRect(r, &clip);
         const auto visible = view.visible();
         const auto first = view.screen(visible.min);
-        if (view.scale >= 10) {
+        if (view.scale >= 12) {
+            std::vector<SDL_FPoint> points;
             for (double x = first.first; x < 1280; x += view.scale) {
-                line(r, static_cast<float>(x), 96, static_cast<float>(x), 764, {230, 236, 238, 255});
+                for (double y = first.second; y < 764; y += view.scale) points.push_back({static_cast<float>(x), static_cast<float>(y)});
             }
-            for (double y = first.second; y < 764; y += view.scale) {
-                line(r, 240, static_cast<float>(y), 1280, static_cast<float>(y), {230, 236, 238, 255});
-            }
+            const auto dot = high_contrast_ ? theme().muted : SDL_Color{189, 204, 212, 255};
+            SDL_SetRenderDrawColor(r, dot.r, dot.g, dot.b, dot.a);
+            SDL_RenderPoints(r, points.data(), static_cast<int>(points.size()));
         }
         circuit.visit(visible, [&](const Cell& cell) {
             ++visible_cells;
@@ -438,72 +441,17 @@ public:
                       static_cast<float>(view.scale), theme().orange, true);
         }
         SDL_SetRenderClipRect(r, nullptr);
-        rectangle(r, 0, 0, 1280, 96, theme().white);
-        rectangle(r, 0, 96, 240, 668, theme().white);
-        line(r, 0, 95, 1280, 95, theme().border);
-        line(r, 239, 96, 239, 764, theme().border);
-        ui::text(r, 22, 24, "GATEHAVEN", theme().ink, 3);
-        ui::text(r, 24, 57, "BUILD. CONNECT. DISCOVER.", theme().muted, 1.25F);
-        const auto toolbar = buttons(running, speed_);
-        for (std::size_t i = 0; i < toolbar.size(); ++i) {
-            const auto& button = toolbar[i];
-            rectangle(r, static_cast<float>(button.rect.x), static_cast<float>(button.rect.y),
-                      static_cast<float>(button.rect.width), static_cast<float>(button.rect.height),
-                      i == 0 ? theme().teal : theme().paper);
-            const auto text_width = static_cast<float>(button.label.size()) * 9;
-            ui::text(r, static_cast<float>(button.rect.x + button.rect.width / 2) - text_width / 2,
-                     37, button.label, i == 0 ? theme().white : theme().ink, 1.5F);
-        }
-        ui::text(r, 276, 76, "SPACE: PLAY / PAUSE    ARROWS: MOVE SELECTION    HOLD E: EYEDROPPER    SCROLL: ZOOM", theme().muted, 1.25F);
-        ui::text(r, 22, 121, "COMPONENTS", theme().muted, 1.5F);
-        for (std::size_t i = 0; i < palette.size(); ++i) {
-            const float y = 146 + static_cast<float>(i) * 28;
-            const InputTool tool{ToolKind::pencil, palette[i]};
-            const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : theme().white);
-            if (selected) rectangle(r, 12, y, 3, 26, theme().teal);
-            if (i < 10) ui::text(r, 26, y + 8, std::to_string((i + 1) % 10), theme().muted, 1.5F);
-            ui::text(r, 52, y + 7, labels[i], selected ? theme().teal : theme().ink, 1.75F);
-            draw_bindings(r, y + 6, tool);
-        }
-        constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
-        constexpr std::array<std::string_view, 4> tool_labels{"Q  SELECT", "PAN", "ERASE", "I  INTERACT"};
-        for (std::size_t i = 0; i < kinds.size(); ++i) {
-            const float y = 522 + static_cast<float>(i) * 28;
-            const InputTool tool{kinds[i]};
-            const bool selected = tools_[0] == tool;
-            rectangle(r, 12, y, 216, 26, selected ? SDL_Color{225, 241, 236, 255} : theme().paper);
-            ui::text(r, 26, y + 8, tool_labels[i], selected ? theme().teal : theme().ink, 1.5F);
-            draw_bindings(r, y + 6, tool);
-        }
-        ui::text(r, 22, 645, "CLICK A TOOL TO BIND", theme().ink, 1.25F);
-        for (std::size_t i = 0; i < binding_names.size(); ++i) {
-            ui::text(r, 22 + static_cast<float>(i % 3) * 68, 667 + static_cast<float>(i / 3) * 15,
-                     binding_names[i], high_contrast_ ? theme().ink : binding_colors[i], 1);
-        }
-        ui::text(r, 22, 707, "SHARED CLIPBOARD " + std::to_string(clipboard_), theme().ink, 1.25F);
-        ui::text(r, 22, 729, "CTRL SHIFT C/V: CHOOSE", theme().muted, 1.0F);
-        ui::text(r, 22, 748, "F11: CONTRAST  F12: DETAILS", theme().muted, 1.0F);
-        rectangle(r, 0, 764, 1280, 36, theme().ink);
-        ui::text(r, 20, 771, status_.substr(0, 73), theme().white, 1.25F);
-        if (hover_) {
-            const auto info = std::string(name(circuit.at(*hover_))) + "  [" + std::to_string(hover_->x) +
-                ", " + std::to_string(hover_->y) + "]  " + (is_communicator(circuit.at(*hover_))
-                    ? std::string("TX ") + (simulation.sent(*hover_) ? "ON" : "OFF") + "  RX " + (simulation.received(*hover_) ? "ON" : "OFF")
-                    : circuit.at(*hover_) == Element::crossing
-                        ? std::string("H ") + ((simulation.ports(*hover_) & 10U) ? "ON" : "OFF") + "  V " + ((simulation.ports(*hover_) & 5U) ? "ON" : "OFF")
-                        : (circuit.at(*hover_) == Element::positive_relay || circuit.at(*hover_) == Element::negative_relay)
-                            ? std::string("POWER ") + (simulation.powered(*hover_) ? "ON" : "OFF") + "  CONDUCT " + (simulation.conductive(*hover_) ? "ON" : "OFF")
-                            : (simulation.powered(*hover_) ? "ON" : "OFF"));
-            ui::text(r, 20, 786, info, {170, 208, 196, 255}, 1);
-        }
-        ui::text(r, 786, 777, (history.modified() ? "*  " : "") + std::to_string(circuit.size()) + " CELLS    TICK " +
-                 std::to_string(simulation.ticks()) + (running ? "    RUNNING" : "    PAUSED"), theme().white, 1.25F);
+        render_chrome(r);
         if (beginner_ && !recovery_menu_ && !help_ && !examples_menu_ && !clipboard_menu_ && !speed_edit_ && !dialog_pending_) render_hint(r);
         if (keyboard_focus_) {
             const auto box = focus_rect(*keyboard_focus_);
             rectangle(r, static_cast<float>(box.x - 2), static_cast<float>(box.y - 2),
                 static_cast<float>(box.width + 4), static_cast<float>(box.height + 4), theme().orange, true);
+        }
+        if (help_ || examples_menu_ || recovery_menu_ || clipboard_menu_ || speed_edit_ || dialog_pending_) {
+            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+            rectangle(r, 0, 0, 1280, 800, {20, 35, 46, 85});
+            SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
         }
         if (help_) render_help(r);
         if (examples_menu_) render_examples(r);
@@ -511,8 +459,8 @@ public:
         if (clipboard_menu_) render_clipboard_menu(r);
         if (speed_edit_) render_speed_dialog(r);
         if (dialog_pending_) {
-            rectangle(r, 414, 334, 548, 92, theme().ink);
-            ui::text(r, 440, 373, "CHOOSE A FILE IN THE SYSTEM DIALOG", theme().white, 2);
+            modal(r, 414, 334, 548, 92);
+            ui::label(r, 440, 365, "Choose a file in the system dialog…", theme().ink, 18);
         }
         return visible_cells;
     }
@@ -542,6 +490,7 @@ private:
     bool dialog_pending_{};
     bool close_after_save_{};
     std::optional<Point> hover_;
+    std::optional<SDL_FPoint> pointer_;
     std::optional<Point> drag_;
     std::size_t drag_button_{};
     std::optional<std::size_t> pan_button_;
@@ -569,7 +518,7 @@ private:
     std::optional<FileFingerprint> disk_version_;
     std::filesystem::path preferences_path_;
     std::string title_;
-    std::string status_{"WELCOME - EXPLORE THE STARTER CIRCUIT"};
+    std::string status_{"Ready to build. Explore the starter circuit or choose a component."};
     std::shared_ptr<Mailbox> mailbox_{std::make_shared<Mailbox>()};
     unsigned speed_{5};
     std::optional<std::string> speed_edit_;
@@ -586,13 +535,13 @@ private:
         if (!recovery_ || !history.modified()) return;
         const auto saved = recovery_->write(simulation.document_snapshot(circuit));
         if (saved) { recovery_dirty_ = true; recovery_schedule_.written(circuit.revision()); }
-        else { recovery_schedule_.failed(); status_ = "RECOVERY SAVE FAILED: " + saved.error(); }
+        else { recovery_schedule_.failed(); status_ = "Recovery save failed: " + saved.error(); }
     }
     void clear_checkpoint() {
         if (!recovery_) return;
         const auto cleared = recovery_->discard();
         if (cleared) { recovery_dirty_ = false; recovery_cleanup_wait_ = 0; }
-        else { recovery_cleanup_wait_ = 30; status_ = "RECOVERY CLEANUP FAILED: " + cleared.error(); }
+        else { recovery_cleanup_wait_ = 30; status_ = "Recovery cleanup failed: " + cleared.error(); }
     }
 
     void cancel_gesture(bool clear_touch = true) {
@@ -652,7 +601,7 @@ private:
             simulation.invalidate(history.last_changes());
             simulation.refresh(circuit);
             endpoints_.prune(circuit);
-            status_ = "CIRCUIT UPDATED";
+            status_ = "Circuit updated";
         }
         return true;
     }
@@ -673,6 +622,8 @@ private:
         if (!button) return;
         if (help_) { help_ = false; return; }
         if (e.button == SDL_BUTTON_LEFT) {
+            if (ViewRect{990, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); examples_menu_ = true; return; }
+            if (ViewRect{1126, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); help_ = true; return; }
             const auto toolbar = buttons(running, speed_);
             for (std::size_t i = 0; i < toolbar.size(); ++i) {
                 if (!toolbar[i].rect.contains(e.x, e.y)) continue;
@@ -719,7 +670,7 @@ private:
         if (eyedropper_) {
             const auto element = circuit.at(*hover_);
             tools_[*button] = element == Element::empty ? InputTool{ToolKind::eraser} : InputTool{ToolKind::pencil, element};
-            status_ = "BOUND " + std::string(binding_names[*button]) + " TO " + std::string(name(element));
+            status_ = "Bound " + std::string(binding_names[*button]) + " TO " + std::string(name(element));
             placing_ = false; return;
         }
         if (placing_ && e.button == SDL_BUTTON_LEFT) {
@@ -739,7 +690,7 @@ private:
         if (tools_[*button].kind == ToolKind::interactor) {
             if (circuit.at(*hover_) == Element::screen) { interaction_button_ = *button; endpoints_.hold_screen(*hover_); }
             else if (is_communicator(circuit.at(*hover_))) communicator_dialog(*hover_);
-            else status_ = "CHOOSE A COMMUNICATOR TO INTERACT";
+            else status_ = "Choose a communicator to interact";
             return;
         }
         const auto modifiers = SDL_GetModState();
@@ -754,7 +705,7 @@ private:
             polyline_.emplace(*hover_, tools_[*button].kind == ToolKind::eraser ? Element::empty : tools_[*button].element);
             polyline_button_ = *button;
             polyline_preview(*hover_);
-            status_ = "POLYLINE: CLICK TO ADD. BACKSPACE TO RETRACE. DOUBLE CLICK TO FINISH.";
+            status_ = "Polyline: click to add. Backspace to retrace. double click to finish.";
             return;
         }
         drag_ = hover_;
@@ -763,8 +714,10 @@ private:
         update_preview(*drag_);
     }
 
-    static constexpr std::size_t focus_count = 10 + palette.size() + 4;
+    static constexpr std::size_t palette_end = 10 + palette.size() + 4;
+    static constexpr std::size_t focus_count = palette_end + 2;
     ViewRect focus_rect(std::size_t index) const {
+        if (index >= palette_end) return {990.0 + static_cast<double>(index - palette_end) * 136, 69, 124, 23};
         if (index < 10) return buttons(running, speed_)[index].rect;
         if (index < 10 + palette.size()) return {12, 146 + static_cast<double>(index - 10) * 28, 216, 26};
         return {12, 522 + static_cast<double>(index - 10 - palette.size()) * 28, 216, 26};
@@ -773,6 +726,7 @@ private:
     std::string focus_description() const {
         if (!keyboard_focus_) return "Canvas. F9 enables keyboard navigation; F8 inspects the current cell.";
         const auto index = *keyboard_focus_;
+        if (index >= palette_end) return index == palette_end ? "Examples. Open the circuit lesson chooser. Shortcut: F3." : "Quick guide. Open keyboard and editing help. Shortcut: F2.";
         if (index < 10) {
             constexpr std::array<std::string_view, 10> descriptions{
                 "Start or pause simulation. Shortcut: Space.", "Pause and advance one tick. Shortcut: F10.",
@@ -793,7 +747,7 @@ private:
         for (std::size_t i = 0; i < tools_.size(); ++i) if (tools_[i] == tool) { text += " " + std::string(binding_names[i]); bound = true; }
         return text + (bound ? "." : " none.");
     }
-    void describe_focus() { status_ = "FOCUS: " + focus_description(); }
+    void describe_focus() { status_ = "Focus: " + focus_description(); }
     void show_details(const std::string& text) {
         cancel_gesture(); tick_schedule_.reset();
         if (!inspection_dialog_(window_, text)) status_ = SDL_GetError();
@@ -875,9 +829,9 @@ private:
             if (e.key == SDLK_RETURN || e.key == SDLK_KP_ENTER || e.key == SDLK_SPACE) {
                 const auto box = focus_rect(*keyboard_focus_);
                 SDL_MouseButtonEvent click{}; click.button = SDL_BUTTON_LEFT; click.clicks = 1;
-                if (shift && *keyboard_focus_ >= 10) click.which = SDL_TOUCH_MOUSEID;
+                if (shift && *keyboard_focus_ >= 10 && *keyboard_focus_ < palette_end) click.which = SDL_TOUCH_MOUSEID;
                 click.x = static_cast<float>(box.x + box.width / 2); click.y = static_cast<float>(box.y + box.height / 2);
-                const bool palette_control = *keyboard_focus_ >= 10;
+                const bool palette_control = *keyboard_focus_ >= 10 && *keyboard_focus_ < palette_end;
                 mouse_down(click); if (palette_control) keyboard_focus_.reset(); return;
             }
         }
@@ -911,7 +865,7 @@ private:
             const auto dy = e.key == SDLK_UP ? -distance : e.key == SDLK_DOWN ? distance : 0;
             const auto next = translated(*keyboard_cursor_, dx, dy);
             if (next) { keyboard_cursor_ = next; hover_ = next; view.center_on(*next); }
-            else status_ = "CANVAS COORDINATE LIMIT REACHED";
+            else status_ = "Canvas coordinate limit reached";
             return;
         }
         if (selection_ && !placing_ && (e.key == SDLK_LEFT || e.key == SDLK_RIGHT || e.key == SDLK_UP || e.key == SDLK_DOWN)) {
@@ -938,7 +892,7 @@ private:
             case SDLK_V: clipboard_action('v', shift); break;
             case SDLK_D:
                 cancel_gesture(); placement_ = capture_selection(simulation.document_snapshot(circuit), selection_); placement_preview_.reset(placement_);
-                placing_ = !placement_.cells.empty(); status_ = "CLICK TO PLACE A DUPLICATE"; break;
+                placing_ = !placement_.cells.empty(); status_ = "Click to place a duplicate"; break;
             case SDLK_I: {
                 std::set<Point> points;
                 for (const auto& cell : circuit.cells()) if (!selection_.contains(cell.position)) points.insert(cell.position);
@@ -960,15 +914,15 @@ private:
         case SDLK_F10: running = false; tick(); break;
         case SDLK_F11:
             high_contrast_ = !high_contrast_;
-            status_ = high_contrast_ ? "HIGH CONTRAST ON" : "STANDARD COLORS";
+            status_ = high_contrast_ ? "High contrast on" : "Standard colors";
             break;
         case SDLK_F9:
             cancel_gesture(); keyboard_focus_.reset();
-            if (keyboard_cursor_) { keyboard_cursor_.reset(); status_ = "POINTER NAVIGATION"; }
+            if (keyboard_cursor_) { keyboard_cursor_.reset(); status_ = "Pointer navigation"; }
             else {
                 keyboard_cursor_ = hover_.value_or(view.cell(760, 430).value_or(Point{}));
                 hover_ = keyboard_cursor_; selection_.clear(); view.center_on(*keyboard_cursor_);
-                status_ = "KEYBOARD CANVAS - ARROWS: NAVIGATE, F8: INSPECT, F10: STEP, ESC: EXIT";
+                status_ = "Keyboard canvas - arrows: navigate, F8: inspect, F10: step, Esc: exit";
             }
             break;
         case SDLK_R: reset_simulation(); break;
@@ -980,7 +934,7 @@ private:
         case SDLK_F8:
             if (keyboard_focus_) show_details(focus_description());
             else if (hover_) show_details(describe_cell(circuit, simulation, *hover_));
-            else status_ = "POINT AT A CELL OR TAB TO A CONTROL, THEN PRESS F8";
+            else status_ = "Point at a cell or Tab to a control, then press F8";
             break;
         case SDLK_F12: show_details(window_description()); break;
         case SDLK_F7: cancel_gesture(); tools_[0] = {ToolKind::pencil, Element::file_output}; placing_ = false; break;
@@ -1029,7 +983,7 @@ private:
         endpoints_.prune(circuit);
         simulation.step(circuit, [&](const CommunicatorGroup& group, bool sending) {
             const bool received = endpoints_.exchange(group, sending, circuit.revision());
-            if (!endpoints_.last_error().empty()) status_ = "FILE PORT: " + endpoints_.last_error();
+            if (!endpoints_.last_error().empty()) status_ = "File port: " + endpoints_.last_error();
             return received;
         });
     }
@@ -1077,29 +1031,29 @@ private:
         speed_ = value;
         speed_edit_.reset();
         tick_schedule_.reset();
-        status_ = "SIMULATION SPEED: " + std::to_string(speed_) + " TICKS/S";
+        status_ = "Simulation speed: " + std::to_string(speed_) + " TICKS/S";
     }
 
     void delete_recovery() {
         if (!recovery_ || recovery_index_ >= recovery_entries_.size()) return;
         const auto removed = recovery_->remove(recovery_entries_[recovery_index_].id);
         recovery_delete_ = false;
-        if (!removed) { status_ = "RECOVERY: " + removed.error(); return; }
+        if (!removed) { status_ = "Recovery: " + removed.error(); return; }
         recovery_entries_.erase(recovery_entries_.begin() + static_cast<std::ptrdiff_t>(recovery_index_));
         if (recovery_index_ >= recovery_entries_.size()) recovery_index_ = recovery_entries_.empty() ? 0 : recovery_entries_.size() - 1;
-        status_ = "ABANDONED SNAPSHOT DELETED";
+        status_ = "Abandoned snapshot deleted";
     }
 
     void restore_recovery(std::size_t index) {
         if (!recovery_ || index >= recovery_entries_.size()) return;
-        if (history.modified()) { status_ = "SAVE THIS CIRCUIT OR OPEN A NEW WINDOW BEFORE RECOVERING"; return; }
+        if (history.modified()) { status_ = "Save this circuit or open a new window before recovering"; return; }
         auto restored = recovery_->restore(recovery_entries_[index].id);
-        if (!restored) { status_ = "RECOVERY: " + restored.error(); return; }
+        if (!restored) { status_ = "Recovery: " + restored.error(); return; }
         cancel_gesture(); circuit = std::move(*restored); path_.clear();
         history.clear(); history.mark_unsaved(); simulation.initialize(circuit); endpoints_.clear();
         selection_.clear(); placing_ = false; running = false; recovery_menu_ = false;
         recovery_dirty_ = true; recovery_schedule_.written(circuit.revision());
-        view.frame(circuit.bounds()); status_ = "CIRCUIT RECOVERED - SAVE TO KEEP YOUR WORK";
+        view.frame(circuit.bounds()); status_ = "Circuit recovered - save to keep your work";
     }
 
     static std::string recovery_date(std::filesystem::file_time_type time) {
@@ -1113,53 +1067,61 @@ private:
     }
 
     static ViewRect recovery_button(std::size_t row) { return {390, 270 + static_cast<double>(row) * 54, 500, 42}; }
+    void modal(SDL_Renderer* r, float x, float y, float w, float h) const {
+        ui::rounded(r, x + 3, y + 6, w, h, {123, 139, 147, 255}, 13);
+        ui::panel(r, x, y, w, h, theme().white, theme().border, 12);
+    }
+
     void render_recovery(SDL_Renderer* r) const {
-        rectangle(r, 350, 180, 580, 460, theme().ink);
-        ui::text(r, 390, 212, "RECOVER UNSAVED CIRCUITS", theme().white, 2);
+        modal(r, 350, 180, 580, 460);
+        ui::label(r, 390, 207, "Recover unsaved work", theme().ink, 23, ui::Weight::semibold);
+        ui::label(r, 390, 240, "Pick a snapshot to continue where you left off.", theme().muted, 13);
         if (recovery_delete_) {
-            ui::text(r, 390, 306, "DELETE THIS SNAPSHOT PERMANENTLY?", theme().white, 1.5F);
-            ui::text(r, 390, 346, "YOUR SAVED CIRCUIT IS NOT AFFECTED.", theme().white, 1.5F);
-            ui::text(r, 390, 402, "ENTER: DELETE     ESC: KEEP", theme().white, 1.5F);
+            ui::label(r, 390, 302, "Delete this snapshot?", theme().ink, 19, ui::Weight::semibold);
+            ui::label(r, 390, 342, "This cannot be undone. Your saved circuit is unaffected.", theme().muted, 13);
+            ui::label(r, 390, 398, "Enter to delete    ·    Esc to keep it", theme().orange, 14, ui::Weight::semibold);
             return;
         }
-        if (recovery_entries_.empty()) ui::text(r, 390, 294, "NO ABANDONED SNAPSHOTS", theme().white, 1.5F);
+        if (recovery_entries_.empty()) ui::label(r, 390, 300, "You're all caught up. No abandoned snapshots.", theme().muted, 14);
         const auto start = (recovery_index_ / 5) * 5;
         for (std::size_t i = start; i < std::min(start + 5, recovery_entries_.size()); ++i) {
             const auto box = recovery_button(i - start);
-            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), static_cast<float>(box.width), static_cast<float>(box.height), i == recovery_index_ ? theme().teal : theme().muted);
-            const auto label = recovery_date(recovery_entries_[i].modified) + "  " + std::to_string((recovery_entries_[i].bytes + 1023) / 1024) + " KB";
-            ui::text(r, 406, static_cast<float>(box.y + 14), label, theme().white, 1.5F);
+            const bool selected = i == recovery_index_;
+            ui::panel(r, 390, static_cast<float>(box.y), 500, 42, selected ? SDL_Color{230, 243, 238, 255} : theme().white,
+                      selected ? theme().teal : theme().border);
+            const auto label = recovery_date(recovery_entries_[i].modified) + "   ·   " + std::to_string((recovery_entries_[i].bytes + 1023) / 1024) + " KB";
+            ui::label(r, 406, static_cast<float>(box.y + 11), label, theme().ink, 14);
         }
-        if (!recovery_entries_.empty()) ui::text(r, 390, 544,
-            std::to_string(recovery_index_ + 1) + " OF " + std::to_string(recovery_entries_.size()) + " SNAPSHOTS", theme().white, 1.25F);
-        ui::text(r, 390, 566, "UP/DOWN: CHOOSE   ENTER: RECOVER", theme().white, 1.25F);
-        ui::text(r, 390, 592, "DEL: DELETE   ESC: KEEP FOR LATER", theme().white, 1.25F);
+        if (!recovery_entries_.empty()) ui::label(r, 390, 544,
+            std::to_string(recovery_index_ + 1) + " of " + std::to_string(recovery_entries_.size()) + " snapshots", theme().muted, 12);
+        ui::label(r, 390, 574, "↑ ↓  Choose     Enter  Recover     Del  Delete", theme().ink, 13);
+        ui::label(r, 390, 599, "Esc keeps these snapshots for later.", theme().muted, 12);
     }
 
     void render_speed_dialog(SDL_Renderer* r) const {
-        rectangle(r, 410, 234, 470, 306, theme().ink);
-        ui::text(r, 452, 272, "SIMULATION SPEED", theme().white, 2.5F);
-        ui::text(r, 452, 314, "TICKS PER SECOND: 1 TO 1000", theme().white, 1.5F);
-        rectangle(r, 484, 350, 320, 58, speed_replace_ ? theme().teal : theme().white);
-        ui::text(r, 508, 366, speed_edit_->empty() ? "_" : *speed_edit_, speed_replace_ ? theme().white : theme().ink, 3);
-        if (speed_error_) ui::text(r, 452, 427, "ENTER A WHOLE NUMBER FROM 1 TO 1000", {255, 182, 148, 255}, 1.25F);
-        else ui::text(r, 452, 427, "ENTER: APPLY    ESC: CANCEL", theme().white, 1.5F);
-        rectangle(r, 484, 460, 148, 40, theme().muted);
-        rectangle(r, 656, 460, 148, 40, theme().teal);
-        ui::text(r, 520, 473, "CANCEL", theme().white, 2);
-        ui::text(r, 696, 473, "APPLY", theme().white, 2);
+        modal(r, 410, 234, 470, 306);
+        ui::label(r, 452, 266, "Simulation speed", theme().ink, 24, ui::Weight::semibold);
+        ui::label(r, 452, 307, "Choose a speed from 1 to 1,000 ticks per second.", theme().muted, 13);
+        ui::panel(r, 484, 350, 320, 58, speed_replace_ ? SDL_Color{230, 243, 238, 255} : theme().white, theme().teal);
+        ui::label(r, 508, 358, speed_edit_->empty() ? "_" : *speed_edit_, theme().ink, 32, ui::Weight::semibold);
+        if (speed_error_) ui::label(r, 452, 423, "Enter a whole number between 1 and 1,000.", theme().orange, 13);
+        else ui::label(r, 452, 423, "Enter to apply    ·    Esc to cancel", theme().muted, 13);
+        ui::panel(r, 484, 460, 148, 40, theme().white, theme().border);
+        ui::rounded(r, 656, 460, 148, 40, theme().teal);
+        ui::centered(r, 484, 460, 148, 40, "Cancel", theme().ink);
+        ui::centered(r, 656, 460, 148, 40, "Apply", theme().white);
     }
 
     void copy(bool cut) {
-        if (!selection_) { status_ = "SELECT A REGION FIRST"; return; }
+        if (!selection_) { status_ = "Select a region first"; return; }
         const auto result = clipboards_.write(clipboard_, capture_selection(simulation.document_snapshot(circuit), selection_));
-        if (!result) { status_ = "COPY FAILED: " + result.error(); return; }
+        if (!result) { status_ = "Copy failed: " + result.error(); return; }
         if (cut) erase_selection();
-        status_ = "COPIED TO SHARED CLIPBOARD " + std::to_string(clipboard_);
+        status_ = "Copied to shared clipboard " + std::to_string(clipboard_);
     }
 
     void clipboard_action(char action, bool choose) {
-        if (action != 'v' && !selection_) { status_ = "SELECT A REGION FIRST"; return; }
+        if (action != 'v' && !selection_) { status_ = "Select a region first"; return; }
         cancel_gesture(); placing_ = false;
         if (choose) { clipboard_menu_ = action; return; }
         clipboard_ = 0;
@@ -1179,23 +1141,24 @@ private:
     }
 
     void render_clipboard_menu(SDL_Renderer* r) const {
-        rectangle(r, 340, 234, 600, 288, theme().ink);
-        const std::string action = *clipboard_menu_ == 'v' ? "PASTE FROM" : *clipboard_menu_ == 'x' ? "CUT TO" : "COPY TO";
-        ui::text(r, 376, 266, action + " SHARED CLIPBOARD", theme().white, 2);
-        ui::text(r, 376, 300, "0 FOLLOWS THE LAST CLIPBOARD USED", {170, 208, 196, 255}, 1.5F);
+        modal(r, 340, 234, 600, 288);
+        const std::string action = *clipboard_menu_ == 'v' ? "Paste from" : *clipboard_menu_ == 'x' ? "Cut to" : "Copy to";
+        ui::label(r, 376, 258, action + " a shared clipboard", theme().ink, 24, ui::Weight::semibold);
+        ui::label(r, 376, 295, "Slot 0 follows the most recently used clipboard.", theme().muted, 13);
         for (unsigned slot = 0; slot < 10; ++slot) {
             const auto box = clipboard_button(slot);
-            rectangle(r, static_cast<float>(box.x), static_cast<float>(box.y), 96, 54,
-                      slot == clipboard_ ? theme().teal : theme().muted);
-            ui::text(r, static_cast<float>(box.x + 39), static_cast<float>(box.y + 15), std::to_string(slot), theme().white, 3);
+            const bool selected = slot == clipboard_;
+            ui::panel(r, static_cast<float>(box.x), static_cast<float>(box.y), 96, 54,
+                selected ? SDL_Color{230, 243, 238, 255} : theme().white, selected ? theme().teal : theme().border);
+            ui::centered(r, static_cast<float>(box.x), static_cast<float>(box.y), 96, 54, std::to_string(slot), selected ? theme().teal : theme().ink, 24);
         }
-        ui::text(r, 376, 480, "PRESS 0-9 OR CLICK A SLOT. ESC: CANCEL", theme().white, 1.5F);
+        ui::label(r, 376, 479, "Press 0–9 or choose a slot    ·    Esc to cancel", theme().muted, 13);
     }
 
     void begin_paste() {
         const auto stamp = clipboards_.read(clipboard_);
         placing_ = false;
-        if (!stamp) { status_ = "PASTE FAILED: " + stamp.error(); return; }
+        if (!stamp) { status_ = "Paste failed: " + stamp.error(); return; }
         placement_ = *stamp; // Keep a stable preview if another window changes this slot.
         placement_preview_.reset(placement_);
         placing_ = !placement_.cells.empty();
@@ -1255,7 +1218,7 @@ private:
             const auto current = fingerprint_file(path);
             if (!current) { status_ = current.error(); return false; }
             if (*current != disk_version_) {
-                if (!confirm_overwrite_(window_)) { status_ = "SAVE CANCELED - CTRL SHIFT S KEEPS BOTH VERSIONS"; return false; }
+                if (!confirm_overwrite_(window_)) { status_ = "Save canceled - Ctrl Shift S keeps both versions"; return false; }
             }
         }
         const auto result = save_document(path, simulation.document_snapshot(circuit));
@@ -1301,10 +1264,119 @@ private:
         else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, nullptr, 0, nullptr, false);
     }
 
-    void draw_bindings(SDL_Renderer* r, float y, InputTool tool) const {
-        for (std::size_t i = 0; i < tools_.size(); ++i) {
-            if (tools_[i] == tool) rectangle(r, 182 + static_cast<float>(i) * 7, y, 5, 14, binding_colors[i]);
+    bool hovered(ViewRect box) const {
+        return pointer_ && box.contains(pointer_->x, pointer_->y) && !help_ && !examples_menu_ &&
+            !speed_edit_ && !clipboard_menu_ && !recovery_menu_ && !dialog_pending_;
+    }
+
+    void render_chrome(SDL_Renderer* r) const {
+        using ui::Weight;
+        const SDL_Color active{230, 243, 238, 255}, hover{239, 244, 246, 255};
+        rectangle(r, 0, 0, 1280, 96, theme().white);
+        rectangle(r, 0, 96, 240, 668, theme().white);
+        line(r, 0, 95, 1280, 95, theme().border);
+        line(r, 239, 96, 239, 764, theme().border);
+        ui::rounded(r, 20, 25, 34, 34, theme().teal, 9);
+        ui::icon(r, ui::Icon::logo, 25, 30, 24, theme().white);
+        ui::label(r, 64, 20, "Gatehaven", theme().ink, 23, Weight::semibold);
+        ui::label(r, 65, 49, "Circuit studio", theme().muted, 12);
+        const auto toolbar = buttons(running, speed_);
+        for (std::size_t i = 0; i < toolbar.size(); ++i) {
+            const auto& button = toolbar[i];
+            const float x = static_cast<float>(button.rect.x), y = static_cast<float>(button.rect.y);
+            const float w = static_cast<float>(button.rect.width), h = static_cast<float>(button.rect.height);
+            const bool primary = i == 0;
+            ui::panel(r, x, y, w, h, primary ? theme().teal : hovered(button.rect) ? hover : theme().white,
+                      primary ? theme().teal : theme().border);
+            if (primary) {
+                ui::icon(r, running ? ui::Icon::pause : ui::Icon::play, x + 17, y + 11, 18, theme().white);
+                ui::centered(r, x + 25, y, w - 25, h, button.label, theme().white, 14);
+            } else ui::centered(r, x, y, w, h, button.label, theme().ink, 13);
         }
+        const auto document = path_.empty() ? std::string("Untitled circuit") : path_utf8(path_.filename());
+        ui::label(r, 272, 73, ui::ellipsize(document, 240, 12), theme().ink, 12, Weight::semibold);
+        if (history.modified()) ui::rounded(r, 526, 79, 5, 5, theme().orange, 2.5F);
+        ui::label(r, 555, 73, "Space  Run / pause     ·     Scroll  Zoom", theme().muted, 12);
+        for (std::size_t i = 0; i < 2; ++i) {
+            const ViewRect box{990.0 + static_cast<double>(i) * 136, 69, 124, 23};
+            if (hovered(box)) ui::rounded(r, static_cast<float>(box.x), 69, 124, 23, hover, 5);
+            ui::centered(r, static_cast<float>(box.x), 69, 124, 23, i == 0 ? "Examples  F3" : "Quick guide  F2", theme().muted, 12, Weight::regular);
+        }
+        ui::label(r, 22, 116, "COMPONENTS", theme().muted, 11, Weight::semibold);
+        ui::label(r, 204, 116, "13", theme().muted, 11);
+        for (std::size_t i = 0; i < palette.size(); ++i) {
+            const float y = 146 + static_cast<float>(i) * 28;
+            const InputTool tool{ToolKind::pencil, palette[i]};
+            const bool selected = tools_[0] == tool;
+            const ViewRect box{12, y, 216, 26};
+            if (selected || hovered(box)) ui::rounded(r, 12, y, 216, 26, selected ? active : hover, 5);
+            if (selected) ui::rounded(r, 12, y + 5, 3, 16, theme().teal, 1.5F);
+            const auto color = selected ? theme().teal : theme().ink;
+            ui::icon(r, static_cast<ui::Icon>(i), 24, y + 4, 18, color);
+            ui::label(r, 52, y + 3, labels[i], color, 13.5F, selected ? Weight::semibold : Weight::regular);
+            const auto shortcut = i < 10 ? std::to_string((i + 1) % 10) : "F" + std::to_string(i - 5);
+            ui::centered(r, 172, y + 4, 23, 18, shortcut, theme().muted, 10.5F, Weight::regular);
+            draw_bindings(r, y + 4, tool);
+        }
+        line(r, 22, 516, 218, 516, theme().border);
+        constexpr std::array kinds{ToolKind::selector, ToolKind::panner, ToolKind::eraser, ToolKind::interactor};
+        constexpr std::array<std::string_view, 4> tool_labels{"Select", "Pan", "Erase", "Interact"};
+        constexpr std::array<std::string_view, 4> shortcuts{"Q", "", "", "I"};
+        for (std::size_t i = 0; i < kinds.size(); ++i) {
+            const float y = 522 + static_cast<float>(i) * 28;
+            const InputTool tool{kinds[i]};
+            const bool selected = tools_[0] == tool;
+            if (selected || hovered({12, y, 216, 26})) ui::rounded(r, 12, y, 216, 26, selected ? active : hover, 5);
+            const auto color = selected ? theme().teal : theme().ink;
+            ui::icon(r, static_cast<ui::Icon>(static_cast<int>(ui::Icon::select) + static_cast<int>(i)), 24, y + 4, 18, color);
+            ui::label(r, 52, y + 3, tool_labels[i], color, 13.5F, selected ? Weight::semibold : Weight::regular);
+            ui::centered(r, 172, y + 4, 23, 18, shortcuts[i], theme().muted, 10.5F, Weight::regular);
+            draw_bindings(r, y + 4, tool);
+        }
+        line(r, 22, 640, 218, 640, theme().border);
+        ui::label(r, 22, 650, "Make the controls yours", theme().ink, 12, Weight::semibold);
+        ui::label(r, 22, 670, "Click a tool with any input below.", theme().muted, 11.5F);
+        constexpr std::array<std::string_view, 6> inputs{"Left", "Right", "Middle", "X1", "X2", "Touch"};
+        for (std::size_t i = 0; i < inputs.size(); ++i) {
+            const float x = 22 + static_cast<float>(i % 3) * 67, y = 694 + static_cast<float>(i / 3) * 25;
+            ui::panel(r, x, y, 60, 20, theme().white, theme().border, 5);
+            ui::rounded(r, x + 7, y + 7, 5, 5, high_contrast_ ? theme().ink : binding_colors[i], 2.5F);
+            ui::label(r, x + 17, y + 2, inputs[i], theme().muted, 10.5F);
+        }
+        ui::label(r, 22, 745, "Clipboard " + std::to_string(clipboard_) + "  ·  Ctrl Shift C / V", theme().muted, 10.5F);
+        rectangle(r, 0, 764, 1280, 36, theme().white);
+        line(r, 0, 764, 1280, 764, theme().border);
+        ui::rounded(r, 20, 780, 6, 6, theme().teal, 3);
+        ui::label(r, 36, 772, ui::ellipsize(status_, hover_ ? 545 : 820, 12), theme().muted, 12);
+        if (hover_) {
+            const auto element = circuit.at(*hover_);
+            const auto detail = std::string(name(element)) + "  (" + std::to_string(hover_->x) + ", " + std::to_string(hover_->y) + ")" +
+                (element == Element::crossing ? std::string("  H:") + ((simulation.ports(*hover_) & 10U) ? "on" : "off") + " V:" + ((simulation.ports(*hover_) & 5U) ? "on" : "off") :
+                 is_communicator(element) ? std::string("  TX:") + (simulation.sent(*hover_) ? "on" : "off") + " RX:" + (simulation.received(*hover_) ? "on" : "off") :
+                 (element == Element::positive_relay || element == Element::negative_relay) ? std::string("  P:") + (simulation.powered(*hover_) ? "on" : "off") + " C:" + (simulation.conductive(*hover_) ? "on" : "off") :
+                 (simulation.powered(*hover_) ? "  on" : "  off"));
+            ui::label(r, 603, 772, ui::ellipsize(detail, 280, 12), theme().muted, 12);
+        }
+        const auto stats = std::to_string(circuit.size()) + " cells   ·   Tick " + std::to_string(simulation.ticks());
+        ui::label(r, 905, 772, ui::ellipsize(stats, 190, 12), theme().muted, 12);
+        ui::rounded(r, 1120, 773, 72, 20, running ? active : hover, 5);
+        ui::centered(r, 1120, 773, 72, 20, running ? "Running" : "Paused", running ? theme().teal : theme().muted, 11);
+        const auto zoom = std::to_string(static_cast<int>(std::round(view.scale / 32.0 * 100))) + "%";
+        ui::label(r, 1258 - ui::text_width(zoom, 12), 772, zoom, theme().muted, 12);
+    }
+
+    void draw_bindings(SDL_Renderer* r, float y, InputTool tool) const {
+        constexpr std::array<std::string_view, 6> codes{"L", "R", "M", "X1", "X2", "T"};
+        std::string label;
+        std::size_t count = 0;
+        for (std::size_t i = 0; i < tools_.size(); ++i) if (tools_[i] == tool) {
+            if (!count) label = codes[i];
+            ++count;
+        }
+        if (!count) return;
+        if (count > 1) label += "+";
+        ui::rounded(r, 199, y, 23, 18, {238, 243, 245, 255}, 4);
+        ui::centered(r, 199, y, 23, 18, label, theme().ink, 10.5F);
     }
 
     void draw_selection(SDL_Renderer* r, Bounds region) const {
@@ -1337,7 +1409,7 @@ private:
             const bool bright = !preview && simulation.sent(cell.position);
             rectangle(r, x + 3, y + 3, std::max(1.0F, s - 6), std::max(1.0F, s - 6),
                       bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{57, 64, 84, 255});
-            if (s >= 18) ui::text(r, x + s / 2 - 3, y + s / 2 - 3.5F, "S", bright ? theme().ink : theme().white, 1);
+            if (s >= 18) ui::centered(r, x, y, s, s, "S", bright ? theme().ink : theme().white, std::min(13.0F, s * 0.45F));
             if (preview) rectangle(r, x, y, s, s, theme().orange, true);
             return;
         }
@@ -1379,9 +1451,8 @@ private:
                                cell.element == Element::positive_relay ? std::string_view("+R") :
                                cell.element == Element::negative_relay ? std::string_view("-R") : name(cell.element);
             if (s >= 18) {
-                const float font = std::min(1.5F, (s - 8) / (static_cast<float>(label.size()) * 6));
-                ui::text(r, x + center - static_cast<float>(label.size()) * 3 * font,
-                         y + center - 3.5F * font, label, theme().white, font);
+                const float size = std::min(12.0F, (s - 7) / ui::text_width(label, 1, ui::Weight::semibold));
+                ui::centered(r, x, y, s, s, label, theme().white, size);
             }
         }
         if (preview) rectangle(r, x, y, s, s, color, true);
@@ -1396,75 +1467,78 @@ private:
     }
 
     void render_examples(SDL_Renderer* r) const {
-        rectangle(r, 374, 162, 612, 478, theme().ink);
-        ui::text(r, 406, 194, "EXPLORE A CIRCUIT", theme().white, 2.5F);
-        ui::text(r, 406, 226, "OPENS IN A NEW WINDOW", {170, 208, 196, 255}, 1.5F);
+        modal(r, 374, 162, 612, 478);
+        ui::label(r, 406, 187, "Start with an idea", theme().ink, 26, ui::Weight::semibold);
+        ui::label(r, 406, 224, "Explore a working circuit. Each opens in a new window.", theme().muted, 13);
+        constexpr std::array<std::string_view, 6> titles{"Your first circuit", "A ticking clock", "An interactive screen", "Positive relay", "Negative relay", "The gate collection"};
+        constexpr std::array<std::string_view, 6> descriptions{"Follow power through an AND gate and a crossing.", "See a repeating signal travel around a feedback loop.", "Hold a screen and watch the circuit respond.", "Let a control signal open a conducting path.", "Explore how a relay responds to the opposite signal.", "Compare the behavior of the four logic gates."};
         for (std::size_t i = 0; i < example_names.size(); ++i) {
             const auto box = example_button(i);
-            rectangle(r, 406, static_cast<float>(box.y), 548, 42, i == example_index_ ? theme().teal : theme().muted);
-            ui::text(r, 428, static_cast<float>(box.y + 13), std::to_string(i + 1) + "  " + std::string(example_names[i]), theme().white, 2);
+            const bool selected = i == example_index_;
+            ui::panel(r, 406, static_cast<float>(box.y), 548, 42, selected ? SDL_Color{230, 243, 238, 255} : theme().white, selected ? theme().teal : theme().border);
+            ui::centered(r, 418, static_cast<float>(box.y), 28, 42, std::to_string(i + 1), selected ? theme().teal : theme().muted, 14);
+            ui::label(r, 459, static_cast<float>(box.y + 2), titles[i], theme().ink, 14, ui::Weight::semibold);
+            ui::label(r, 459, static_cast<float>(box.y + 23), descriptions[i], theme().muted, 11.5F);
         }
-        ui::text(r, 406, 602, "1-6 OR ARROWS + ENTER. ESC: CLOSE", theme().white, 1.5F);
+        ui::label(r, 406, 601, "↑ ↓  Browse     Enter  Open     Esc  Close", theme().muted, 13);
     }
 
     void render_hint(SDL_Renderer* r) const {
-        std::string_view first = "DRAG TO DRAW A STRAIGHT LINE. HOLD SHIFT TO CHAIN LINES.";
-        std::string_view second = "BACKSPACE RETRACES A POLYLINE. DOUBLE CLICK FINISHES IT.";
-        if (placing_) { first = "CLICK TO PLACE YOUR COPIED CIRCUIT. ESC CANCELS."; second = "[ AND ] ROTATE. H AND V FLIP THE PREVIEW."; }
-        else if (eyedropper_) { first = "CLICK A CELL TO BIND THAT BUTTON TO ITS PENCIL."; second = "CLICK EMPTY SPACE TO BIND THE ERASER."; }
+        std::string_view first = "Drag to draw a straight line. hold shift to chain lines.";
+        std::string_view second = "Backspace retraces a polyline. double click finishes it.";
+        if (placing_) { first = "Click to place your copied circuit. esc cancels."; second = "[ AND ] ROTATE. H AND V FLIP THE PREVIEW."; }
+        else if (eyedropper_) { first = "Click a cell to bind that button to its pencil."; second = "Click empty space to bind the eraser."; }
         else if (tools_[0].kind == ToolKind::selector) {
-            first = "SHIFT ADDS TO THE SELECTION. ALT REMOVES FROM IT.";
-            second = "DOUBLE CLICK: ELECTRICAL NET. TRIPLE CLICK: WHOLE CIRCUIT.";
+            first = "Shift adds to the selection. alt removes from it.";
+            second = "Double click: electrical net. triple click: whole circuit.";
         } else if (tools_[0].kind == ToolKind::panner) {
-            first = "DRAG TO MOVE THE CAMERA. SCROLL TO ZOOM AT THE CURSOR.";
-            second = "DOUBLE CLICK CENTERS A CELL. F FRAMES THE WHOLE CIRCUIT.";
+            first = "Drag to move the camera. scroll to zoom at the cursor.";
+            second = "Double click centers a cell. f frames the whole circuit.";
         } else if (tools_[0].kind == ToolKind::eraser) {
-            first = "DRAG TO ERASE A LINE. SHIFT CHAINS ERASER SEGMENTS.";
-            second = "CTRL Z RESTORES THE WHOLE EDIT.";
+            first = "Drag to erase a line. shift chains eraser segments.";
+            second = "Ctrl z restores the whole edit.";
         } else if (tools_[0].kind == ToolKind::interactor) {
-            first = "HOLD A SCREEN TO SEND POWER INTO THE CIRCUIT.";
-            second = "CLICK A FILE PORT TO CHOOSE ITS INPUT OR OUTPUT FILE.";
+            first = "Hold a screen to send power into the circuit.";
+            second = "Click a file port to choose its input or output file.";
         } else if (tools_[0].element == Element::screen) {
-            first = "ADJACENT SCREENS WORK AS ONE. I: HOLD TO INTERACT.";
-            second = "BRIGHTNESS SHOWS SIGNALS SENT BY THE CIRCUIT.";
+            first = "Adjacent screens work as one. i: hold to interact.";
+            second = "Brightness shows signals sent by the circuit.";
         } else if (is_communicator(tools_[0].element)) {
-            first = "FILE PORTS TRANSFER SERIAL BITS, ONE PER TICK.";
-            second = "I: CHOOSE A FILE. F1: PROTOCOL GUIDE IN THE MANUAL.";
+            first = "File ports transfer serial bits, one per tick.";
+            second = "I: choose a file. f1: protocol guide in the manual.";
         }
-        rectangle(r, 254, 690, 674, 60, theme().white);
-        ui::text(r, 268, 703, first, theme().teal, 1.25F);
-        ui::text(r, 268, 727, second, theme().muted, 1.25F);
+        ui::panel(r, 254, 690, 730, 60, theme().white, theme().border, 8);
+        ui::label(r, 270, 701, first, theme().teal, 13, ui::Weight::semibold);
+        ui::label(r, 270, 726, second, theme().muted, 12);
     }
 
     void render_help(SDL_Renderer* r) const {
-        rectangle(r, 338, 132, 846, 608, theme().ink);
-        ui::text(r, 376, 170, "BUILD YOUR FIRST CIRCUIT", theme().white, 2.5F);
-        constexpr std::array<std::string_view, 22> lines{
-            "1-0: COMPONENTS      Q: SELECT REGION",
-            "F5/F6/F7: SCREEN / FILE IN / FILE OUT",
-            "I: INTERACT WITH SCREENS AND FILE PORTS",
-            "CLICK TOOL: BIND THAT MOUSE BUTTON",
-            "HOLD E + CLICK: SAMPLE A TOOL",
-            "SHIFT + DRAW: POLYLINE; BACKSPACE: RETRACE",
-            "SELECT: SHIFT ADDS, ALT SUBTRACTS",
-            "SPACE: PLAY/PAUSE    RIGHT/F10: ONE TICK",
-            "CTRL SPACE: SET TICKS PER SECOND",
-            "R: RESET            F: FRAME CIRCUIT",
-            "CTRL C/X/V: COPY / CUT / PASTE",
-            "CTRL Z/Y: UNDO / REDO    CTRL D: DUPLICATE",
-            "CTRL S/O/N: SAVE / OPEN / NEW",
-            "[ AND ]: ROTATE     H/V: FLIP",
-            "ARROWS: MOVE SELECTION  CTRL: X4",
-            "CTRL SHIFT C/V: CHOOSE CLIPBOARD",
-            "F1: MANUAL   F3: EXAMPLES   F4: RECOVERY",
-            "TAB: FOCUS CONTROLS. ENTER: ACTIVATE",
-            "F9: KEYBOARD CANVAS. ARROWS: NAVIGATE",
-            "ENTER: USE TOOL. F8: INSPECT FOCUS/CELL",
-            "TWO FINGERS: PAN AND PINCH TO ZOOM",
-            "F11: CONTRAST  F12: DETAILS  ESC: CLOSE"};
-        for (std::size_t i = 0; i < lines.size(); ++i) {
-            ui::text(r, 378, 208 + static_cast<float>(i) * 23, lines[i], theme().white, 1.75F);
-        }
+        modal(r, 280, 120, 910, 620);
+        ui::label(r, 316, 144, "QUICK GUIDE", theme().teal, 11, ui::Weight::semibold);
+        ui::label(r, 316, 166, "Build. Connect. See what happens.", theme().ink, 26, ui::Weight::semibold);
+        ui::label(r, 316, 205, "Choose a component, draw on the canvas, then run your circuit.", theme().muted, 14);
+        ui::panel(r, 1114, 146, 40, 26, theme().paper, theme().border, 5);
+        ui::centered(r, 1114, 146, 40, 26, "Esc", theme().muted, 12);
+        struct Shortcut { std::string_view keys, description; };
+        const auto group = [&](float x, float y, std::string_view title, const std::array<Shortcut, 6>& shortcuts) {
+            ui::label(r, x, y, title, theme().ink, 16, ui::Weight::semibold);
+            for (std::size_t i = 0; i < shortcuts.size(); ++i) {
+                const float row = y + 33 + static_cast<float>(i) * 25;
+                ui::label(r, x, row, shortcuts[i].keys, theme().teal, 11.5F, ui::Weight::semibold);
+                ui::label(r, x + 138, row, shortcuts[i].description, theme().muted, 12.5F);
+            }
+        };
+        group(316, 252, "Create & draw", {{{"1–0", "Choose a component"}, {"F5 / F6 / F7", "Screen / file input / output"},
+            {"Click a tool", "Bind that mouse button"}, {"E + click", "Sample a component"}, {"Shift + draw", "Chain connected segments"}, {"Backspace", "Retrace a segment"}}});
+        group(754, 252, "Select & edit", {{{"Q", "Select a region"}, {"Shift / Alt", "Add / subtract selection"},
+            {"Ctrl C / X / V", "Copy / cut / paste"}, {"Ctrl Z / Y / D", "Undo / redo / duplicate"}, {"[ ]  /  H V", "Rotate / flip selection"}, {"Arrow keys", "Move selection; Ctrl = ×4"}}});
+        group(316, 467, "Run & explore", {{{"Space", "Run or pause"}, {"F10", "Advance one tick"},
+            {"Ctrl Space", "Change simulation speed"}, {"R", "Reset the simulation"}, {"I", "Interact with a screen / port"}, {"F / scroll", "Fit circuit / zoom"}}});
+        group(754, 467, "Files & workspace", {{{"Ctrl S / O / N", "Save / open / new circuit"}, {"Ctrl Shift S", "Save As"},
+            {"Ctrl Shift C / V", "Choose a shared clipboard"}, {"F1 / F3 / F4", "Manual / examples / recovery"}, {"F11 / F12", "Contrast / window details"}, {"Two fingers", "Pan and pinch to zoom"}}});
+        line(r, 316, 674, 1154, 674, theme().border);
+        ui::label(r, 316, 690, "Keyboard: Tab focuses controls · Enter activates · F9 navigates cells · F8 describes focus.", theme().muted, 12);
+        ui::label(r, 316, 712, "On Mac, Command also works for Ctrl shortcuts. Click anywhere or press Esc to close.", theme().muted, 12);
     }
 };
 
@@ -1537,6 +1611,12 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto require = [](bool ok, const char* message) {
         if (!ok) throw std::runtime_error(message);
     };
+    require(ui::text_width("WWW") > ui::text_width("iii") * 2, "UI font lost proportional metrics");
+    require(ui::text_width("é") != ui::text_width("?"), "Latin filename glyph became a fallback");
+    require(ui::ellipsize("circuit-é.ghv", 500) == "circuit-é.ghv", "UI shortened a fitting filename");
+    const auto clipped = ui::ellipsize("circuit-é.ghv", 60);
+    require(clipped.ends_with("…") && ui::text_width(clipped) <= 60, "UI text escaped its available width");
+    require(ui::ellipsize("too narrow", 0).empty(), "UI overflowed an empty label");
     const auto key = [&](SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE) {
         SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN;
         event.key.key = code; event.key.mod = mod;
@@ -1566,7 +1646,9 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.running, "Keyboard focus could not activate Play");
     key(SDLK_RETURN); require(!app.running, "Keyboard focus could not activate Pause");
     key(SDLK_ESCAPE);
-    key(SDLK_TAB, SDL_KMOD_SHIFT); // Last tool is Interactor.
+    key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_RETURN); // Quick guide.
+    key(SDLK_ESCAPE);
+    key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_TAB, SDL_KMOD_SHIFT); // Interactor.
     key(SDLK_RETURN); key(SDLK_1);
     require(!app.history.modified(), "Keyboard palette navigation edited the circuit");
     const auto original = app.circuit;
@@ -1592,6 +1674,13 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
         require(SDL_PushEvent(&event), "Could not push mouse event");
         dispatch(app, renderer);
     };
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1050, 80, SDL_BUTTON_LEFT, 0);
+    key(SDLK_RETURN);
+    require(demos.size() == 2 && app.circuit == original, "Examples toolbar link changed the current circuit");
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1180, 80, SDL_BUTTON_LEFT, 0);
+    key(SDLK_SPACE);
+    require(!app.running, "Quick guide toolbar link did not open its modal");
+    key(SDLK_ESCAPE);
     const auto mouse = [&](Uint32 type, Point cell, Uint8 button = SDL_BUTTON_LEFT, SDL_MouseID device = 0) {
         const auto [x, y] = app.view.screen(cell);
         pointer(type, static_cast<float>(x + app.view.scale / 2), static_cast<float>(y + app.view.scale / 2), button, device);
@@ -1929,7 +2018,7 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     key(SDLK_ESCAPE); key(SDLK_TAB); key(SDLK_F8);
     require(inspections.back().find("button.") != std::string::npos, "Focused control details were not exposed");
     key(SDLK_RIGHT); key(SDLK_F8);
-    require(inspections.back().find("STEP button") != std::string::npos, "Control details did not follow focus");
+    require(inspections.back().find("Step button") != std::string::npos, "Control details did not follow focus");
     key(SDLK_ESCAPE); key(SDLK_F11); key(SDLK_F12);
     require(inspections.back().find("High contrast on.") != std::string::npos, "Window summary missed contrast mode");
     const auto before_summary = app.simulation.ticks(); app.update(10);
@@ -2032,7 +2121,7 @@ int main(int argc, char** argv) {
         if (!SDL_SetRenderLogicalPresentation(renderer.get(), 1280, 800, SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
             throw std::runtime_error(SDL_GetError());
         }
-        SDL_SetWindowMinimumSize(window.get(), 800, 500);
+        SDL_SetWindowMinimumSize(window.get(), 1120, 700);
         SDL_SetRenderVSync(renderer.get(), 1);
         const ui::FontAtlas fonts(renderer.get());
         if (diagnostics) {
