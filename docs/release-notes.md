@@ -73,3 +73,9 @@ filtered levels for small icons and Retina displays. Sidebar icons grow from
 part. New circuits start with 64-pixel cells, twice the previous default, and
 symbols use more of each tile. All artwork works offline; package notices retain
 the source image licenses.
+
+Dense circuit views now batch component images after their tile backgrounds,
+reducing renderer pipeline switches. A paired Mac experiment measured a 36.4%
+reduction in median frame time for its alternating zoom workload; this is a
+workload-specific observation. Pixel comparisons protect component appearance,
+selection outlines, overlapping paste previews, contrast and zoom extremes.

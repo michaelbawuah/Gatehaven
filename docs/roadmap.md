@@ -1,7 +1,8 @@
 # Roadmap
 
-Gatehaven uses an independently written C++23 implementation and original
-application visuals. The first milestone is a usable, testable desktop sandbox.
+Gatehaven uses an independently written C++23 implementation and a custom desktop
+interface with embedded component artwork. The first milestone is a usable,
+testable desktop sandbox.
 
 ## Delivery order
 

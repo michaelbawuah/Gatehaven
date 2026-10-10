@@ -240,3 +240,22 @@ callback/mailbox, codecs, disk writes and recovery store execute. They do not
 certify physical interaction with platform dialogs. `--self-test-display` runs
 the same scenarios with the available native renderer; the acceptance collector
 records the exact binary and keeps human observations pending.
+
+## Component rendering acceptance, 10 October 2026
+
+The desktop now batches canvas artwork after drawing tile backgrounds. Before
+and after software captures of eight UI states are byte-identical. A permanent
+desktop workflow compares every pixel against immediate drawing at minimum,
+small, default and maximum zoom, then with selected components, an overlapping
+duplicate preview, high contrast and powered gate examples.
+
+All **14/14 CTest suites** pass locally and on the Apple Silicon Mac. The new
+pixel comparisons and the editing, zoom, save/close and recovery workflows also
+pass with the Mac's native Cocoa/Metal renderer. Local ASan/UBSan desktop checks
+pass with the existing leak-detection limitation. The paired native rendering
+experiment and its scope are recorded in [performance measurements](performance.md).
+
+These are automated application workflows, including injected input events.
+Physical gesture/dialog playthroughs, screen-reader review, clean-machine
+installation and real signing credentials remain release gates. The acceptance
+collector must continue to leave unperformed manual checks pending.

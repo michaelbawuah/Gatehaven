@@ -160,3 +160,36 @@ SDL_VIDEODRIVER=dummy build/app/gatehaven --benchmark-render 100000 60
 [Raw render frames](../bench/rendering-results-2026-10-09.json) retain the
 source trees, frame distributions, build type and identical-image hashes. Native
 GPU rendering, high-DPI displays and physical interaction still need acceptance.
+
+## Component artwork on macOS, 10 October 2026
+
+Canvas tiles now submit their component images after drawing the opaque tile
+backgrounds. This reduces geometry/texture pipeline switches in dense views.
+Selection outlines remain above the artwork, and editing previews retain their
+overlay order. The component images and circuit behavior are unchanged.
+
+Three paired fresh-process runs alternated the old and new renderer on the same
+Apple Silicon Mac, using AppleClang 21.0.0.21000101 Release builds, SDL 3.4.18,
+Cocoa/Metal, and a 2560 × 1600 pixel output for a 1280 × 800 logical workspace.
+VSync was disabled for measurement. Each scenario used 60 measured frames after
+12 warm-up frames, with 3,072 circuit cells and 10,000 additional off-screen cells.
+The table reports the median of the three per-run median frame times.
+
+| Scenario | Before (ms) | Batched artwork (ms) | Reduction |
+| --- | ---: | ---: | ---: |
+| Static | 8.36833 | 8.23883 | 1.5% |
+| Pan | 8.42492 | 8.22942 | 2.3% |
+| Zoom | 13.49520 | 8.57892 | 36.4% |
+
+Zoom alternates between 748 and 2,816 visible cells. These are render submission
+and presentation measurements on a shared desktop, without a GPU completion
+fence; they are not physical input latency or a universal frame-rate guarantee.
+The small static/pan differences may reflect run-to-run noise.
+
+[Raw runs](../bench/rendering-results-2026-10-10.json) retain every frame, binary
+hashes, the baseline revision and the exact measured source patch. The candidate
+was built in an isolated worktree at that baseline plus the patch, so its embedded
+revision names the baseline. Eight software snapshots before and after are
+byte-identical. The desktop test also compares batched and immediate pixels at
+zoom limits, with selection, overlapping paste, high contrast and powered gates;
+that check passes on both software and the Mac Metal renderer.
