@@ -96,7 +96,16 @@ jobs:
       - run: ctest --test-dir build/app -C Release --output-on-failure
       - name: Exercise X11 and Wayland window backends
         if: runner.os == 'Linux'
-        run: python tools/check_linux_displays.py build/app/gatehaven
+        run: python tools/check_linux_displays.py build/app/gatehaven --output build/app/display-evidence
+      - name: Collect isolated desktop acceptance baseline
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            python tools/acceptance.py build/app/Release/gatehaven.exe build/app/acceptance-evidence --headless --skip-benchmark
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            python tools/acceptance.py build/app/gatehaven.app build/app/acceptance-evidence --headless --skip-benchmark
+          else
+            python tools/acceptance.py build/app/gatehaven build/app/acceptance-evidence --headless --skip-benchmark
+          fi
       - name: Record software rendering workloads
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -149,6 +158,8 @@ jobs:
             build/app/gatehaven*.bmp
             build/app/toolchain.txt
             build/app/rendering.json
+            build/app/display-evidence/*.json
+            build/app/acceptance-evidence/*
 
   benchmark:
     name: Simulation benchmark
