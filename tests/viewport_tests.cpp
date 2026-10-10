@@ -35,7 +35,7 @@ TEST("viewport arithmetic remains safe at world boundaries") {
     v.zoom(1e100, 500, 500);
     CHECK(v.scale == Viewport::max_scale);
     v.zoom(1e-100, 500, 500);
-    CHECK(v.scale == 4);
+    CHECK(v.scale == Viewport::min_scale);
 }
 
 TEST("zoom remains anchored through small trackpad increments and scale limits") {
@@ -56,7 +56,7 @@ TEST("invalid zoom coordinates do not poison the camera") {
     Viewport view; const auto original_x = view.center_x; const auto original_y = view.center_y;
     const auto nan = std::numeric_limits<double>::quiet_NaN();
     view.zoom(2, nan, 0); view.zoom(2, 0, std::numeric_limits<double>::infinity());
-    CHECK(view.center_x == original_x && view.center_y == original_y && view.scale == 32);
+    CHECK(view.center_x == original_x && view.center_y == original_y && view.scale == Viewport::default_scale);
     CHECK(!view.cell(nan, 0));
     view.center_x = nan;
     CHECK(view.visible().min.x == 0);

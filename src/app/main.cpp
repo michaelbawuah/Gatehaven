@@ -53,8 +53,6 @@ constexpr std::array palette{Element::wire, Element::crossing, Element::source,
 constexpr std::array<std::string_view, 13> labels{"Wire", "Crossing", "Power source", "Signal",
     "AND gate", "OR gate", "NAND gate", "NOR gate", "Positive relay", "Negative relay", "Screen", "File input", "File output"};
 
-constexpr std::array<SDL_Color, 6> binding_colors{{{205, 63, 64, 255}, {53, 103, 205, 255},
-    {36, 139, 74, 255}, {0, 150, 180, 255}, {179, 62, 169, 255}, {190, 153, 0, 255}}};
 constexpr std::array<std::string_view, 6> binding_names{"LEFT", "RIGHT", "MIDDLE", "X1", "X2", "TOUCH"};
 
 std::optional<std::size_t> input_button(const SDL_MouseButtonEvent& event) {
@@ -209,9 +207,10 @@ public:
                 view.center_x = 3.5; view.center_y = .5; view.scale = 128;
             } else {
                 for (std::size_t i = 0; i < palette.size(); ++i)
-                    circuit.set({static_cast<Coordinate>(i % 7) * 3, static_cast<Coordinate>(i / 7) * 3}, palette[i]);
-                view.center_x = 9.5; view.center_y = 2; view.scale = state == "symbols-small" ? 16 : 48;
+                    circuit.set({static_cast<Coordinate>(i % 7) * 2, static_cast<Coordinate>(i / 7) * 2}, palette[i]);
+                view.center_x = 6.5; view.center_y = 1.5; view.scale = state == "symbols-small" ? 16 : Viewport::default_scale;
             }
+            tools_[0] = {ToolKind::pencil, Element::or_gate};
             simulation.initialize(circuit); status_ = "Circuit symbols · Gates, relays, power and file connections";
         }
         else if (state == "contrast") high_contrast_ = true;
@@ -1406,8 +1405,8 @@ private:
             if (selected || hovered(box)) ui::rounded(r, 12, y, 216, 26, selected ? active : hover, 5);
             if (selected) ui::rounded(r, 12, y + 5, 3, 16, theme().teal, 1.5F);
             const auto color = selected ? theme().teal : theme().ink;
-            ui::icon(r, static_cast<ui::Icon>(i), 24, y + 4, 18, color);
-            ui::label(r, 52, y + 3, labels[i], color, 13.5F, selected ? Weight::semibold : Weight::regular);
+            ui::icon(r, static_cast<ui::Icon>(i), 20, y, 26, color);
+            ui::label(r, 56, y + 3, labels[i], color, 13.5F, selected ? Weight::semibold : Weight::regular);
             const auto shortcut = i < 10 ? std::to_string((i + 1) % 10) : "F" + std::to_string(i - 5);
             ui::centered(r, 172, y + 4, 23, 18, shortcut, theme().muted, 10.5F, Weight::regular);
             draw_bindings(r, y + 4, tool);
@@ -1428,14 +1427,22 @@ private:
             draw_bindings(r, y + 4, tool);
         }
         line(r, 22, 640, 218, 640, theme().border);
-        ui::label(r, 22, 650, "Make the controls yours", theme().ink, 12, Weight::semibold);
-        ui::label(r, 22, 670, "Click a tool with any input below.", theme().muted, 11.5F);
-        constexpr std::array<std::string_view, 6> inputs{"Left", "Right", "Middle", "X1", "X2", "Touch"};
-        for (std::size_t i = 0; i < inputs.size(); ++i) {
-            const float x = 22 + static_cast<float>(i % 3) * 67, y = 694 + static_cast<float>(i / 3) * 25;
-            ui::panel(r, x, y, 60, 20, theme().white, theme().border, 5);
-            ui::rounded(r, x + 7, y + 7, 5, 5, high_contrast_ ? theme().ink : binding_colors[i], 2.5F);
-            ui::label(r, x + 17, y + 2, inputs[i], theme().muted, 10.5F);
+        auto preview_element = tools_[0].kind == ToolKind::pencil ? tools_[0].element : Element::wire;
+        if (hover_ && circuit.at(*hover_) != Element::empty) preview_element = circuit.at(*hover_);
+        if (pointer_ && ViewRect{12, 146, 216, 364}.contains(pointer_->x, pointer_->y))
+            preview_element = palette[static_cast<std::size_t>((pointer_->y - 146) / 28)];
+        const auto preview_index = static_cast<std::size_t>(std::find(palette.begin(), palette.end(), preview_element) - palette.begin());
+        ui::label(r, 22, 650, "COMPONENT PREVIEW", theme().muted, 10.5F, Weight::semibold);
+        ui::panel(r, 18, 674, 74, 66, theme().paper, theme().border, 7);
+        ui::component_symbol(r, preview_element, 21, 673, 68, theme().teal, Direction::east,
+                             preview_element == Element::negative_relay);
+        constexpr std::array<std::string_view, 13> explanations{"Connect cells", "Separate paths", "Supply power", "Control input",
+            "Every input on", "Any input on", "Invert AND", "Invert OR", "On allows flow", "Off allows flow", "Display / interact", "Read serial bits", "Write serial bits"};
+        if (preview_index < palette.size()) {
+            ui::label(r, 104, 677, labels[preview_index], theme().ink, 13, Weight::semibold);
+            ui::label(r, 104, 699, explanations[preview_index], theme().muted, 11.5F);
+            const auto shortcut = preview_index < 10 ? std::to_string((preview_index + 1) % 10) : "F" + std::to_string(preview_index - 5);
+            ui::label(r, 104, 720, shortcut + "  Select tool", theme().teal, 11);
         }
         ui::label(r, 22, 745, "Clipboard " + std::to_string(clipboard_) + "  ·  Ctrl Shift C / V", theme().muted, 10.5F);
         rectangle(r, 0, 764, 1280, 36, theme().white);
@@ -1455,7 +1462,7 @@ private:
         ui::label(r, 905, 772, ui::ellipsize(stats, 190, 12), theme().muted, 12);
         ui::rounded(r, 1120, 773, 72, 20, running ? active : hover, 5);
         ui::centered(r, 1120, 773, 72, 20, running ? "Running" : "Paused", running ? theme().teal : theme().muted, 11);
-        const auto zoom = std::to_string(static_cast<int>(std::round(view.scale / 32.0 * 100))) + "%";
+        const auto zoom = std::to_string(static_cast<int>(std::round(view.scale / Viewport::default_scale * 100))) + "%";
         ui::panel(r, 1066, 704, 190, 44, theme().white, theme().border, 9);
         for (std::size_t i = 0; i < zoom_buttons.size(); ++i) {
             const auto box = zoom_buttons[i];
@@ -1534,7 +1541,7 @@ private:
                 }
             }
             const auto direction = ui::is_gate(cell.element) ? ui::symbol_direction(circuit, cell.position, cell.element) : Direction::east;
-            ui::component_symbol(r, cell.element, x + s * .1F, y + s * .1F, s * .8F, ink, direction,
+            ui::component_symbol(r, cell.element, x + s * .025F, y + s * .025F, s * .95F, ink, direction,
                                  !preview && simulation.conductive(cell.position));
             if (preview) rectangle(r, x, y, s, s, theme().orange, true);
             return;
@@ -2504,6 +2511,7 @@ int main(int argc, char** argv) {
         SDL_SetWindowMinimumSize(window.get(), 1120, 700);
         SDL_SetRenderVSync(renderer.get(), 1);
         const ui::FontAtlas fonts(renderer.get());
+        const ui::SymbolAtlas symbols(renderer.get());
         if (diagnostics) {
             ui::diagnostics(std::cout, window.get(), renderer.get()); return std::cout ? 0 : 1;
         }

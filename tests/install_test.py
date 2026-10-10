@@ -40,6 +40,9 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
     assert (resources / notice).read_bytes() == (Path(__file__).resolve().parents[1] / notice).read_bytes()
     font_notice = Path("third_party") / "Inter" / "LICENSE.txt"
     assert (resources / font_notice).read_bytes() == (Path(__file__).resolve().parents[1] / font_notice).read_bytes()
+    for image_library in ("electronic-symbols", "Lucide"):
+        image_notice = Path("third_party") / image_library / "LICENSE.txt"
+        assert (resources / image_notice).read_bytes() == (Path(__file__).resolve().parents[1] / image_notice).read_bytes()
     if has_app == "ON" and sys.platform in ("win32", "darwin"):
         target = "windows" if sys.platform == "win32" else "macos"
         identity = "a" * 40 if target == "windows" else "Developer ID Application: Plan only"

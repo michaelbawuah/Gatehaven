@@ -49,8 +49,8 @@ inline void icon(SDL_Renderer* renderer, Icon kind, float x, float y, float size
         Element::and_gate, Element::or_gate, Element::nand_gate, Element::nor_gate, Element::positive_relay,
         Element::negative_relay, Element::screen, Element::file_input, Element::file_output};
     const auto index = static_cast<std::size_t>(kind);
-    if (index < components.size() && (components[index] == Element::source || components[index] >= Element::positive_relay)) {
-        component_symbol(renderer, components[index], x, y, size, color, Direction::east, false, true); return;
+    if (index < components.size()) {
+        component_symbol(renderer, components[index], x, y, size, color, Direction::east, components[index] == Element::negative_relay); return;
     }
     const float scale = size / 24;
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -66,13 +66,7 @@ inline void icon(SDL_Renderer* renderer, Icon kind, float x, float y, float size
         constexpr int indices[]{0, 1, 2, 0, 2, 3};
         SDL_RenderGeometry(renderer, nullptr, vertices, 4, indices, 6);
     };
-    const auto dot = [&](float cx, float cy, float radius) {
-        rounded(renderer, x + (cx - radius) * scale, y + (cy - radius) * scale, radius * 2 * scale, radius * 2 * scale, color, radius * scale);
-    };
     switch (kind) {
-    case Icon::wire: stroke(3, 18, 11, 18); stroke(11, 18, 11, 6); stroke(11, 6, 21, 6); dot(3, 18, 2); dot(21, 6, 2); break;
-    case Icon::crossing: stroke(3, 12, 9, 12); stroke(15, 12, 21, 12); stroke(12, 3, 12, 21); break;
-    case Icon::signal: stroke(2, 16, 7, 16); stroke(7, 16, 7, 7); stroke(7, 7, 16, 7); stroke(16, 7, 16, 16); stroke(16, 16, 22, 16); break;
     case Icon::logo: {
         stroke(5, 4, 12, 4); stroke(5, 4, 5, 20); stroke(5, 20, 12, 20);
         for (int i = 0; i < 12; ++i) {
@@ -83,6 +77,7 @@ inline void icon(SDL_Renderer* renderer, Icon kind, float x, float y, float size
         stroke(1, 8, 5, 8); stroke(1, 16, 5, 16); stroke(19, 12, 23, 12);
         break;
     }
+    case Icon::wire: case Icon::crossing: case Icon::signal:
     case Icon::source: case Icon::and_gate: case Icon::or_gate: case Icon::nand_gate: case Icon::nor_gate:
     case Icon::positive_relay: case Icon::negative_relay: case Icon::screen: case Icon::file_input: case Icon::file_output:
         break; // Component symbols were drawn above.

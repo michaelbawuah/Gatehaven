@@ -1,0 +1,80 @@
+[
+  {
+    "file": "and.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/IC-COM-Logic-AND.svg",
+    "sha256": "3a0d2fc3fb9ee8767ac6a53ddbdfeab91aa744e3e2a87eb6572722e0c2490eb3",
+    "license": "MIT"
+  },
+  {
+    "file": "or.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/IC-COM-Logic-OR.svg",
+    "sha256": "3d642d81c73775effd6fa35866b31e234ad99d7668ece9763fb87c8d5b33ef1e",
+    "license": "MIT"
+  },
+  {
+    "file": "nand.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/IC-COM-Logic-NAND.svg",
+    "sha256": "402ef59bc37ad75424d8a0c1c11f2b1ec65e83791da313ecbe4257caf198640d",
+    "license": "MIT"
+  },
+  {
+    "file": "nor.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/IC-COM-Logic-NOR.svg",
+    "sha256": "4baf5319eeee0462a30e2f356c8d081f728eb8b40214d6f59da3944e00733c27",
+    "license": "MIT"
+  },
+  {
+    "file": "source.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/Source-COM-DC.svg",
+    "sha256": "b79a1e8781a91eba2496f2d490c73ad7619af6025bb9747b2af6e0b27b57e604",
+    "license": "MIT"
+  },
+  {
+    "file": "signal.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/Source-COM-Square.svg",
+    "sha256": "0c7fe6fb6d89ce20e36607009749e0770059aa6df287a43e10bbae5fff7112a3",
+    "license": "MIT"
+  },
+  {
+    "file": "relay-open.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/Relay-COM-COM-SPST-NO.svg",
+    "sha256": "f08d9623b8fa9593ea72268484a7635f6c544bc4396205372cec04bd858ead00",
+    "license": "MIT"
+  },
+  {
+    "file": "relay-closed.svg",
+    "source": "https://raw.githubusercontent.com/chris-pikul/electronic-symbols/9c22054b11cb865cda7c817e4a9f4a4d3be6256e/SVG/Relay-COM-COM-SPST-NC.svg",
+    "sha256": "b837a77b4e037a011da12afca03ce348a4c07a744d999f0193b88fd3a1385189",
+    "license": "MIT"
+  },
+  {
+    "file": "screen.svg",
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/70562c1ee1c4fdcf736fe97bc893fb8511927934/icons/monitor.svg",
+    "sha256": "d1a443233345724859de8e4fb48968ba91e885e12ddbd710701548bd91b39428",
+    "license": "ISC"
+  },
+  {
+    "file": "file-input.svg",
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/70562c1ee1c4fdcf736fe97bc893fb8511927934/icons/file-input.svg",
+    "sha256": "8c654aca5f51c6c814c75c686324d6ab3ce1f6bacfc70e7f4a8473cb063f4321",
+    "license": "ISC"
+  },
+  {
+    "file": "file-output.svg",
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/70562c1ee1c4fdcf736fe97bc893fb8511927934/icons/file-output.svg",
+    "sha256": "94a0abe002d76ae0047b9a7e9ec2e2045381c4f4a81372da1d961d6bc14c5868",
+    "license": "ISC"
+  },
+  {
+    "file": "wire.svg",
+    "source": "https://raw.githubusercontent.com/lucide-icons/lucide/70562c1ee1c4fdcf736fe97bc893fb8511927934/icons/route.svg",
+    "sha256": "fc169fd38a9963b016ad6d60fd72baa2b0ea8e0cec085bbc53287297c3d8121a",
+    "license": "ISC"
+  },
+  {
+    "file": "crossing.svg",
+    "source": "Gatehaven original insulation-gap drawing",
+    "sha256": "49ab9051b3cb5fa9252c0594fa90cb4bc4fc71fd1fc4b85cfd392e7c1614eb99",
+    "license": "project"
+  }
+]

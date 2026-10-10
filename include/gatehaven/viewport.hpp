@@ -16,7 +16,7 @@ struct ViewRect {
 
 class Viewport {
 public:
-    static constexpr double default_scale = 32, min_scale = 4, max_scale = 256;
+    static constexpr double default_scale = 64, min_scale = 8, max_scale = 512;
     ViewRect area{240, 88, 1040, 676};
     double center_x{0.5};
     double center_y{3.5};
@@ -72,7 +72,7 @@ public:
         center_y = (static_cast<double>(bounds->min.y) + bounds->max.y + 1) / 2;
         const double width = static_cast<double>(bounds->max.x) - bounds->min.x + 5;
         const double height = static_cast<double>(bounds->max.y) - bounds->min.y + 5;
-        scale = std::clamp(std::min({area.width / width, area.height / height, 40.0}), min_scale, max_scale);
+        scale = std::clamp(std::min({area.width / width, area.height / height, default_scale}), min_scale, max_scale);
     }
 
 private:
