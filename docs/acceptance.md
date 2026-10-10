@@ -13,6 +13,36 @@ The speed button or Cmd+Shift+T changes simulation speed. The automatic event
 tests do not prove that physical shortcuts pass through macOS: confirm these
 controls by hand with the default OS shortcuts enabled.
 
+## First 20-minute playthrough
+
+Use a disposable circuit and the installed app. On Mac, launch the copy in your
+Applications folder; old build-folder copies are separate apps. Keep the report
+open beside the game and note problems as they happen.
+
+1. **Minutes 0–5: see and navigate.** Open Examples and choose `gate-gallery`.
+   Check that AND, OR, NAND and NOR have readable symbols. Try the zoom buttons,
+   wheel or trackpad pinch, then reset to 100%. Resize and minimize/restore the
+   window. Look for clipped text or a zoom position that jumps unexpectedly.
+2. **Minutes 5–12: build and run.** Open the `starter` lesson in another window.
+   Pause, add or remove wires and sources, undo and redo, then run or single-step.
+   Make a small circuit of your own. Copy a selection between the two windows
+   and continue editing after closing one. Save work before closing if prompted.
+3. **Minutes 12–16: keep your work.** Save As a new `.ghv` file with spaces and
+   an accented letter in its name, close it and reopen it. Confirm its layout
+   and saved signal levels. Repeat with a separate `.ccsb` copy; its occupied
+   rectangle moves to the origin by design. Try canceling Open and Save As too.
+4. **Minutes 16–20: controls and readability.** Use Tab and Enter to reach
+   controls. Try Contrast and Cmd/Ctrl+Shift+K, then speed and Cmd/Ctrl+Shift+T.
+   Restart the app and confirm the contrast preference was saved. Use F8/F12
+   for descriptions, with Fn if needed on your Mac. Record confusing controls,
+   slowdowns, crashes or anything you could not complete.
+
+Save observations with **Save results as JSON**. This is a starting route through
+the checklist: mark a card passed only after completing all of its instructions.
+Unperformed checks, including screen-reader, touch, file-port, recovery and
+clean-machine/signature checks, remain pending or get an explained blocked or
+not-applicable result. Signing is separate from playing the unsigned preview.
+
 ## From a checkout
 
 On a Mac, after building the desktop application:

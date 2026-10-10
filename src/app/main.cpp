@@ -2308,8 +2308,19 @@ void zoom_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSes
         require(SDL_RenderCoordinatesToWindow(renderer, 977, 321, &event.wheel.mouse_x, &event.wheel.mouse_y), "Could not map wheel anchor");
         event.wheel.y = amount; event.wheel.direction = direction; send(event);
     };
+    const auto resize = [&](int width, int height) {
+        require(SDL_SetWindowSize(window, width, height), "Could not resize zoom test window");
+        // A resize request is asynchronous on X11/Wayland. Finish it and drain
+        // its native events before mapping synthetic logical pointer positions;
+        // otherwise dispatch can change the mapping after an event is queued.
+        require(SDL_SyncWindow(window), "Zoom test window resize did not finish");
+        dispatch(app, renderer);
+        int actual_width{}, actual_height{};
+        require(SDL_GetWindowSize(window, &actual_width, &actual_height) && actual_width == width && actual_height == height,
+                "Zoom test window did not reach the requested size");
+    };
     // Real window IDs exercise logical-coordinate conversion at non-default sizes.
-    require(SDL_SetWindowSize(window, 1120, 760), "Could not resize zoom test");
+    resize(1120, 760);
     pointer(SDL_EVENT_MOUSE_MOTION, 977, 321);
     const auto before = app.view.world(977, 321);
     const auto anchored = [&] {
@@ -2348,7 +2359,7 @@ void zoom_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSes
     key(SDLK_F2); pinch(SDL_EVENT_PINCH_BEGIN); pinch(SDL_EVENT_PINCH_UPDATE, 2); wheel(2); key(SDLK_ESCAPE);
     require(app.view.scale == Viewport::default_scale && app.circuit == original && !app.history.modified(),
             "Navigation changed the document or leaked through a modal");
-    require(SDL_SetWindowSize(window, 1280, 800), "Could not restore zoom test window");
+    resize(1280, 800);
     std::cout << "Zoom workflow passed: native pinch, scaled-window anchor, fractional wheel, keyboard, controls and focus loss\n";
 }
 

@@ -259,3 +259,14 @@ These are automated application workflows, including injected input events.
 Physical gesture/dialog playthroughs, screen-reader review, clean-machine
 installation and real signing credentials remain release gates. The acceptance
 collector must continue to leave unperformed manual checks pending.
+
+## Native resize test synchronization
+
+The X11 job in [run 38033750498](https://github.com/michaelbawuah/Gatehaven/actions/runs/38033750498)
+exposed a race in the zoom workflow: SDL's asynchronous window resize could
+complete after a synthetic pointer had already been mapped to window coordinates.
+The test now waits with `SDL_SyncWindow`, drains native events and verifies the
+requested size before generating pointer input. It also synchronizes restoration
+of the original window before the artwork checks. Pointer anchoring, fractional
+scrolling, pinch, button hit testing and focus-loss assertions remain in place;
+the normal game loop does not acquire this test-only blocking wait.
