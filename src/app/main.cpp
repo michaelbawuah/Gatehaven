@@ -24,6 +24,7 @@
 #include "gatehaven/version.hpp"
 #include "gatehaven/paths.hpp"
 #include "gatehaven/resources.hpp"
+#include "diagnostics.hpp"
 #include "gatehaven/process.hpp"
 
 #include <SDL3/SDL.h>
@@ -1954,7 +1955,7 @@ int main(int argc, char** argv) {
             std::cout << path_utf8(*manual) << '\n'; return std::cout ? 0 : 1;
         }
         if ((mode == "--help" || mode == "-h") && argc == 2) {
-            std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --build-info | --manual-path]\n"
+            std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --build-info | --manual-path | --diagnostics]\n"
                          "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";
             return 0;
         }
@@ -1962,6 +1963,7 @@ int main(int argc, char** argv) {
         const bool display_test = mode == "--self-test-display";
         const bool testing = mode == "--self-test" || child_test || display_test;
         const bool snapshot = mode == "--snapshot";
+        const bool diagnostics = mode == "--diagnostics";
         const bool benchmark = mode == "--benchmark-render";
         std::size_t extra_cells = 0; unsigned frames = 60;
         const auto parse_count = [](const char* text, auto& value) {
@@ -1973,14 +1975,14 @@ int main(int argc, char** argv) {
             (argc > 3 && !parse_count(argv[3], frames)) || extra_cells > 1000000 || frames < 10 || frames > 600)) return 2;
         const bool blank = mode == "--new";
         const bool demo = mode.starts_with("--demo=");
-        if (mode.starts_with("--") && !blank && !demo && !testing && !snapshot && !benchmark) {
+        if (mode.starts_with("--") && !blank && !demo && !testing && !snapshot && !benchmark && !diagnostics) {
             std::cerr << "Unknown option or incorrect argument count. Use --help.\n"; return 2;
         }
         if (demo && !make_example(mode.substr(7))) {
             std::cerr << "Unknown example. Choose starter, oscillator, screen-switch, positive-relay, negative-relay, or gate-gallery.\n";
             return 2;
         }
-        if ((testing && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && !benchmark && argc > 2)) {
+        if (((testing || diagnostics) && argc != 2) || (snapshot && argc != 3 && argc != 4) || (!testing && !snapshot && !benchmark && argc > 2)) {
             std::cerr << "Usage: gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --self-test | --snapshot OUTPUT.bmp [STATE]]\n";
             return 2;
         }
@@ -1990,7 +1992,7 @@ int main(int argc, char** argv) {
         const SdlLifetime lifetime;
         TestDirectory test_directory;
         std::filesystem::path session_directory;
-        if (testing || snapshot || benchmark) {
+        if (testing || snapshot || benchmark || diagnostics) {
             test_directory.path = std::filesystem::temp_directory_path() /
                 ("gatehaven-smoke-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
             session_directory = test_directory.path;
@@ -2003,7 +2005,7 @@ int main(int argc, char** argv) {
         if (!clipboard) throw std::runtime_error(clipboard.error());
         if (testing || snapshot || benchmark) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
         auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if ((testing && !display_test) || snapshot || benchmark) flags |= SDL_WINDOW_HIDDEN;
+        if ((testing && !display_test) || snapshot || benchmark || diagnostics) flags |= SDL_WINDOW_HIDDEN;
         SDL_Window* raw_window = nullptr;
         SDL_Renderer* raw_renderer = nullptr;
         const bool created = SDL_CreateWindowAndRenderer("Gatehaven", 1280, 800, flags, &raw_window, &raw_renderer);
@@ -2015,6 +2017,9 @@ int main(int argc, char** argv) {
         }
         SDL_SetWindowMinimumSize(window.get(), 800, 500);
         SDL_SetRenderVSync(renderer.get(), 1);
+        if (diagnostics) {
+            ui::diagnostics(std::cout, window.get(), renderer.get()); return std::cout ? 0 : 1;
+        }
         std::vector<std::optional<std::filesystem::path>> launched;
         std::vector<std::string> demos;
         std::vector<std::string> inspections;
