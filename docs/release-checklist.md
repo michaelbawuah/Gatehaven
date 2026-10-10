@@ -14,9 +14,9 @@ manual checks below. A final release requires evidence for each supported target
 | Packaging | Archives/installers and hashes; relocated Mac bundle; Windows reinstall/data preservation; fresh Ubuntu container lifecycle jobs | Exact candidate jobs must pass; install/open/upgrade/uninstall on clean machines |
 | Displays | Dummy rendering/coordinate conversion; X11 and Wayland virtual-display CI checks | Confirm candidate display jobs; physical HiDPI/per-monitor moves, resize and minimize |
 | Input | Mouse buttons, synthetic multitouch, keyboard cursor, focused-control/window text and saved high contrast | Physical touch, keyboard layouts, screen readers, full contrast/zoom review |
-| Native dialogs | Callback cancellation/error/lifetime tests; selection rules | Actual dialogs, Unicode paths, cancel, shutdown while pending on each OS |
+| Native dialogs | Callback cancellation/error/lifetime tests; complete save/close sequences; completed-filename replacement | Actual dialogs, Unicode paths, cancel, shutdown while pending on each OS |
 | Signing | Credentialed workflow prepared with failure-path tests; ordinary CI previews remain unsigned | Configure identities; run [signing](signing.md), verify downloaded artifacts on clean machines |
-| Recovery | Process-kill, ownership, deletion and failed-replacement checks | Real interruption and restore/save workflows on each target |
+| Recovery | Process-kill, ownership, deletion, failed replacement and editor restore/save/reopen sequences | Real interruption and restore/save workflows on each target |
 | Distribution | Dependency notices and reproducible dependency pins | Decide the application license and final release/update policy |
 
 ## Manual test record
@@ -43,6 +43,8 @@ for failures. Leave untested scenarios explicitly pending.
    Review crossings with only one powered axis, high zoom, and screen-reader behavior.
 5. Cancel each native file dialog and close while a dialog is pending. Confirm
    circuits do not choose communicator paths; connect explicit test files only.
+   Save As without an extension when the completed `.ghv` or `.ccsb` name already
+   exists; cancel replacement and verify both the file and unsaved circuit survive.
 6. Exercise active serial input/output, reopen changed files, merge/split groups,
    reset without rewinding, and verify final bytes against an independent peer.
 7. Terminate an unsaved instance, restore it, save it, and ensure active windows

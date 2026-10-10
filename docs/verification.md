@@ -211,3 +211,32 @@ installed-stage planning is checked on Windows/macOS; no real certificate or
 notarization service has been used. See [signing setup](signing.md) for the
 credentialed workflow and [release acceptance](release-checklist.md) for the
 remaining physical-device, screen-reader, clean-machine and client checks.
+
+## Document lifecycle verification
+
+The expanded desktop event checks pass in the local Linux Debug build as part of
+**14/14 CTest suites**, including installed execution and recovery process tests.
+The desktop scenarios also pass with ASan/UBSan; local leak detection retains the
+environment limitation described above.
+
+- Construct a circuit through keyboard events, step it, cancel closing, cancel
+  Save As, then save and reopen a Unicode filename with its current levels.
+- Undo and redo across the saved revision. Fail Save As and confirm that the next
+  ordinary Save still writes to the original document.
+- Decline and approve replacement when adding `.ghv` or `.ccsb` produces an
+  existing filename. Verify the actual destination and preserve both versions
+  when replacement is declined.
+- Save on close and reject later queued edits and simulation updates. The queued
+  edit regression failed before the close-state guard was added.
+- Write a checkpoint from the editor, restore it, cancel and fail its save, release
+  that editor, restore again, save successfully, and reopen with current levels.
+  Live checkpoints stay unavailable to other windows; successful Save removes
+  the owned checkpoint. The separate process test still terminates a real writer
+  and checks ownership release and competing restores.
+
+These scenarios replace only the operating system's picker and confirmation UI
+with deterministic responses. The actual application event handlers, dialog
+callback/mailbox, codecs, disk writes and recovery store execute. They do not
+certify physical interaction with platform dialogs. `--self-test-display` runs
+the same scenarios with the available native renderer; the acceptance collector
+records the exact binary and keeps human observations pending.

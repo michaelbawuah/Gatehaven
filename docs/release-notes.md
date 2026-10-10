@@ -48,3 +48,10 @@ and a compact status bar replace the prototype lettering and dense grid chrome.
 Examples and Quick guide are visible header actions with keyboard focus support.
 The guide, lesson chooser, speed, clipboard, and recovery panels share a clearer
 light layout. Drawing, simulation, saved circuits, and shortcuts remain compatible.
+
+Save As now checks for an existing circuit after adding a missing filename
+extension. Canceling that confirmation preserves both circuits. Once closing is
+accepted, queued input and simulation updates stop before they can change the
+saved document. Desktop verification now follows complete save/close and recovery
+sequences, including Unicode names, failed writes, canceled dialogs, undo/redo,
+and reopening recovered work.
