@@ -46,6 +46,7 @@ inline void display_information(std::ostream& out, SDL_Window* window, SDL_Rende
 inline void diagnostics(std::ostream& out, SDL_Window* window, SDL_Renderer* renderer) {
     out << "{\"schema\":1,\"product\":\"Gatehaven\",\"version\":"; json_string(out, version);
     out << ",\"source_revision\":"; json_string(out, source_revision);
+    out << ",\"build_configuration\":"; json_string(out, GATEHAVEN_APP_BUILD_CONFIG);
     out << ",\"build_info\":"; json_string(out, build_information());
     out << ",\"display\":"; display_information(out, window, renderer);
     out << ",\"physical_device_verified\":false,\"limits\":["

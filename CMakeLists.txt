@@ -85,6 +85,7 @@ endif()
 if(GATEHAVEN_BUILD_APP)
     find_package(SDL3 3.4.18 EXACT CONFIG REQUIRED)
     add_executable(gatehaven src/app/main.cpp src/app/font.cpp src/app/instances.cpp)
+    target_compile_definitions(gatehaven PRIVATE GATEHAVEN_APP_BUILD_CONFIG="$<CONFIG>")
     target_link_libraries(gatehaven PRIVATE gatehaven_platform SDL3::SDL3)
     gatehaven_defaults(gatehaven)
     add_custom_target(gatehaven_snapshot

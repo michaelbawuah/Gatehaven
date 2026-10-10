@@ -1493,6 +1493,7 @@ void render_benchmark(App& app, SDL_Renderer* renderer, std::size_t extra_cells,
               << ",\"native_display_requested\":" << (native_display ? "true" : "false")
               << ",\"vsync_disable_succeeded\":" << (vsync_disabled ? "true" : "false") << ",\"display\":";
     ui::display_information(std::cout, SDL_GetRenderWindow(renderer), renderer);
+    std::cout << ",\"build_configuration\":"; ui::json_string(std::cout, GATEHAVEN_APP_BUILD_CONFIG);
     std::cout << ",\"scenarios\":[";
     constexpr std::array<std::string_view, 3> scenarios{"static", "pan", "zoom"};
     for (std::size_t scenario = 0; scenario < scenarios.size(); ++scenario) {
