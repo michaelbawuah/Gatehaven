@@ -111,6 +111,32 @@ void SDLCALL dialog_callback(void* userdata, const char* const* paths, int filte
     request->mailbox->result = std::move(result);
 }
 
+using FileDialog = std::function<void(std::unique_ptr<DialogRequest>, SDL_Window*)>;
+void show_file_dialog(std::unique_ptr<DialogRequest> request, SDL_Window* window) {
+    static const SDL_DialogFileFilter save_filters[]{{"Gatehaven circuit", "ghv"}, {"Legacy circuit", "ccsb"}};
+    static const SDL_DialogFileFilter open_filters[]{{"Circuit files", "ghv;ccsb"}, {"All files", "*"}};
+    const auto location = request->location.c_str();
+    const bool saving = request->save;
+    const bool endpoint = request->endpoint.has_value();
+    if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window,
+                                     endpoint ? nullptr : save_filters, endpoint ? 0 : 2, location);
+    else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window,
+                               endpoint ? nullptr : open_filters, endpoint ? 0 : 2, nullptr, false);
+}
+
+enum class CloseChoice { cancel, discard, save };
+using ClosePrompt = std::function<CloseChoice(SDL_Window*)>;
+CloseChoice confirm_close(SDL_Window* window) {
+    const SDL_MessageBoxButtonData choices[]{
+        {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Cancel"},
+        {0, 1, "Discard changes"}, {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 2, "Save"}};
+    const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window, "Unsaved circuit",
+        "Save your changes before closing this circuit?", 3, choices, nullptr};
+    int selected = 0;
+    if (!SDL_ShowMessageBox(&data, &selected)) return CloseChoice::cancel;
+    return selected == 1 ? CloseChoice::discard : selected == 2 ? CloseChoice::save : CloseChoice::cancel;
+}
+
 using OverwritePrompt = std::function<bool(SDL_Window*)>;
 bool confirm_overwrite(SDL_Window* window) {
     const SDL_MessageBoxButtonData choices[]{
@@ -137,8 +163,12 @@ public:
     bool quit{};
 
     explicit App(SDL_Window* window, ClipboardSession& clipboards,
-                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo, OverwritePrompt overwrite = confirm_overwrite, InspectionDialog inspection = show_inspection)
-        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)), confirm_overwrite_(std::move(overwrite)), inspection_dialog_(std::move(inspection)) {
+                 ui::InstanceLauncher launcher = ui::launch_instance, ui::DemoLauncher demos = ui::launch_demo,
+                 OverwritePrompt overwrite = confirm_overwrite, InspectionDialog inspection = show_inspection,
+                 FileDialog file_picker = show_file_dialog, ClosePrompt close_prompt = confirm_close)
+        : window_(window), clipboards_(clipboards), launcher_(std::move(launcher)), demo_launcher_(std::move(demos)),
+          confirm_overwrite_(std::move(overwrite)), inspection_dialog_(std::move(inspection)),
+          file_picker_(std::move(file_picker)), close_prompt_(std::move(close_prompt)) {
         simulation.initialize(circuit);
         view.area = {240, 96, 1040, 668};
         view.frame(circuit.bounds());
@@ -510,6 +540,8 @@ private:
     ui::DemoLauncher demo_launcher_;
     OverwritePrompt confirm_overwrite_;
     InspectionDialog inspection_dialog_;
+    FileDialog file_picker_;
+    ClosePrompt close_prompt_;
     Stamp placement_;
     StampPreview placement_preview_;
     unsigned clipboard_{};
@@ -1191,15 +1223,9 @@ private:
         if (!history.modified()) return true;
         cancel_gesture();
         running = false;
-        const SDL_MessageBoxButtonData choices[]{
-            {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Cancel"},
-            {0, 1, "Discard changes"}, {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 2, "Save"}};
-        const SDL_MessageBoxData data{SDL_MESSAGEBOX_WARNING, window_, "Unsaved circuit",
-            "Save your changes before closing this circuit?", 3, choices, nullptr};
-        int selected = 0;
-        if (!SDL_ShowMessageBox(&data, &selected)) return false;
-        if (selected == 1) return true;
-        if (selected != 2) return false;
+        const auto selected = close_prompt_(window_);
+        if (selected == CloseChoice::discard) return true;
+        if (selected != CloseChoice::save) return false;
         if (!path_.empty()) return save(path_);
         close_after_save_ = true;
         file_dialog(true);
@@ -1242,13 +1268,9 @@ private:
         cancel_gesture();
         running = false;
         dialog_pending_ = true;
-        static const SDL_DialogFileFilter save_filters[]{{"Gatehaven circuit", "ghv"}, {"Legacy circuit", "ccsb"}};
-        static const SDL_DialogFileFilter open_filters[]{{"Circuit files", "ghv;ccsb"}, {"All files", "*"}};
         const auto utf8 = path_.empty() ? std::u8string(u8"circuit.ghv") : path_.u8string();
         auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, saving, {utf8.begin(), utf8.end()}, std::nullopt});
-        const auto location = request->location.c_str();
-        if (saving) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, save_filters, 2, location);
-        else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, open_filters, 2, nullptr, false);
+        file_picker_(std::move(request), window_);
     }
 
     void communicator_dialog(Point point) {
@@ -1259,9 +1281,7 @@ private:
             if (std::find(group.cells.begin(), group.cells.end(), point) != group.cells.end()) { point = group.id; break; }
         }
         auto request = std::make_unique<DialogRequest>(DialogRequest{mailbox_, output, "output.bin", point});
-        const auto location = request->location.c_str();
-        if (output) SDL_ShowSaveFileDialog(dialog_callback, request.release(), window_, nullptr, 0, location);
-        else SDL_ShowOpenFileDialog(dialog_callback, request.release(), window_, nullptr, 0, nullptr, false);
+        file_picker_(std::move(request), window_);
     }
 
     bool hovered(ViewRect box) const {
@@ -2033,6 +2053,92 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
 }
 
+// Exercise complete document flows through the same events and asynchronous
+// callback used by the desktop. Only the OS picker and confirmation UI are replaced.
+void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSession& clipboard,
+                            const std::filesystem::path& directory) {
+    const auto require = [](bool ok, const char* message) { if (!ok) throw std::runtime_error(message); };
+    std::unique_ptr<DialogRequest> pending;
+    CloseChoice close_choice = CloseChoice::cancel;
+    unsigned close_prompts = 0;
+    std::vector<std::optional<std::filesystem::path>> opened;
+    App app(window, clipboard,
+            [&](std::optional<std::filesystem::path> path) -> std::expected<void, std::string> { opened.push_back(path); return {}; },
+            ui::launch_demo, [](SDL_Window*) { return false; }, show_inspection,
+            [&](std::unique_ptr<DialogRequest> request, SDL_Window*) {
+                require(!pending, "A second picker replaced a pending request"); pending = std::move(request);
+            },
+            [&](SDL_Window*) { ++close_prompts; return close_choice; });
+    const auto key = [&](SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE) {
+        SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN; event.key.key = code; event.key.mod = mod;
+        require(SDL_PushEvent(&event), "Could not queue document workflow key"); dispatch(app, renderer);
+    };
+    const auto close = [&] {
+        SDL_Event event{}; event.type = SDL_EVENT_QUIT;
+        require(SDL_PushEvent(&event), "Could not queue close request"); dispatch(app, renderer);
+    };
+    const auto complete = [&](const std::optional<std::filesystem::path>& chosen, bool failed = false, int filter = 0) {
+        require(pending != nullptr, "The document picker was not requested");
+        const auto path = chosen ? path_utf8(*chosen) : std::string{};
+        const char* paths[]{chosen ? path.c_str() : nullptr, nullptr};
+        dialog_callback(pending.release(), failed ? nullptr : paths, filter);
+        app.update(0);
+    };
+    app.start_blank();
+    key(SDLK_F9); key(SDLK_3); key(SDLK_RETURN); key(SDLK_RIGHT); key(SDLK_1); key(SDLK_RETURN);
+    key(SDLK_F10);
+    const auto edited = app.simulation.document_snapshot(app.circuit);
+    require(app.history.modified() && edited.size() == 2, "Keyboard construction did not create an unsaved circuit");
+    close();
+    require(!app.quit && app.history.modified() && close_prompts == 1, "Cancel lost the unsaved window");
+    close_choice = CloseChoice::save; close();
+    require(pending && pending->save && !app.quit, "Close did not wait for Save As");
+    close(); key(SDLK_RETURN);
+    require(close_prompts == 2 && app.simulation.document_snapshot(app.circuit) == edited,
+            "Pending Save As allowed a second close prompt or an edit");
+    complete(std::nullopt);
+    require(!app.quit && app.history.modified(), "Canceling Save As closed or cleaned the document");
+
+    // A later ordinary Save must not inherit the canceled close request.
+    key(SDLK_S, SDL_KMOD_GUI);
+    const auto basename = directory / utf8_path("circuit étude");
+    auto saved_path = basename; saved_path += ".ghv";
+    complete(basename);
+    require(!app.quit && !app.history.modified() && load_document(saved_path).value() == edited,
+            "Save after a canceled close lost Unicode paths, levels or window state");
+    key(SDLK_Z, SDL_KMOD_CTRL);
+    require(app.history.modified(), "Undo after Save did not mark the document modified");
+    key(SDLK_Y, SDL_KMOD_CTRL);
+    require(!app.history.modified(), "Redo to the saved revision stayed modified");
+
+    key(SDLK_RIGHT); key(SDLK_RETURN);
+    const auto newest = app.simulation.document_snapshot(app.circuit);
+    const auto blocked_path = directory / "cannot replace.ghv";
+    std::filesystem::create_directory(blocked_path);
+    key(SDLK_S, static_cast<SDL_Keymod>(SDL_KMOD_CTRL | SDL_KMOD_SHIFT)); complete(blocked_path);
+    require(app.history.modified() && !app.quit && load_document(saved_path).value() == edited,
+            "Failed Save As discarded edits or changed the previous file");
+    key(SDLK_S, SDL_KMOD_CTRL);
+    require(!pending && !app.history.modified() && load_document(saved_path).value() == newest,
+            "Failed Save As redirected the next Save");
+
+    key(SDLK_O, SDL_KMOD_CTRL); complete(std::nullopt, true);
+    require(opened.empty() && app.simulation.document_snapshot(app.circuit) == newest, "Failed picker opened or replaced a document");
+    key(SDLK_O, SDL_KMOD_GUI); complete(saved_path);
+    require(opened.size() == 1 && opened.back() == saved_path && app.simulation.document_snapshot(app.circuit) == newest,
+            "Open picker did not preserve the current circuit in its own window");
+
+    key(SDLK_RIGHT); key(SDLK_RETURN);
+    const auto closing = app.simulation.document_snapshot(app.circuit);
+    close();
+    require(app.quit && !app.history.modified() && load_document(saved_path).value() == closing,
+            "Save on close did not write the current document before quitting");
+    App reopened(window, clipboard);
+    require(reopened.open(saved_path) && reopened.simulation.document_snapshot(reopened.circuit) == closing && !reopened.history.modified(),
+            "Reopening a saved circuit lost component state or retained unsaved history");
+    std::cout << "Document workflow passed: construction, canceled close, Save As, failed save, Unicode reopen, undo/redo\n";
+}
+
 struct SdlLifetime { ~SdlLifetime() { SDL_Quit(); } };
 struct TestDirectory {
     std::filesystem::path path;
@@ -2144,6 +2250,7 @@ int main(int argc, char** argv) {
         if (!testing && !snapshot && !benchmark) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
+            document_workflow_test(window.get(), renderer.get(), **clipboard, session_directory);
             if (display_test) {
                 if (!SDL_RenderPresent(renderer.get())) throw std::runtime_error(SDL_GetError());
                 std::cout << "Display smoke passed: " << SDL_GetCurrentVideoDriver() << " / " << SDL_GetRendererName(renderer.get()) << '\n';
