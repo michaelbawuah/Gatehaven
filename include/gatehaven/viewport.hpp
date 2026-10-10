@@ -16,10 +16,11 @@ struct ViewRect {
 
 class Viewport {
 public:
+    static constexpr double default_scale = 32, min_scale = 4, max_scale = 256;
     ViewRect area{240, 88, 1040, 676};
     double center_x{0.5};
     double center_y{3.5};
-    double scale{32};
+    double scale{default_scale};
 
     [[nodiscard]] std::pair<double, double> world(double x, double y) const {
         return {center_x + (x - area.x - area.width / 2) / scale,
@@ -59,19 +60,19 @@ public:
     void zoom(double multiplier, double x, double y) {
         if (!std::isfinite(multiplier) || multiplier <= 0 || !std::isfinite(x) || !std::isfinite(y)) return;
         const auto before = world(x, y);
-        scale = std::clamp(scale * multiplier, 4.0, 80.0);
+        scale = std::clamp(scale * multiplier, min_scale, max_scale);
         const auto after = world(x, y);
         center_x = std::clamp(center_x + before.first - after.first, lo, hi);
         center_y = std::clamp(center_y + before.second - after.second, lo, hi);
     }
 
     void frame(std::optional<Bounds> bounds) {
-        if (!bounds) { center_x = center_y = 0; scale = 32; return; }
+        if (!bounds) { center_x = center_y = 0; scale = default_scale; return; }
         center_x = (static_cast<double>(bounds->min.x) + bounds->max.x + 1) / 2;
         center_y = (static_cast<double>(bounds->min.y) + bounds->max.y + 1) / 2;
         const double width = static_cast<double>(bounds->max.x) - bounds->min.x + 5;
         const double height = static_cast<double>(bounds->max.y) - bounds->min.y + 5;
-        scale = std::clamp(std::min({area.width / width, area.height / height, 40.0}), 4.0, 80.0);
+        scale = std::clamp(std::min({area.width / width, area.height / height, 40.0}), min_scale, max_scale);
     }
 
 private:

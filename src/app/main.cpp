@@ -81,6 +81,10 @@ void line(SDL_Renderer* r, float x, float y, float xx, float yy, SDL_Color c) {
 }
 
 struct Button { ViewRect rect; std::string label; };
+constexpr std::array<ViewRect, 3> zoom_buttons{{{1072, 710, 34, 32}, {1110, 710, 100, 32}, {1214, 710, 34, 32}}};
+bool zoom_key(SDL_Keycode key) {
+    return key == SDLK_EQUALS || key == SDLK_PLUS || key == SDLK_KP_PLUS || key == SDLK_MINUS || key == SDLK_KP_MINUS;
+}
 std::array<Button, 10> buttons(bool running, unsigned speed) {
     return {{{{272, 22, 102, 40}, running ? "Pause" : "Run"},
              {{384, 22, 68, 40}, "Step"}, {{462, 22, 80, 40}, "Reset"},
@@ -198,7 +202,19 @@ public:
     }
 
     bool prepare_snapshot(std::string_view state) {
-        if (state == "contrast") high_contrast_ = true;
+        if (state == "symbols" || state == "symbols-close" || state == "symbols-small") {
+            start_blank();
+            if (state == "symbols-close") {
+                for (std::size_t i = 0; i < 4; ++i) circuit.set({static_cast<Coordinate>(i) * 2, 0}, palette[i + 4]);
+                view.center_x = 3.5; view.center_y = .5; view.scale = 128;
+            } else {
+                for (std::size_t i = 0; i < palette.size(); ++i)
+                    circuit.set({static_cast<Coordinate>(i % 7) * 3, static_cast<Coordinate>(i / 7) * 3}, palette[i]);
+                view.center_x = 9.5; view.center_y = 2; view.scale = state == "symbols-small" ? 16 : 48;
+            }
+            simulation.initialize(circuit); status_ = "Circuit symbols · Gates, relays, power and file connections";
+        }
+        else if (state == "contrast") high_contrast_ = true;
         else if (state == "help") help_ = true;
         else if (state == "examples") examples_menu_ = true;
         else if (state == "keyboard") keyboard_focus_ = 2;
@@ -353,7 +369,7 @@ public:
         if (e.type == SDL_EVENT_DROP_FILE && e.drop.data) {
             launch_open(utf8_path(e.drop.data)); return;
         }
-        if (e.type == SDL_EVENT_KEY_DOWN && (!e.key.repeat || (keyboard_cursor_ &&
+        if (e.type == SDL_EVENT_KEY_DOWN && (!e.key.repeat || zoom_key(e.key.key) || (keyboard_cursor_ &&
             (e.key.key == SDLK_LEFT || e.key.key == SDLK_RIGHT || e.key.key == SDLK_UP || e.key.key == SDLK_DOWN)))) key(e.key);
         if (help_) {
             if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) help_ = false;
@@ -393,16 +409,17 @@ public:
             }
             return;
         }
-        if (e.type == SDL_EVENT_MOUSE_WHEEL && view.area.contains(e.wheel.mouse_x, e.wheel.mouse_y)) {
+        if (e.type == SDL_EVENT_PINCH_BEGIN || e.type == SDL_EVENT_PINCH_UPDATE || e.type == SDL_EVENT_PINCH_END) {
+            pinch_event(e.pinch); return;
+        }
+        if (e.type == SDL_EVENT_MOUSE_WHEEL && canvas_point(e.wheel.mouse_x, e.wheel.mouse_y) && !pinch_anchor_) {
             const double amount = e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -e.wheel.y : e.wheel.y;
-            view.zoom(std::pow(1.18, amount), e.wheel.mouse_x, e.wheel.mouse_y);
-            if (drag_ && hover_) update_preview(*hover_);
-            if (polyline_ && hover_) polyline_preview(*hover_);
+            if (std::isfinite(amount)) zoom_at(std::exp2(std::clamp(amount, -4.0, 4.0) / 4), e.wheel.mouse_x, e.wheel.mouse_y);
         }
         if (e.type == SDL_EVENT_MOUSE_MOTION) {
             pointer_ = SDL_FPoint{e.motion.x, e.motion.y};
             if (pan_button_) { view.pan(e.motion.xrel, e.motion.yrel); pan_distance_ += std::abs(e.motion.xrel) + std::abs(e.motion.yrel); }
-            if (!keyboard_cursor_) hover_ = view.area.contains(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
+            if (!keyboard_cursor_) hover_ = canvas_point(e.motion.x, e.motion.y) ? view.cell(e.motion.x, e.motion.y) : std::nullopt;
             if (drag_ && hover_) update_preview(*hover_);
             if (polyline_ && hover_) polyline_preview(*hover_);
             if (interaction_button_) {
@@ -410,7 +427,7 @@ public:
                 if (hover_ && circuit.at(*hover_) == Element::screen) endpoints_.hold_screen(*hover_);
             }
         }
-        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) { keyboard_focus_.reset(); keyboard_cursor_.reset(); mouse_down(e.button); }
+        if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) { pointer_ = SDL_FPoint{e.button.x, e.button.y}; keyboard_focus_.reset(); keyboard_cursor_.reset(); mouse_down(e.button); }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && input_button(e.button) == interaction_button_) {
             interaction_button_.reset(); endpoints_.release_screens();
         }
@@ -419,7 +436,7 @@ public:
             pan_button_.reset(); pan_origin_.reset();
         }
         if (e.type == SDL_EVENT_MOUSE_BUTTON_UP && drag_ && input_button(e.button) == drag_button_) {
-            const auto end = view.area.contains(e.button.x, e.button.y) ? view.cell(e.button.x, e.button.y) : std::nullopt;
+            const auto end = canvas_point(e.button.x, e.button.y) ? view.cell(e.button.x, e.button.y) : std::nullopt;
             if (end) {
                 update_preview(*end, true);
                 if (drag_tool_.kind == ToolKind::selector) {
@@ -529,6 +546,7 @@ private:
     bool close_after_save_{};
     std::optional<Point> hover_;
     std::optional<SDL_FPoint> pointer_;
+    std::optional<SDL_FPoint> pinch_anchor_;
     std::optional<Point> drag_;
     std::size_t drag_button_{};
     std::optional<std::size_t> pan_button_;
@@ -594,9 +612,43 @@ private:
         interaction_button_.reset(); endpoints_.release_screens();
         preview_.clear();
         eyedropper_ = false;
+        pinch_anchor_.reset();
+    }
+
+    static bool zoom_control(float x, float y) {
+        return ViewRect{1066, 704, 190, 44}.contains(x, y);
+    }
+    bool canvas_point(float x, float y) const { return view.area.contains(x, y) && !zoom_control(x, y); }
+    void zoom_at(double multiplier, double x, double y) {
+        view.zoom(multiplier, x, y);
+        if (!keyboard_cursor_ && pointer_) hover_ = canvas_point(pointer_->x, pointer_->y) ? view.cell(pointer_->x, pointer_->y) : std::nullopt;
+        if (drag_ && hover_) update_preview(*hover_);
+        if (polyline_ && hover_) polyline_preview(*hover_);
+    }
+    void zoom_from_keyboard(double multiplier) {
+        if (keyboard_cursor_) {
+            const auto [x, y] = view.screen(*keyboard_cursor_);
+            zoom_at(multiplier, x + view.scale / 2, y + view.scale / 2);
+        } else if (pointer_ && canvas_point(pointer_->x, pointer_->y)) zoom_at(multiplier, pointer_->x, pointer_->y);
+        else zoom_at(multiplier, view.area.x + view.area.width / 2, view.area.y + view.area.height / 2);
+    }
+    void pinch_event(const SDL_PinchFingerEvent& event) {
+        if (event.windowID && event.windowID != SDL_GetWindowID(window_)) return;
+        if (event.type == SDL_EVENT_PINCH_END) { pinch_anchor_.reset(); return; }
+        if (event.type == SDL_EVENT_PINCH_BEGIN) {
+            auto anchor = pointer_;
+            if (!anchor) {
+                float x{}, y{}; SDL_GetMouseState(&x, &y);
+                if (SDL_RenderCoordinatesFromWindow(SDL_GetRenderer(window_), x, y, &x, &y)) anchor = SDL_FPoint{x, y};
+            }
+            cancel_gesture();
+            if (anchor && canvas_point(anchor->x, anchor->y)) pinch_anchor_ = anchor;
+        } else if (pinch_anchor_) zoom_at(event.scale, pinch_anchor_->x, pinch_anchor_->y);
     }
 
     void touch_event(const SDL_Event& event) {
+        const auto device_type = SDL_GetTouchDeviceType(event.tfinger.touchID);
+        if (device_type == SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE || device_type == SDL_TOUCH_DEVICE_INDIRECT_RELATIVE) return;
         if (event.type == SDL_EVENT_FINGER_CANCELED) { cancel_gesture(); return; }
         const TouchId id{event.tfinger.touchID, event.tfinger.fingerID};
         const TouchPoint point{event.tfinger.x, event.tfinger.y};
@@ -662,6 +714,14 @@ private:
         if (!button) return;
         if (help_) { help_ = false; return; }
         if (e.button == SDL_BUTTON_LEFT) {
+            if (zoom_control(e.x, e.y)) {
+                cancel_gesture();
+                for (std::size_t i = 0; i < zoom_buttons.size(); ++i) if (zoom_buttons[i].contains(e.x, e.y)) {
+                    zoom_at(i == 0 ? 0.8 : i == 2 ? 1.25 : Viewport::default_scale / view.scale,
+                            view.area.x + view.area.width / 2, view.area.y + view.area.height / 2);
+                }
+                return;
+            }
             if (ViewRect{990, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); examples_menu_ = true; return; }
             if (ViewRect{1126, 69, 124, 23}.contains(e.x, e.y)) { cancel_gesture(); keyboard_focus_.reset(); help_ = true; return; }
             const auto toolbar = buttons(running, speed_);
@@ -683,6 +743,7 @@ private:
                 return;
             }
         }
+        if (zoom_control(e.x, e.y)) return;
         if (ViewRect{12, 146, 216, 364}.contains(e.x, e.y)) {
             cancel_gesture();
             tools_[*button] = {ToolKind::pencil, palette[static_cast<std::size_t>((e.y - 146) / 28)]};
@@ -755,8 +816,9 @@ private:
     }
 
     static constexpr std::size_t palette_end = 10 + palette.size() + 4;
-    static constexpr std::size_t focus_count = palette_end + 2;
+    static constexpr std::size_t focus_count = palette_end + 5;
     ViewRect focus_rect(std::size_t index) const {
+        if (index >= palette_end + 2) return zoom_buttons[index - palette_end - 2];
         if (index >= palette_end) return {990.0 + static_cast<double>(index - palette_end) * 136, 69, 124, 23};
         if (index < 10) return buttons(running, speed_)[index].rect;
         if (index < 10 + palette.size()) return {12, 146 + static_cast<double>(index - 10) * 28, 216, 26};
@@ -766,6 +828,10 @@ private:
     std::string focus_description() const {
         if (!keyboard_focus_) return "Canvas. F9 enables keyboard navigation; F8 inspects the current cell.";
         const auto index = *keyboard_focus_;
+        if (index >= palette_end + 2) {
+            constexpr std::array<std::string_view, 3> descriptions{"Zoom out. Shortcut: minus.", "Reset zoom to 100 percent. Shortcut: Control 0.", "Zoom in. Shortcut: plus."};
+            return std::string(descriptions[index - palette_end - 2]);
+        }
         if (index >= palette_end) return index == palette_end ? "Examples. Open the circuit lesson chooser. Shortcut: F3." : "Quick guide. Open keyboard and editing help. Shortcut: F2.";
         if (index < 10) {
             constexpr std::array<std::string_view, 10> descriptions{
@@ -856,6 +922,10 @@ private:
             else if (e.key == SDLK_RETURN) choose_clipboard(clipboard_);
             return;
         }
+        if (zoom_key(e.key)) {
+            zoom_from_keyboard(e.key == SDLK_MINUS || e.key == SDLK_KP_MINUS ? 0.8 : 1.25); return;
+        }
+        if (control && e.key == SDLK_0) { zoom_from_keyboard(Viewport::default_scale / view.scale); return; }
         if (e.key == SDLK_TAB && !control) {
             cancel_gesture();
             keyboard_focus_ = keyboard_focus_ ? (*keyboard_focus_ + (shift ? focus_count - 1 : 1)) % focus_count : (shift ? focus_count - 1 : 0);
@@ -992,11 +1062,6 @@ private:
         }
         case SDLK_F: view.frame(circuit.bounds()); break;
         case SDLK_HOME: view.frame(circuit.bounds()); break;
-        case SDLK_EQUALS:
-        case SDLK_PLUS:
-        case SDLK_KP_PLUS: view.zoom(1.25, 760, 430); break;
-        case SDLK_MINUS:
-        case SDLK_KP_MINUS: view.zoom(0.8, 760, 430); break;
         case SDLK_D:
         case SDLK_DELETE:
         case SDLK_BACKSPACE: erase_selection(); break;
@@ -1325,7 +1390,7 @@ private:
         const auto document = path_.empty() ? std::string("Untitled circuit") : path_utf8(path_.filename());
         ui::label(r, 272, 73, ui::ellipsize(document, 240, 12), theme().ink, 12, Weight::semibold);
         if (history.modified()) ui::rounded(r, 526, 79, 5, 5, theme().orange, 2.5F);
-        ui::label(r, 555, 73, "Space  Run / pause     ·     Scroll  Zoom", theme().muted, 12);
+        ui::label(r, 555, 73, "Space  Run / pause     ·     Pinch or scroll  Zoom", theme().muted, 12);
         for (std::size_t i = 0; i < 2; ++i) {
             const ViewRect box{990.0 + static_cast<double>(i) * 136, 69, 124, 23};
             if (hovered(box)) ui::rounded(r, static_cast<float>(box.x), 69, 124, 23, hover, 5);
@@ -1391,7 +1456,17 @@ private:
         ui::rounded(r, 1120, 773, 72, 20, running ? active : hover, 5);
         ui::centered(r, 1120, 773, 72, 20, running ? "Running" : "Paused", running ? theme().teal : theme().muted, 11);
         const auto zoom = std::to_string(static_cast<int>(std::round(view.scale / 32.0 * 100))) + "%";
-        ui::label(r, 1258 - ui::text_width(zoom, 12), 772, zoom, theme().muted, 12);
+        ui::panel(r, 1066, 704, 190, 44, theme().white, theme().border, 9);
+        for (std::size_t i = 0; i < zoom_buttons.size(); ++i) {
+            const auto box = zoom_buttons[i];
+            const float x = static_cast<float>(box.x), y = static_cast<float>(box.y), w = static_cast<float>(box.width);
+            if (hovered(box)) ui::rounded(r, x, y, w, 32, hover, 5);
+            if (i == 1) ui::centered(r, x, y, w, 32, zoom, theme().ink, 13);
+            else {
+                rectangle(r, x + 10, y + 15, 14, 2, theme().ink);
+                if (i == 2) rectangle(r, x + 16, y + 9, 2, 14, theme().ink);
+            }
+        }
     }
 
     void draw_bindings(SDL_Renderer* r, float y, InputTool tool) const {
@@ -1426,7 +1501,6 @@ private:
         const float x = static_cast<float>(wx), y = static_cast<float>(wy);
         const float s = static_cast<float>(view.scale);
         const float center = s / 2;
-        const float stroke = std::max(2.0F, s * (high_contrast_ && ports != 0 ? 0.22F : 0.13F));
         const auto powered = ports != 0;
         const auto color = preview ? theme().orange : powered ? theme().teal : (high_contrast_ ? theme().ink : SDL_Color{99, 117, 128, 255});
         if (cell.element == Element::empty) {
@@ -1434,11 +1508,34 @@ private:
         }
         rectangle(r, x + 1, y + 1, s - 2, s - 2,
                   powered ? SDL_Color{217, 238, 227, 255} : SDL_Color{233, 238, 241, 255});
-        if (cell.element == Element::screen) {
-            const bool bright = !preview && simulation.sent(cell.position);
-            rectangle(r, x + 3, y + 3, std::max(1.0F, s - 6), std::max(1.0F, s - 6),
-                      bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{57, 64, 84, 255});
-            if (s >= 18) ui::centered(r, x, y, s, s, "S", bright ? theme().ink : theme().white, std::min(13.0F, s * 0.45F));
+        if (cell.element != Element::wire && cell.element != Element::crossing && cell.element != Element::signal) {
+            const auto ink = preview ? theme().orange : cell.element == Element::source ? theme().orange : powered ? theme().teal : theme().ink;
+            if (s >= 12) {
+                ui::panel(r, x + 2, y + 2, s - 4, s - 4,
+                          powered ? SDL_Color{232, 246, 239, 255} : theme().white,
+                          high_contrast_ ? ink : powered ? SDL_Color{149, 200, 177, 255} : theme().border,
+                          std::min(8.0F, s * .13F));
+                // Only actual neighboring cells get terminals. Orange marks a
+                // Signal control; the symbol's orientation never changes wiring.
+                const float terminal = std::max(1.3F, s * .045F), length = s * .15F;
+                for (const auto direction : directions) {
+                    const auto next = neighbor(cell.position, direction);
+                    if (!next || circuit.at(*next) == Element::empty) continue;
+                    if (cell.element == Element::source && circuit.at(*next) == Element::signal) continue;
+                    const auto terminal_color = circuit.at(*next) == Element::signal ? theme().orange : ink;
+                    if (direction == Direction::west || direction == Direction::east)
+                        rectangle(r, direction == Direction::west ? x : x + s - length, y + center - terminal / 2, length, terminal, terminal_color);
+                    else rectangle(r, x + center - terminal / 2, direction == Direction::north ? y : y + s - length, terminal, length, terminal_color);
+                }
+                if (cell.element == Element::screen) {
+                    const bool bright = !preview && simulation.sent(cell.position);
+                    rectangle(r, x + s * .24F, y + s * .27F, s * .52F, s * .32F,
+                              bright ? SDL_Color{246, 190, 65, 255} : SDL_Color{216, 228, 235, 255});
+                }
+            }
+            const auto direction = ui::is_gate(cell.element) ? ui::symbol_direction(circuit, cell.position, cell.element) : Direction::east;
+            ui::component_symbol(r, cell.element, x + s * .1F, y + s * .1F, s * .8F, ink, direction,
+                                 !preview && simulation.conductive(cell.position));
             if (preview) rectangle(r, x, y, s, s, theme().orange, true);
             return;
         }
@@ -1464,24 +1561,18 @@ private:
             if (south) rectangle(r, x + center - vertical_stroke / 2, y + center - vertical_stroke / 2,
                                  vertical_stroke, center + vertical_stroke / 2, preview ? theme().orange : vertical);
             if (!north && !south && !east && !west) {
-                rectangle(r, x + center - stroke, y + center - stroke, stroke * 2, stroke * 2, color);
+                if (cell.element == Element::signal) ui::icon(r, ui::Icon::signal, x + s * .1F, y + s * .1F, s * .8F, theme().orange);
+                else {
+                    rectangle(r, x + s * .16F, y + center - horizontal_stroke / 2, s * .68F, horizontal_stroke, color);
+                    if (cell.element == Element::crossing) {
+                        rectangle(r, x + center - vertical_stroke, y + s * .1F, vertical_stroke * 2, s * .8F, theme().paper);
+                        rectangle(r, x + center - vertical_stroke / 2, y + s * .16F, vertical_stroke, s * .68F, color);
+                    }
+                }
             }
-            if (cell.element == Element::signal) {
+            if (cell.element == Element::signal && (north || south || east || west)) {
                 rectangle(r, x + s * 0.3F, y + s * 0.3F, s * 0.4F, s * 0.4F,
                           powered ? theme().orange : SDL_Color{161, 110, 66, 255});
-            }
-        } else {
-            const float padding = std::min(3.0F, s / 8);
-            rectangle(r, x + padding, y + padding, s - 2 * padding, s - 2 * padding,
-                      cell.element == Element::source ? theme().orange : powered ? theme().teal : SDL_Color{91, 89, 130, 255});
-            const auto label = cell.element == Element::file_input ? std::string_view("IN") :
-                               cell.element == Element::file_output ? std::string_view("OUT") :
-                               cell.element == Element::source ? std::string_view("+") :
-                               cell.element == Element::positive_relay ? std::string_view("+R") :
-                               cell.element == Element::negative_relay ? std::string_view("-R") : name(cell.element);
-            if (s >= 18) {
-                const float size = std::min(12.0F, (s - 7) / ui::text_width(label, 1, ui::Weight::semibold));
-                ui::centered(r, x, y, s, s, label, theme().white, size);
             }
         }
         if (preview) rectangle(r, x, y, s, s, color, true);
@@ -1521,7 +1612,7 @@ private:
             first = "Shift adds to the selection. alt removes from it.";
             second = "Double click: electrical net. triple click: whole circuit.";
         } else if (tools_[0].kind == ToolKind::panner) {
-            first = "Drag to move the camera. scroll to zoom at the cursor.";
+            first = "Drag to move the camera. Pinch or scroll to zoom at the cursor.";
             second = "Double click centers a cell. f frames the whole circuit.";
         } else if (tools_[0].kind == ToolKind::eraser) {
             first = "Drag to erase a line. shift chains eraser segments.";
@@ -1564,7 +1655,7 @@ private:
         group(316, 467, "Run & explore", {{{"Space", "Run or pause"}, {"F10", "Advance one tick"},
             {"Ctrl Space", "Change simulation speed"}, {"R", "Reset the simulation"}, {"I", "Interact with a screen / port"}, {"F / scroll", "Fit circuit / zoom"}}});
         group(754, 467, "Files & workspace", {{{"Ctrl S / O / N", "Save / open / new circuit"}, {"Ctrl Shift S", "Save As"},
-            {"Ctrl Shift C / V", "Choose a shared clipboard"}, {"F1 / F3 / F4", "Manual / examples / recovery"}, {"F11 / F12", "Contrast / window details"}, {"Two fingers", "Pan and pinch to zoom"}}});
+            {"Ctrl Shift C / V", "Choose a shared clipboard"}, {"F1 / F3 / F4", "Manual / examples / recovery"}, {"F11 / F12", "Contrast / window details"}, {"Pinch / + −", "Zoom; Ctrl 0 resets to 100%"}}});
         line(r, 316, 674, 1154, 674, theme().border);
         ui::label(r, 316, 690, "Keyboard: Tab focuses controls · Enter activates · F9 navigates cells · F8 describes focus.", theme().muted, 12);
         ui::label(r, 316, 712, "On Mac, Command also works for Ctrl shortcuts. Click anywhere or press Esc to close.", theme().muted, 12);
@@ -1646,6 +1737,16 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     const auto clipped = ui::ellipsize("circuit-é.ghv", 60);
     require(clipped.ends_with("…") && ui::text_width(clipped) <= 60, "UI text escaped its available width");
     require(ui::ellipsize("too narrow", 0).empty(), "UI overflowed an empty label");
+    {
+        Circuit symbols; symbols.set({0, 0}, Element::or_gate);
+        require(ui::symbol_direction(symbols, {0, 0}, Element::or_gate) == Direction::east, "Isolated gate lost its conventional orientation");
+        symbols.set({0, -1}, Element::wire); symbols.set({1, 0}, Element::signal);
+        require(ui::symbol_direction(symbols, {0, 0}, Element::or_gate) == Direction::north, "Gate symbol points at an input instead of its output");
+        symbols.set({0, -1}, Element::empty);
+        require(ui::symbol_direction(symbols, {0, 0}, Element::or_gate) == Direction::west, "Gate symbol did not face away from its lone input");
+        symbols.set({0, -1}, Element::wire);
+        require(ui::symbol_direction(symbols, {1, -1}, Element::nand_gate) == Direction::west, "Placement preview ignored the neighboring wire");
+    }
     const auto key = [&](SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE) {
         SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN;
         event.key.key = code; event.key.mod = mod;
@@ -1675,9 +1776,10 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     require(app.running, "Keyboard focus could not activate Play");
     key(SDLK_RETURN); require(!app.running, "Keyboard focus could not activate Pause");
     key(SDLK_ESCAPE);
-    key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_RETURN); // Quick guide.
+    for (int i = 0; i < 4; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT);
+    key(SDLK_RETURN); // Quick guide, before the three zoom controls.
     key(SDLK_ESCAPE);
-    key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_TAB, SDL_KMOD_SHIFT); key(SDLK_TAB, SDL_KMOD_SHIFT); // Interactor.
+    for (int i = 0; i < 6; ++i) key(SDLK_TAB, SDL_KMOD_SHIFT); // Interactor.
     key(SDLK_RETURN); key(SDLK_1);
     require(!app.history.modified(), "Keyboard palette navigation edited the circuit");
     const auto original = app.circuit;
@@ -2062,6 +2164,78 @@ void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& se
     std::cout << "Desktop smoke passed: SDL events, editing, shared copy/paste, independent New/Open, simulation, rendering\n";
 }
 
+void zoom_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSession& clipboard) {
+    const auto require = [](bool ok, const char* message) { if (!ok) throw std::runtime_error(message); };
+    App app(window, clipboard);
+    const auto original = app.circuit;
+    const auto send = [&](SDL_Event event) {
+        require(SDL_PushEvent(&event), "Could not queue zoom event"); dispatch(app, renderer);
+    };
+    const auto pointer = [&](Uint32 type, float x, float y, Uint8 button = SDL_BUTTON_LEFT) {
+        float wx{}, wy{}; require(SDL_RenderCoordinatesToWindow(renderer, x, y, &wx, &wy), "Could not map zoom pointer");
+        SDL_Event event{}; event.type = type;
+        if (type == SDL_EVENT_MOUSE_MOTION) {
+            event.motion.windowID = SDL_GetWindowID(window); event.motion.x = wx; event.motion.y = wy;
+        } else {
+            event.button.windowID = SDL_GetWindowID(window); event.button.x = wx; event.button.y = wy; event.button.button = button;
+        }
+        send(event);
+    };
+    const auto key = [&](SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE, bool repeat = false) {
+        SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN; event.key.key = code; event.key.mod = mod; event.key.repeat = repeat; send(event);
+    };
+    const auto pinch = [&](Uint32 type, float scale = 0) {
+        SDL_Event event{}; event.type = type; event.pinch.windowID = SDL_GetWindowID(window); event.pinch.scale = scale; send(event);
+    };
+    const auto wheel = [&](float amount, SDL_MouseWheelDirection direction = SDL_MOUSEWHEEL_NORMAL) {
+        SDL_Event event{}; event.type = SDL_EVENT_MOUSE_WHEEL; event.wheel.windowID = SDL_GetWindowID(window);
+        require(SDL_RenderCoordinatesToWindow(renderer, 977, 321, &event.wheel.mouse_x, &event.wheel.mouse_y), "Could not map wheel anchor");
+        event.wheel.y = amount; event.wheel.direction = direction; send(event);
+    };
+    // Real window IDs exercise logical-coordinate conversion at non-default sizes.
+    require(SDL_SetWindowSize(window, 1120, 760), "Could not resize zoom test");
+    pointer(SDL_EVENT_MOUSE_MOTION, 977, 321);
+    const auto before = app.view.world(977, 321);
+    const auto anchored = [&] {
+        const auto after = app.view.world(977, 321);
+        require(std::abs(before.first - after.first) < 1e-4 && std::abs(before.second - after.second) < 1e-4,
+                "Zoom drifted away from the pointer after window scaling");
+    };
+    const auto initial_scale = app.view.scale;
+    pinch(SDL_EVENT_PINCH_BEGIN); pinch(SDL_EVENT_PINCH_UPDATE, 1.5F);
+    require(std::abs(app.view.scale - initial_scale * 1.5) < 1e-4, "Native trackpad pinch did not zoom"); anchored();
+    pointer(SDL_EVENT_MOUSE_MOTION, 820, 400); pinch(SDL_EVENT_PINCH_UPDATE, 1.2F); anchored();
+    pinch(SDL_EVENT_PINCH_UPDATE, std::numeric_limits<float>::quiet_NaN()); anchored();
+    pinch(SDL_EVENT_PINCH_END);
+    pointer(SDL_EVENT_MOUSE_MOTION, 977, 321);
+    const auto wheel_scale = app.view.scale;
+    wheel(.25F); wheel(.25F, SDL_MOUSEWHEEL_FLIPPED);
+    require(std::abs(app.view.scale - wheel_scale) < 1e-4, "Fractional or flipped wheel input lost its inverse"); anchored();
+    wheel(1000);
+    require(app.view.scale <= wheel_scale * 2 + 1e-4, "A large wheel event jumped directly to the zoom limit"); anchored();
+    key(SDLK_EQUALS, SDL_KMOD_GUI); key(SDLK_MINUS, SDL_KMOD_GUI); anchored();
+    key(SDLK_0, SDL_KMOD_GUI); require(app.view.scale == Viewport::default_scale, "Command 0 did not restore 100 percent"); anchored();
+    key(SDLK_EQUALS, SDL_KMOD_NONE, true);
+    require(app.view.scale > Viewport::default_scale, "Held zoom key did not repeat");
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1160, 726); pointer(SDL_EVENT_MOUSE_BUTTON_UP, 1160, 726);
+    require(app.view.scale == Viewport::default_scale, "Zoom percentage button did not reset scale");
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1231, 726); pointer(SDL_EVENT_MOUSE_BUTTON_UP, 1231, 726);
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1089, 726); pointer(SDL_EVENT_MOUSE_BUTTON_UP, 1089, 726);
+    require(app.view.scale == Viewport::default_scale, "Zoom buttons are not reciprocal");
+    pointer(SDL_EVENT_MOUSE_BUTTON_DOWN, 1089, 726, SDL_BUTTON_RIGHT); pointer(SDL_EVENT_MOUSE_BUTTON_UP, 1089, 726, SDL_BUTTON_RIGHT);
+    pointer(SDL_EVENT_MOUSE_MOTION, 80, 200);
+    pinch(SDL_EVENT_PINCH_BEGIN); pinch(SDL_EVENT_PINCH_UPDATE, 2); pinch(SDL_EVENT_PINCH_END);
+    require(app.view.scale == Viewport::default_scale, "Pinching the sidebar zoomed the canvas");
+    pointer(SDL_EVENT_MOUSE_MOTION, 977, 321); pinch(SDL_EVENT_PINCH_BEGIN);
+    SDL_Event lost{}; lost.type = SDL_EVENT_WINDOW_FOCUS_LOST; send(lost); pinch(SDL_EVENT_PINCH_UPDATE, 2);
+    require(app.view.scale == Viewport::default_scale, "Focus loss left a pinch active");
+    key(SDLK_F2); pinch(SDL_EVENT_PINCH_BEGIN); pinch(SDL_EVENT_PINCH_UPDATE, 2); wheel(2); key(SDLK_ESCAPE);
+    require(app.view.scale == Viewport::default_scale && app.circuit == original && !app.history.modified(),
+            "Navigation changed the document or leaked through a modal");
+    require(SDL_SetWindowSize(window, 1280, 800), "Could not restore zoom test window");
+    std::cout << "Zoom workflow passed: native pinch, scaled-window anchor, fractional wheel, keyboard, controls and focus loss\n";
+}
+
 // Exercise complete document flows through the same events and asynchronous
 // callback used by the desktop. Only the OS picker and confirmation UI are replaced.
 void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSession& clipboard,
@@ -2350,6 +2524,7 @@ int main(int argc, char** argv) {
         if (!testing && !snapshot && !benchmark) app.load_settings(session_directory.parent_path() / "preferences.ghp");
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
+            zoom_workflow_test(window.get(), renderer.get(), **clipboard);
             document_workflow_test(window.get(), renderer.get(), **clipboard, session_directory);
             recovery_workflow_test(window.get(), **clipboard, session_directory);
             if (display_test) {
@@ -2365,7 +2540,7 @@ int main(int argc, char** argv) {
         if (benchmark) { render_benchmark(app, renderer.get(), extra_cells, frames, native_benchmark); return std::cout ? 0 : 1; }
         if (snapshot) {
             if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
-                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, canvas, contrast, or recovery.\n";
+                std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, canvas, contrast, recovery, symbols, symbols-close, or symbols-small.\n";
                 return 2;
             }
             app.simulation.step(app.circuit); app.simulation.step(app.circuit);

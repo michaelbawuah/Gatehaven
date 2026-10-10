@@ -33,9 +33,23 @@ TEST("viewport arithmetic remains safe at world boundaries") {
     CHECK(visible.min.x <= visible.max.x);
     CHECK(visible.min.y <= visible.max.y);
     v.zoom(1e100, 500, 500);
-    CHECK(v.scale == 80);
+    CHECK(v.scale == Viewport::max_scale);
     v.zoom(1e-100, 500, 500);
     CHECK(v.scale == 4);
+}
+
+TEST("zoom remains anchored through small trackpad increments and scale limits") {
+    Viewport view;
+    const auto anchor = view.world(977, 321);
+    for (int i = 0; i < 100; ++i) view.zoom(1.015, 977, 321);
+    for (int i = 0; i < 100; ++i) view.zoom(1 / 1.015, 977, 321);
+    CHECK(std::abs(view.scale - Viewport::default_scale) < 1e-9);
+    for (const auto multiplier : {1e100, 1e100, 1e-100, 1e-100, 8.0}) {
+        view.zoom(multiplier, 977, 321);
+        const auto after = view.world(977, 321);
+        CHECK(std::abs(anchor.first - after.first) < 1e-9);
+        CHECK(std::abs(anchor.second - after.second) < 1e-9);
+    }
 }
 
 TEST("invalid zoom coordinates do not poison the camera") {
