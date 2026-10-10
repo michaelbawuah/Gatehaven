@@ -451,7 +451,7 @@ public:
         }
     }
 
-    std::size_t render(SDL_Renderer* r) const {
+    std::size_t render(SDL_Renderer* r, bool batch_images = true) const {
         std::size_t visible_cells = 0;
         SDL_SetRenderDrawColor(r, theme().paper.r, theme().paper.g, theme().paper.b, 255);
         SDL_RenderClear(r);
@@ -468,16 +468,22 @@ public:
             SDL_SetRenderDrawColor(r, dot.r, dot.g, dot.b, dot.a);
             SDL_RenderPoints(r, points.data(), static_cast<int>(points.size()));
         }
+        // Tile backgrounds are opaque and disjoint. Submit their images together
+        // to avoid a geometry/texture pipeline switch for every component.
+        std::vector<CellImage> images;
+        std::vector<Point> selected;
         circuit.visit(visible, [&](const Cell& cell) {
             ++visible_cells;
-            draw_cell(r, cell, simulation.ports(cell.position));
-            if (selection_.contains(cell.position)) {
-                const auto [x, y] = view.screen(cell.position);
-                rectangle(r, static_cast<float>(x + 2), static_cast<float>(y + 2),
-                    static_cast<float>(view.scale - 4), static_cast<float>(view.scale - 4),
-                    selection_changed_ ? SDL_Color{205, 63, 64, 255} : SDL_Color{53, 103, 205, 255}, true);
-            }
+            draw_cell(r, cell, simulation.ports(cell.position), false, batch_images ? &images : nullptr);
+            if (selection_.contains(cell.position)) selected.push_back(cell.position);
         });
+        for (const auto& image : images) image.draw(r);
+        for (const auto point : selected) {
+            const auto [x, y] = view.screen(point);
+            rectangle(r, static_cast<float>(x + 2), static_cast<float>(y + 2),
+                static_cast<float>(view.scale - 4), static_cast<float>(view.scale - 4),
+                selection_changed_ ? SDL_Color{205, 63, 64, 255} : SDL_Color{53, 103, 205, 255}, true);
+        }
         for (const auto& cell : preview_) {
             if (visible.contains(cell.position)) draw_cell(r, cell, 0, true);
         }
@@ -520,6 +526,16 @@ public:
     }
 
 private:
+    struct CellImage {
+        Element element;
+        float x, y, size;
+        SDL_Color color;
+        Direction direction{Direction::east};
+        bool conducting{};
+        void draw(SDL_Renderer* renderer) const {
+            ui::component_symbol(renderer, element, x, y, size, color, direction, conducting);
+        }
+    };
     SDL_Window* window_; // Non-owning; main owns the window for the entire App lifetime.
     std::array<InputTool, 6> tools_{Preferences{}.bindings};
     InputTool drag_tool_;
@@ -1503,7 +1519,12 @@ private:
                   static_cast<float>(bottom - top), {61, 112, 195, 255}, true);
     }
 
-    void draw_cell(SDL_Renderer* r, Cell cell, std::uint8_t ports, bool preview = false) const {
+    void draw_cell(SDL_Renderer* r, Cell cell, std::uint8_t ports, bool preview = false,
+                   std::vector<CellImage>* images = nullptr) const {
+        const auto image = [&](CellImage artwork) {
+            if (images) images->push_back(artwork);
+            else artwork.draw(r); // Editing previews retain their overlay order.
+        };
         const auto [wx, wy] = view.screen(cell.position);
         const float x = static_cast<float>(wx), y = static_cast<float>(wy);
         const float s = static_cast<float>(view.scale);
@@ -1541,8 +1562,8 @@ private:
                 }
             }
             const auto direction = ui::is_gate(cell.element) ? ui::symbol_direction(circuit, cell.position, cell.element) : Direction::east;
-            ui::component_symbol(r, cell.element, x + s * .025F, y + s * .025F, s * .95F, ink, direction,
-                                 !preview && simulation.conductive(cell.position));
+            image({cell.element, x + s * .025F, y + s * .025F, s * .95F, ink, direction,
+                   !preview && simulation.conductive(cell.position)});
             if (preview) rectangle(r, x, y, s, s, theme().orange, true);
             return;
         }
@@ -1568,7 +1589,7 @@ private:
             if (south) rectangle(r, x + center - vertical_stroke / 2, y + center - vertical_stroke / 2,
                                  vertical_stroke, center + vertical_stroke / 2, preview ? theme().orange : vertical);
             if (!north && !south && !east && !west) {
-                if (cell.element == Element::signal) ui::icon(r, ui::Icon::signal, x + s * .1F, y + s * .1F, s * .8F, theme().orange);
+                if (cell.element == Element::signal) image({Element::signal, x + s * .1F, y + s * .1F, s * .8F, theme().orange});
                 else {
                     rectangle(r, x + s * .16F, y + center - horizontal_stroke / 2, s * .68F, horizontal_stroke, color);
                     if (cell.element == Element::crossing) {
@@ -2243,6 +2264,51 @@ void zoom_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSes
     std::cout << "Zoom workflow passed: native pinch, scaled-window anchor, fractional wheel, keyboard, controls and focus loss\n";
 }
 
+void artwork_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSession& clipboard) {
+    const auto require = [](bool ok, const char* message) { if (!ok) throw std::runtime_error(message); };
+    App app(window, clipboard);
+    require(app.prepare_snapshot("symbols"), "Could not prepare artwork fixture");
+    const auto compare = [&] {
+        using Surface = std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)>;
+        const auto capture = [&](bool batch) {
+            app.render(renderer, batch);
+            Surface raw(SDL_RenderReadPixels(renderer, nullptr), SDL_DestroySurface);
+            require(raw != nullptr, "Could not read artwork pixels");
+            Surface rgba(SDL_ConvertSurface(raw.get(), SDL_PIXELFORMAT_RGBA32), SDL_DestroySurface);
+            require(rgba != nullptr, "Could not normalize artwork pixels");
+            return rgba;
+        };
+        const auto reference = capture(false), batched = capture(true);
+        require(reference->w == batched->w && reference->h == batched->h, "Artwork dimensions changed");
+        for (int y = 0; y < reference->h; ++y) {
+            const auto* expected = static_cast<const unsigned char*>(reference->pixels) + y * reference->pitch;
+            const auto* actual = static_cast<const unsigned char*>(batched->pixels) + y * batched->pitch;
+            require(std::equal(expected, expected + reference->w * 4, actual), "Batched artwork changed canvas pixels");
+        }
+    };
+    const auto key = [&](SDL_Keycode code, SDL_Keymod mod = SDL_KMOD_NONE) {
+        SDL_Event event{}; event.type = SDL_EVENT_KEY_DOWN; event.key.key = code; event.key.mod = mod; app.event(event);
+    };
+    // Check every component, partial clipping and zoom limits before checking
+    // overlays. Compare full pixel rows, excluding driver-specific padding.
+    for (const double scale : {Viewport::min_scale, 16.0, Viewport::default_scale, Viewport::max_scale}) {
+        app.view.scale = scale; compare();
+    }
+    app.view.scale = Viewport::default_scale;
+    key(SDLK_A, SDL_KMOD_CTRL); compare();
+    key(SDLK_D, SDL_KMOD_CTRL);
+    SDL_Event pointer{}; pointer.type = SDL_EVENT_MOUSE_MOTION;
+    const auto [x, y] = app.view.screen({0, 0});
+    pointer.motion.x = static_cast<float>(x + app.view.scale / 2);
+    pointer.motion.y = static_cast<float>(y + app.view.scale / 2);
+    app.event(pointer); compare(); // Duplicate preview overlaps existing artwork.
+    key(SDLK_F11); compare();
+    key(SDLK_ESCAPE); key(SDLK_F11);
+    require(app.start_example("gate-gallery"), "Could not prepare powered artwork");
+    key(SDLK_F10); key(SDLK_F10); compare();
+    std::cout << "Artwork workflow passed: identical batched pixels, zoom limits, selection, overlapping paste and contrast\n";
+}
+
 // Exercise complete document flows through the same events and asynchronous
 // callback used by the desktop. Only the OS picker and confirmation UI are replaced.
 void document_workflow_test(SDL_Window* window, SDL_Renderer* renderer, ClipboardSession& clipboard,
@@ -2533,6 +2599,7 @@ int main(int argc, char** argv) {
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
             zoom_workflow_test(window.get(), renderer.get(), **clipboard);
+            artwork_workflow_test(window.get(), renderer.get(), **clipboard);
             document_workflow_test(window.get(), renderer.get(), **clipboard, session_directory);
             recovery_workflow_test(window.get(), **clipboard, session_directory);
             if (display_test) {
