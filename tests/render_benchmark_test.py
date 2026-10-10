@@ -13,6 +13,10 @@ for extra in (0, 20000):
     report = json.loads(run.stdout)
     assert report["total_cells"] == 3072 + extra
     assert report["frames"] == 10 and report["renderer"] == "software"
+    assert report["native_display_requested"] is False
+    assert report["display"]["video_driver"] == "dummy"
+    assert report["display"]["renderer"] == report["renderer"]
+    assert isinstance(report["vsync_disable_succeeded"], bool)
     for scenario in report["scenarios"]:
         assert len(scenario["frame_ms"]) == 10
         assert 0 < scenario["visible_min"] <= scenario["visible_max"] <= 3072

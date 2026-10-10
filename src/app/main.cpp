@@ -1477,25 +1477,35 @@ void dispatch(App& app, SDL_Renderer* renderer) {
 }
 
 // Measures the real render path with fixed visible work and optional off-screen cells.
-void render_benchmark(App& app, SDL_Renderer* renderer, std::size_t extra_cells, unsigned frames) {
+void render_benchmark(App& app, SDL_Renderer* renderer, std::size_t extra_cells, unsigned frames, bool native_display) {
     app.start_blank();
     for (Coordinate y = -24; y < 24; ++y) for (Coordinate x = -32; x < 32; ++x)
         app.circuit.set({x, y}, palette[static_cast<std::size_t>((x + 32 + (y + 24) * 64) % static_cast<Coordinate>(palette.size()))]);
     for (std::size_t i = 0; i < extra_cells; ++i)
         app.circuit.set({static_cast<Coordinate>(10000 + i % 1000), static_cast<Coordinate>(10000 + i / 1000)}, Element::wire);
     app.simulation.initialize(app.circuit);
-    SDL_SetRenderVSync(renderer, 0);
+    const bool vsync_disabled = SDL_SetRenderVSync(renderer, 0);
     std::cout << "{\"schema\":1,\"source_revision\":\"" << source_revision
               << "\",\"video_driver\":\"" << SDL_GetCurrentVideoDriver()
               << "\",\"renderer\":\"" << SDL_GetRendererName(renderer)
               << "\",\"logical_width\":1280,\"logical_height\":800,\"total_cells\":" << app.circuit.size()
-              << ",\"extra_cells\":" << extra_cells << ",\"frames\":" << frames << ",\"scenarios\":[";
+              << ",\"extra_cells\":" << extra_cells << ",\"frames\":" << frames
+              << ",\"native_display_requested\":" << (native_display ? "true" : "false")
+              << ",\"vsync_disable_succeeded\":" << (vsync_disabled ? "true" : "false") << ",\"display\":";
+    ui::display_information(std::cout, SDL_GetRenderWindow(renderer), renderer);
+    std::cout << ",\"scenarios\":[";
     constexpr std::array<std::string_view, 3> scenarios{"static", "pan", "zoom"};
     for (std::size_t scenario = 0; scenario < scenarios.size(); ++scenario) {
         app.view.scale = 32; app.view.center_on({0, 0});
         std::vector<double> timings; timings.reserve(frames);
         std::size_t smallest = std::numeric_limits<std::size_t>::max(), largest = 0;
         for (unsigned frame = 0; frame < frames + 12; ++frame) {
+            SDL_Event event;
+            while (SDL_PollEvent(&event)) {
+                if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED ||
+                    (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE))
+                    throw std::runtime_error("Rendering benchmark canceled");
+            }
             const auto begin = std::chrono::steady_clock::now();
             if (scenario == 1) app.view.pan(frame % 2 == 0 ? 16 : -16, 0);
             if (scenario == 2) app.view.zoom(frame % 2 == 0 ? 0.5 : 2.0, 760, 430);
@@ -1516,8 +1526,9 @@ void render_benchmark(App& app, SDL_Renderer* renderer, std::size_t extra_cells,
         for (std::size_t i = 0; i < timings.size(); ++i) { if (i) std::cout << ','; std::cout << timings[i]; }
         std::cout << "]}";
     }
-    std::cout << "],\"limits\":[\"Software renderer; no physical input-to-photon measurement\","
-                 "\"Initialization excluded; timings include render submission and present\"]}\n";
+    std::cout << "],\"limits\":[\"No physical input-to-photon measurement or GPU completion fence\","
+                 "\"Initialization excluded; timings include render submission and present\","
+                 "\"Compare the recorded backend, pixel dimensions, VSync and build type on the same machine\"]}\n";
 }
 
 void self_test(App& app, SDL_Renderer* renderer, const std::filesystem::path& session_directory,
@@ -1964,7 +1975,8 @@ int main(int argc, char** argv) {
         const bool testing = mode == "--self-test" || child_test || display_test;
         const bool snapshot = mode == "--snapshot";
         const bool diagnostics = mode == "--diagnostics";
-        const bool benchmark = mode == "--benchmark-render";
+        const bool native_benchmark = mode == "--benchmark-display";
+        const bool benchmark = mode == "--benchmark-render" || native_benchmark;
         std::size_t extra_cells = 0; unsigned frames = 60;
         const auto parse_count = [](const char* text, auto& value) {
             const std::string_view input(text);
@@ -1990,6 +2002,9 @@ int main(int argc, char** argv) {
         SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
         if (!SDL_SetAppMetadata("Gatehaven", version, application_id) || !SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError());
         const SdlLifetime lifetime;
+        const std::string_view video_driver = SDL_GetCurrentVideoDriver();
+        if ((display_test || native_benchmark) && (video_driver == "dummy" || video_driver == "offscreen"))
+            throw std::runtime_error("Display verification requires a native video backend");
         TestDirectory test_directory;
         std::filesystem::path session_directory;
         if (testing || snapshot || benchmark || diagnostics) {
@@ -2003,9 +2018,9 @@ int main(int argc, char** argv) {
         }
         auto clipboard = ClipboardSession::join(session_directory);
         if (!clipboard) throw std::runtime_error(clipboard.error());
-        if (testing || snapshot || benchmark) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+        if ((testing && !display_test) || snapshot || (benchmark && !native_benchmark)) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
         auto flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        if ((testing && !display_test) || snapshot || benchmark || diagnostics) flags |= SDL_WINDOW_HIDDEN;
+        if ((testing && !display_test) || snapshot || (benchmark && !native_benchmark) || diagnostics) flags |= SDL_WINDOW_HIDDEN;
         SDL_Window* raw_window = nullptr;
         SDL_Renderer* raw_renderer = nullptr;
         const bool created = SDL_CreateWindowAndRenderer("Gatehaven", 1280, 800, flags, &raw_window, &raw_renderer);
@@ -2038,8 +2053,6 @@ int main(int argc, char** argv) {
         if (testing) {
             self_test(app, renderer.get(), session_directory, launched, demos, inspections);
             if (display_test) {
-                if (std::string_view(SDL_GetCurrentVideoDriver()) == "dummy")
-                    throw std::runtime_error("Display verification requires a native video backend");
                 if (!SDL_RenderPresent(renderer.get())) throw std::runtime_error(SDL_GetError());
                 std::cout << "Display smoke passed: " << SDL_GetCurrentVideoDriver() << " / " << SDL_GetRendererName(renderer.get()) << '\n';
             }
@@ -2049,7 +2062,7 @@ int main(int argc, char** argv) {
             }
             return 0;
         }
-        if (benchmark) { render_benchmark(app, renderer.get(), extra_cells, frames); return std::cout ? 0 : 1; }
+        if (benchmark) { render_benchmark(app, renderer.get(), extra_cells, frames, native_benchmark); return std::cout ? 0 : 1; }
         if (snapshot) {
             if (!app.prepare_snapshot(argc == 4 ? argv[3] : "starter")) {
                 std::cerr << "Unknown snapshot state. Use a lesson name, help, examples, hints, speed, clipboard, keyboard, canvas, contrast, or recovery.\n";
