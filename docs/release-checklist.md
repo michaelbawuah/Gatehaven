@@ -5,7 +5,8 @@ Automated native builds and a developer workstation do not substitute for the
 manual checks below. A final release requires evidence for each supported target.
 
 The [current preview record](preview-0.5.0.md) identifies the verified
-MIT-licensed `02d810f` candidate and its prepared release assets. The
+MIT-licensed `02d810f` candidate and its published release assets. All 37 uploaded
+files matched the prepared sizes and SHA-256 digests. The
 [earlier workstation record](preview-eacd8f2.md) preserves the separate Mac
 package checks and their original binary identity.
 

@@ -7,13 +7,17 @@
 Gatehaven is a digital logic sandbox built in C++23. Connect wires, combine
 logic gates, and step through a circuit to see how its signals change.
 
+[Download Gatehaven Preview 1](https://github.com/michaelbawuah/Gatehaven/releases/tag/v0.5.0-preview.1) ·
+[Watch the 50-second gameplay demo (MP4)](https://github.com/michaelbawuah/Gatehaven/releases/download/v0.5.0-preview.1/Gatehaven-Gameplay-Demo.mp4)
+
 ![Gatehaven desktop editor with circuit symbols and zoom controls](docs/images/desktop-prototype.png)
 
 [View all 13 components](docs/images/component-gallery.png) · [Gate symbols up close](docs/images/circuit-symbols.png).
 
-**Status: 0.5 development preview, not a finished release.** Windows, macOS,
-and Linux are the intended platforms. See [verification notes](docs/verification.md)
-for exactly what has been tested.
+**Status: 0.5 unsigned development preview.** Downloads are available for
+Windows, macOS, and Linux. Mac builds are not notarized; hands-on accessibility
+and clean-machine acceptance remain in progress. See
+[verification notes](docs/verification.md) for exactly what has been tested.
 
 [Current preview and release status](docs/preview-0.5.0.md) lists the
 verified candidate, downloads for each platform, and remaining release work.
@@ -25,9 +29,9 @@ offline manuals, save-conflict protection, and six built-in circuit lessons.
 Legacy `.ccsb` import/export preserves saved/reset levels. A compiled electrical
 component engine, keyboard canvas, and native text inspector make large circuits
 easier to explore. Linux previews include AppImages. Large clipboard and stroke
-previews use clipped queries. Successful desktop jobs on the
-[Actions page](https://github.com/michaelbawuah/Gatehaven/actions/workflows/ci.yml)
-provide unsigned [native preview packages](docs/packaging.md).
+previews use clipped queries. The
+[published preview](https://github.com/michaelbawuah/Gatehaven/releases/tag/v0.5.0-preview.1)
+contains verified [native packages](docs/packaging.md) from the candidate's CI run.
 
 ## Try the core
 
@@ -164,7 +168,10 @@ and copyright notices in `third_party/`. Keep these notices and Gatehaven's
 ## Build evidence and previews
 
 Native Actions jobs cover Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows
-x64/ARM64. Download an artifact only after that exact run passes. Windows x64
+x64/ARM64. Preview 1 provides 13 application packages, the gameplay demo,
+screenshots, installation notes, licenses, and checksums. All 37 published assets
+were checked against their prepared sizes and SHA-256 digests. For later CI
+builds, download an artifact only after that exact run passes. Windows x64
 also produces an unsigned installer; ARM64 uses a ZIP. Each package includes
 `build-metadata.json`; `gatehaven-cli --build-info` prints its compiler, target, and source revision.
 See the packaging guide for installation and remaining acceptance requirements.

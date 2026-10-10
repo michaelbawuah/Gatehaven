@@ -2,8 +2,9 @@
 
 The portfolio film shows a real Gatehaven editing session driven by scripted
 mouse input. It is 50 seconds long, 1920 × 1080, 30 fps, H.264, and silent with
-on-screen captions. The finished MP4, poster, and screenshots belong with the
-preview's release assets.
+on-screen captions. [Watch or download the MP4](https://github.com/michaelbawuah/Gatehaven/releases/download/v0.5.0-preview.1/Gatehaven-Gameplay-Demo.mp4).
+The finished MP4, poster, and screenshots are published with
+[Gatehaven Preview 1](https://github.com/michaelbawuah/Gatehaven/releases/tag/v0.5.0-preview.1).
 
 | Time | Demonstration |
 | --- | --- |
