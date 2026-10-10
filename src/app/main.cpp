@@ -1347,7 +1347,7 @@ private:
         rectangle(r, 0, 764, 1280, 36, theme().white);
         line(r, 0, 764, 1280, 764, theme().border);
         ui::rounded(r, 20, 780, 6, 6, theme().teal, 3);
-        ui::label(r, 36, 772, ui::ellipsize(status_, hover_ ? 545 : 820, 12), theme().muted, 12);
+        ui::label(r, 36, 772, ui::ellipsize(status_, hover_ ? 545.0F : 820.0F, 12), theme().muted, 12);
         if (hover_) {
             const auto element = circuit.at(*hover_);
             const auto detail = std::string(name(element)) + "  (" + std::to_string(hover_->x) + ", " + std::to_string(hover_->y) + ")" +
