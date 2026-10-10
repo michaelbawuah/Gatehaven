@@ -72,6 +72,16 @@ with tempfile.TemporaryDirectory(prefix="gatehaven installed ") as directory:
         assert invalid.returncode == 2 and "Unknown option" in invalid.stderr
         env = dict(os.environ, SDL_VIDEODRIVER="dummy")
         run(app, "--self-test", env=env, cwd=root)
+        collector = (bundle / "Resources" if sys.platform == "darwin" else resources) / "acceptance/acceptance.py"
+        collected = root / "acceptance-check"
+        run(sys.executable, collector, app, collected, "--headless", "--skip-benchmark", cwd=root)
+        evidence = json.loads((collected / "evidence.json").read_text())
+        assert evidence["automated_status"] == "passed" and evidence["mode"] == "headless"
+        assert evidence["candidate"]["source_revision"] == metadata["source_revision"]
+        assert all(item["status"] == "pending" for item in evidence["manual"])
+        assert not evidence["release_acceptance_complete"]
+        assert (collected / "report.html").is_file()
+        run(cli, "check", collected / "practice-circuit-é.ghv")
         snapshot = root / "installed-preview.bmp"
         frames = set()
         for state in ("starter", "help", "examples", "hints", "speed", "clipboard", "gate-gallery", "keyboard", "recovery", "canvas", "contrast"):

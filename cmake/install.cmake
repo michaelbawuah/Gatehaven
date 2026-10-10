@@ -14,6 +14,10 @@ if(GATEHAVEN_BUILD_APP)
 endif()
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/gatehaven)
 install(DIRECTORY docs samples third_party DESTINATION ${CMAKE_INSTALL_DATADIR}/gatehaven)
+install(FILES tools/acceptance.py tools/acceptance.html DESTINATION ${CMAKE_INSTALL_DATADIR}/gatehaven/acceptance)
+if(APPLE AND GATEHAVEN_BUILD_APP)
+    install(FILES tools/acceptance.py tools/acceptance.html DESTINATION gatehaven.app/Contents/Resources/acceptance)
+endif()
 
 # Include the redistributable Microsoft runtime when built with MSVC.
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${CMAKE_INSTALL_BINDIR})

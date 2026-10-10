@@ -76,7 +76,7 @@ def read_json_result(check):
 def validate_manual(report):
     expected = [item[0] for item in SCENARIOS]
     manual = report.get("manual", [])
-    if not isinstance(manual, list) or [item.get("id") for item in manual] != expected:
+    if not isinstance(manual, list) or any(not isinstance(item, dict) for item in manual) or [item.get("id") for item in manual] != expected:
         raise ValueError("manual checklist does not match this version")
     for item in manual:
         if item.get("status") not in STATUSES or not isinstance(item.get("notes"), str):
@@ -88,6 +88,7 @@ def validate_manual(report):
 
 
 def write_html(report, output):
+    validate_manual(report)
     template = Path(__file__).with_suffix(".html").read_text(encoding="utf-8")
     data = json.dumps(report, ensure_ascii=True).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     cards = []

@@ -1968,6 +1968,7 @@ int main(int argc, char** argv) {
         }
         if ((mode == "--help" || mode == "-h") && argc == 2) {
             std::cout << "Gatehaven [FILE.ghv|FILE.ccsb | --new | --demo=NAME | --version | --build-info | --manual-path | --diagnostics]\n"
+                         "Measurements: --benchmark-render EXTRA_CELLS FRAMES (software) or --benchmark-display EXTRA_CELLS FRAMES (native session)\n"
                          "F1: manual  F2: shortcuts  F3: examples  F4: recovery\n";
             return 0;
         }
