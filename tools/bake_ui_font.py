@@ -16,7 +16,7 @@ characters = sorted(set(range(32, 127)) | set(range(160, 256)) |
                      0x2190, 0x2191, 0x2192, 0x2193, 0x2212, 0x2318})
 image = Image.new("L", (WIDTH, 4096))
 draw = ImageDraw.Draw(image)
-x, y, row_height = 2, 2, 0
+x, y, row_height = 4, 4, 0
 records = []
 for weight in (400, 600):
     font = ImageFont.truetype(str(SOURCE), SIZE)
@@ -24,14 +24,18 @@ for weight in (400, 600):
     for code in characters:
         char = chr(code)
         left, top, right, bottom = font.getbbox(char, anchor="ls")
-        width, height = right - left, bottom - top
-        if x + width + 2 > WIDTH:
-            x, y, row_height = 2, y + row_height + 4, 0
+        # Align every source rectangle to the deepest 4:1 area-filtered level.
+        # SDL's software renderer converts source rectangles to integer pixels;
+        # fractional mip coordinates otherwise crop strokes from small glyphs.
+        width = ((right - left + 3) // 4) * 4
+        height = ((bottom - top + 3) // 4) * 4
+        if x + width + 4 > WIDTH:
+            x, y, row_height = 4, y + row_height + 4, 0
         draw.text((x - left, y - top), char, font=font, anchor="ls", fill=255)
         records.append((code, weight, x, y, width, height, left, top, font.getlength(char)))
         x += width + 4
         row_height = max(row_height, height)
-height = y + row_height + 2
+height = y + row_height + 4
 assert height <= image.height
 pixels = image.crop((0, 0, WIDTH, height)).tobytes()
 encoded = []

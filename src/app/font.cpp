@@ -16,6 +16,15 @@ struct Glyph {
 };
 #include "font_atlas.inc"
 
+// The software renderer truncates source rectangles to integer pixels. Every
+// mip-level glyph rectangle must therefore remain integral after 4:1 filtering.
+static_assert([] {
+    for (const auto& g : glyphs) {
+        if (g.x % 4 || g.y % 4 || g.width % 4 || g.height % 4) return false;
+    }
+    return atlas_width % 4 == 0 && atlas_height % 4 == 0;
+}(), "Font atlas glyphs must align to the deepest mip level");
+
 std::unordered_map<SDL_Renderer*, std::array<SDL_Texture*, 3>> textures;
 
 std::uint32_t next(std::string_view value, std::size_t& offset) {
